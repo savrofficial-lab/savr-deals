@@ -5,17 +5,21 @@ export default function App() {
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="bg-sky-500 shadow-md">
-  <div className="max-w-7xl mx-auto flex items-center justify-between px-6 py-4">
-    {/* Logo on the left */}
-    <a href="/" className="flex items-center">
-      <img
-        src="/savrdeals-high-resolution-logo.png"
-        alt="Savrdeals logo"
-        className="h-24 w-auto object-contain"  // bigger logo
-      />
-    </a>
-
-    {/* Navigation on the right */}
+  <div className="max-w-6xl mx-auto flex items-center justify-between p-4">
+    <img
+      src="/savrdeals-horizontal-logo.png"
+      alt="Savrdeals"
+      className="h-16 w-auto object-contain" // try h-20 if you want even bigger
+    />
+    <nav className="space-x-4 text-sm text-white hidden sm:flex">
+      <a href="#" className="hover:underline">Home</a>
+      <a href="#" className="hover:underline">Categories</a>
+      <a href="#" className="hover:underline">Reels</a>
+      <a href="#" className="hover:underline">Coupons</a>
+    </nav>
+  </div>
+</header>
+  {/* Navigation on the right */}
     <nav className="space-x-8 text-white text-lg font-medium hidden md:flex">
       <a href="#" className="hover:underline">Home</a>
       <a href="#" className="hover:underline">Categories</a>
