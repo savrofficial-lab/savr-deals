@@ -8,7 +8,7 @@ export default function App() {
   <div className="max-w-6xl mx-auto flex items-center justify-between p-4">
     <img src="/savrdeals-new-logo.png"
       alt="Savrdeals"
-      className="h-16 w-auto object-contain" 
+      className="h-20 w-auto object-contain" 
     />
     <nav className="space-x-4 text-sm text-white hidden sm:flex">
       <a href="#" className="hover:underline">Home</a>
