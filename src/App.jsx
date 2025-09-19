@@ -27,22 +27,6 @@ export default function App() {
             </a>
           </nav>
         </div>
-
-        {/* Optional right-side nav */}
-        <nav className="space-x-8 text-white text-lg font-medium hidden md:flex max-w-7xl mx-auto px-6 pb-4">
-          <a href="#" className="hover:underline">
-            Home
-          </a>
-          <a href="#" className="hover:underline">
-            Categories
-          </a>
-          <a href="#" className="hover:underline">
-            Reels
-          </a>
-          <a href="#" className="hover:underline">
-            Coupons
-          </a>
-        </nav>
       </header>
 
       {/* Main Content */}
