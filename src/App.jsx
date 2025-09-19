@@ -9,7 +9,7 @@ export default function App() {
     <img
       src="/savrdeals-horizontal-logo.png"
       alt="Savrdeals"
-      className="h-16 w-auto object-contain" // try h-20 if you want even bigger
+      className="h-16 w-auto object-contain" 
     />
     <nav className="space-x-4 text-sm text-white hidden sm:flex">
       <a href="#" className="hover:underline">Home</a>
