@@ -4,24 +4,27 @@ import DealsGrid from "./components/DealsGrid";
 export default function App() {
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="bg-white shadow-sm py-3">
-        <div className="max-w-6xl mx-auto p-4 flex items-center justify-between">
-          <a href="/" className="flex items-center space-x-2">
-  <img
-  src="/savrdeals-high-resolution-logo.png"
-  alt="Savrdeals logo"
-  className="h-16 w-48 object-contain"
-/>
-          <nav className="space-x-4 text-sm text-gray-700 hidden sm:flex">
-            <a href="#" className="hover:underline">Home</a>
-            <a href="#" className="hover:underline">Categories</a>
-            <a href="#" className="hover:underline">Reels</a>
-            <a href="#" className="hover:underline">Coupons</a>
-          </nav>
-        </div>
-      </header>
+      <header className="bg-green-700 shadow-md">
+  <div className="max-w-7xl mx-auto flex items-center justify-between px-6 py-4">
+    {/* Logo on the left */}
+    <a href="/" className="flex items-center">
+      <img
+        src="/savrdeals-high-resolution-logo.png"
+        alt="Savrdeals logo"
+        className="h-20 w-auto object-contain"  // bigger logo
+      />
+    </a>
 
-      <main className="max-w-6xl mx-auto p-4 grid grid-cols-1 lg:grid-cols-4 gap-6">
+    {/* Navigation on the right */}
+    <nav className="space-x-8 text-white text-lg font-medium hidden md:flex">
+      <a href="#" className="hover:underline">Home</a>
+      <a href="#" className="hover:underline">Categories</a>
+      <a href="#" className="hover:underline">Reels</a>
+      <a href="#" className="hover:underline">Coupons</a>
+    </nav>
+  </div>
+</header>
+   <main className="max-w-6xl mx-auto p-4 grid grid-cols-1 lg:grid-cols-4 gap-6">
         <section className="lg:col-span-3">
           <DealsGrid />
         </section>
