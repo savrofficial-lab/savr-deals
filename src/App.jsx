@@ -4,14 +4,14 @@ import DealsGrid from "./components/DealsGrid";
 export default function App() {
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="bg-green-700 shadow-md">
+      <header className="bg-purple-700 shadow-md">
   <div className="max-w-7xl mx-auto flex items-center justify-between px-6 py-4">
     {/* Logo on the left */}
     <a href="/" className="flex items-center">
       <img
         src="/savrdeals-high-resolution-logo.png"
         alt="Savrdeals logo"
-        className="h-20 w-auto object-contain"  // bigger logo
+        className="h-24 w-auto object-contain"  // bigger logo
       />
     </a>
 
