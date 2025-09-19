@@ -50,7 +50,6 @@ export default function App() {
         <section className="lg:col-span-3">
           <DealsGrid />
         </section>
-
         <aside className="hidden lg:block">
           <div className="sticky top-20">
             <div className="bg-white rounded-2xl shadow p-4 h-[600px] flex items-center justify-center">
@@ -63,6 +62,7 @@ export default function App() {
         </aside>
       </main>
 
+      
       {/* Footer */}
       <footer className="bg-gray-100 mt-8 py-6 px-4 text-center text-gray-700 text-sm">
         <div className="max-w-3xl mx-auto">
