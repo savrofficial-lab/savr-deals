@@ -4,7 +4,7 @@ import DealsGrid from "./components/DealsGrid";
 export default function App() {
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="bg-cyan-500 shadow-md">
+      <header className="bg-sky-500 shadow-md">
   <div className="max-w-7xl mx-auto flex items-center justify-between px-6 py-4">
     {/* Logo on the left */}
     <a href="/" className="flex items-center">
