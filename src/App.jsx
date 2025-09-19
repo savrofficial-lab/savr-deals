@@ -32,6 +32,25 @@ export default function App() {
           </div>
         </aside>
       </main>
+      <footer className="bg-gray-100 mt-8 py-6 px-4 text-center text-gray-700 text-sm">
+  <div className="max-w-3xl mx-auto">
+    <p className="font-semibold text-lg mb-2">About Us</p>
+    <p className="mb-4">
+      We are building an easy-to-use platform to help you discover the best online deals
+      across multiple e-commerce stores. Currently running in beta and non-profit.
+    </p>
+
+    <p className="font-semibold text-lg mb-2">Contact</p>
+    <p>
+      Email: <a href="mailto:savrofficialdeals@email.com" className="text-blue-600 underline">savrofficialdeals@email.com</a> <br />
+      Instagram: <a href="https://instagram.com/savrofficialdeals" className="text-blue-600 underline">@savrofficialdeals</a>
+    </p>
+
+    <p className="mt-4 text-xs text-gray-500">
+      © {new Date().getFullYear()} YourBrandName. All rights reserved.
+    </p>
+  </div>
+</footer>
     </div>
   );
 }
