@@ -5,7 +5,7 @@ export default function App() {
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="bg-sky-500 shadow-md">
-  <div className="max-w-6xl mx-auto flex items-center justify-between p-4">
+  <div className="max-w-7xl mx-auto flex items-center justify-between px-6 py-4">
     <img src="/savrdeals-new-logo.png"
       alt="Savrdeals"
       className="h-16 w-auto object-contain" 
