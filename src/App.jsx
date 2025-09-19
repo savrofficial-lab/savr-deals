@@ -1,9 +1,9 @@
-import React from "react";
+     import React from "react";
 import DealsGrid from "./components/DealsGrid";
 
 export default function App() {
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 flex flex-col">
       {/* Header */}
       <header className="bg-sky-500 shadow-md">
         <div className="max-w-7xl mx-auto flex items-center justify-between px-6 py-4">
@@ -46,7 +46,7 @@ export default function App() {
       </header>
 
       {/* Main Content */}
-      <main className="max-w-6xl mx-auto p-4 grid grid-cols-1 lg:grid-cols-4 gap-6">
+      <main className="flex-1 max-w-6xl mx-auto p-4 grid grid-cols-1 lg:grid-cols-4 gap-6 w-full">
         <section className="lg:col-span-3">
           <DealsGrid />
         </section>
@@ -62,14 +62,14 @@ export default function App() {
         </aside>
       </main>
 
-      
       {/* Footer */}
       <footer className="bg-gray-100 mt-8 py-6 px-4 text-center text-gray-700 text-sm">
         <div className="max-w-3xl mx-auto">
           <p className="font-semibold text-lg mb-2">About Us</p>
           <p className="mb-4">
-            We are building an easy-to-use platform to help you discover the best online deals
-            across multiple e-commerce stores. Currently running in beta and non-profit.
+            We are building an easy-to-use platform to help you discover the best
+            online deals across multiple e-commerce stores. Currently running in
+            beta and non-profit.
           </p>
 
           <p className="font-semibold text-lg mb-2">Contact</p>
@@ -92,10 +92,11 @@ export default function App() {
           </p>
 
           <p className="mt-4 text-xs text-gray-500">
-            © {new Date().getFullYear()} YourBrandName. All rights reserved.
+            © {new Date().getFullYear()} Savrdeals. All rights reserved.
           </p>
         </div>
       </footer>
     </div>
   );
 }
+   
