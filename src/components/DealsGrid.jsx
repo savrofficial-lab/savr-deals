@@ -33,7 +33,12 @@ export default function DealsGrid() {
           <h2 className="text-base font-semibold mb-2 text-gray-800">
             {deal.title}
           </h2>
-          <p className="text-sm text-gray-600 mb-4">{deal.price}</p>
+          <div className="mt-2 flex items-center space-x-2">
+  <span className="text-lg font-bold text-gray-900">₹{deal.price}</span>
+  {deal.oldPrice && (
+    <span className="text-sm text-gray-500 line-through">₹{deal.oldPrice}</span>
+  )}
+</div>
           <a
             href={deal.link}
             target="_blank"
