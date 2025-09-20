@@ -27,7 +27,15 @@ export default function App() {
             </a>
           </nav>
         </div>
-      </header>
+         {/* Navigation on the right */}
+    <nav className="space-x-8 text-white text-lg font-medium hidden md:flex">
+      <a href="#" className="hover:underline">Home</a>
+      <a href="#" className="hover:underline">Categories</a>
+      <a href="#" className="hover:underline">Reels</a>
+      <a href="#" className="hover:underline">Coupons</a>
+    </nav>
+  </div>
+</header>
 
       {/* Main Content */}
       <main className="flex-1 max-w-6xl mx-auto p-4 grid grid-cols-1 lg:grid-cols-4 gap-6 w-full">
