@@ -5,6 +5,7 @@
     "oldPrice": "12499",
     "image": "https://i.ibb.co/wXHKrTH/IMG-20250919-234207.jpg",
     "link": "https://www.flipkart.com/samsung-galaxy-f06-5g-bahama-blue-64-gb/p/itma2920c68b7fc8?pid=MOBHBF5JDCSG2TVD&lid=LSTMOBHBF5JDCSG2TVDYJZYLX&marketplace=FLIPKART&fm=neo%2Fmerchandising&iid=M_2c44a0c2-880b-4ca3-9c87-5fcbc3ad4223_11_42OTAAY8KIGZ_MC.MOBHBF5JDCSG2TVD&ppt=None&ppn=None&ssid=g4d6zm1pao0000001758304672638&otracker=clp_pmu_v2_Samsung%2Bsmartphones_3_11.productCard.PMU_V2_Samsung%2BGalaxy%2BF06%2B5G%2B%2528Bahama%2BBlue%252C%2B64%2BGB%2529_mobile-phones-store_MOBHBF5JDCSG2TVD_neo%2Fmerchandising_2&otracker1=clp_pmu_v2_PINNED_neo%2Fmerchandising_Samsung%2Bsmartphones_LIST_productCard_cc_3_NA_view-all&cid=MOBHBF5JDCSG2TVD "
+    "category": "Mobiles"
   },
  {
     "title": "Samsung Galaxy M05 (Mint Green, 4GB RAM, 64 GB Storage) ",
@@ -12,13 +13,15 @@
     "oldPrice": "9999",
     "image": "https://i.ibb.co/Kzbkyp3J/IMG-20250920-033320.jpg",
     "link": "https://www.amazon.in/gp/product/B0DFY3XCB6/ref=ox_sc_act_title_5?smid=AQUYM0O99MFUT&psc=1"
-  },
+    "category": "Mobiles"
+  },p
 {
     "title": "Samsung Galaxy A55 5G (Awesome Iceblue, 8GB RAM, 256GB Storage) ",
     "price": "25999",
     "oldPrice": "45999",
     "image": "https://i.ibb.co/Xr3G0T4W/IMG-20250920-033644.jpg",
     "link": "https://www.amazon.in/gp/product/B0CWPCFSM3/ref=ox_sc_act_title_4?smid=AJ6SIZC8YQDZX&th=1"
+    "category": "Mobiles"
   },
 {
     "title": "Samsung Galaxy M06 5G (Sage Green, 4GB RAM, 64GB Storage) ",
@@ -26,6 +29,7 @@
     "oldPrice": "12499",
     "image": "https://i.ibb.co/LhDsfxjf/IMG-20250920-033853.jpg",
     "link": "https://www.amazon.in/gp/product/B0F3X54YTF/ref=ox_sc_act_title_3?smid=AQUYM0O99MFUT&th=1"
+    "category": "Mobiles"
   },
 {
     "title": "Samsung Galaxy M06 5G (Blazing Black, 6GB RAM, 128 GB Storage)",
@@ -33,6 +37,7 @@
     "oldPrice": "15499",
     "image": "https://i.ibb.co/cKcnkjYB/IMG-20250920-034105.jpg",
     "link": "https://www.amazon.in/gp/product/B0DX5R87P8/ref=ox_sc_act_title_2?smid=AQUYM0O99MFUT&th=1"
+    "category": "Mobiles"
   },
 {
     "title": "Samsung Galaxy A55 5G (Awesome Iceblue, 8GB RAM, 128GB Storage)",
@@ -40,6 +45,7 @@
     "oldPrice": "42999",
     "image": "https://i.ibb.co/JFbD7qGL/IMG-20250920-034333.jpg",
     "link": "https://www.amazon.in/gp/product/B0CWPC2W5V/ref=ox_sc_act_title_1?smid=AJ6SIZC8YQDZX&th=1"
+    "category": "Mobiles"
   }
   ,  {
     "title": "Apple iPhone 15 Plus (256 GB) - Pink",
@@ -47,6 +53,7 @@
     "oldPrice": "99900",
     "image": "https://i.ibb.co/N2LczKf6/IMG-20250920-160323.jpg",
     "link": "https://www.amazon.in/gp/product/B0CHX7STQQ/ref=ox_sc_act_title_9?smid=AJ6SIZC8YQDZX&th=1"
+    "category": "Mobiles"
   }
   ,  {
     "title": "Apple iPhone 13 (128GB) - Blue",
@@ -54,6 +61,7 @@
     "oldPrice": "59900",
     "image": "https://i.ibb.co/TDtGqJkN/IMG-20250920-160452.jpg",
     "link": "https://www.amazon.in/gp/product/B09G9BL5CP/ref=ox_sc_act_title_8?smid=AJ6SIZC8YQDZX&th=1"
+    "category": "Mobiles"
   }
   ,  {
     "title": "OnePlus 12R (Cool Blue, 8GB RAM, 256GB Storage)",
@@ -61,6 +69,7 @@
     "oldPrice": "42999",
     "image": "https://i.ibb.co/q355XYVc/IMG-20250920-160710.jpg",
     "link": "https://www.amazon.in/gp/product/B0CX27M63L/ref=ox_sc_act_title_6?smid=A23AODI1X2CEAE&th=1"
+    "category": "Mobiles"
   }
   ,  {
     "title": "OnePlus Nord 3 5G (Tempest Gray, 8GB RAM, 128GB Storage)",
@@ -68,6 +77,7 @@
     "oldPrice": "33999",
     "image": "https://i.ibb.co/hS8GBgW/IMG-20250920-160907.jpg",
     "link": "https://www.amazon.in/gp/product/B0C7V84BS2/ref=ox_sc_act_title_5?smid=A23AODI1X2CEAE&th=1"
+    "category": "Mobiles"
   }
   ,  {
     "title": "OnePlus 11 5G (Titan Black, 8GB RAM, 128GB Storage)",
@@ -75,6 +85,7 @@
     "oldPrice": "56999",
     "image": "https://i.ibb.co/vC38Wh1n/IMG-20250920-161100.jpg",
     "link": "https://www.amazon.in/gp/product/B0BQJMRXQV/ref=ox_sc_act_title_4?smid=A23AODI1X2CEAE&th=1"
+    "category": "Mobiles"
   }
   ,  {
     "title": "OnePlus 11 5G (Eternal Green, 8GB RAM, 128GB Storage)",
@@ -82,6 +93,7 @@
     "oldPrice": "56999",
     "image": "https://i.ibb.co/LX7rkMVQ/IMG-20250920-161246.jpg",
     "link": "https://www.amazon.in/gp/product/B0BQJLCQD3/ref=ox_sc_act_title_3?smid=A1PMDMV3MPN3BU&th=1"
+    "category": "Mobiles"
   }
   ,  {
     "title": "OnePlus 10 Pro 5G (Volcanic Black, 8GB RAM, 128GB Storage)",
@@ -89,6 +101,7 @@
     "oldPrice": "66999",
     "image": "https://i.ibb.co/CKR0VKQx/IMG-20250920-161430.jpg",
     "link": "https://www.amazon.in/gp/product/B09V2P9C3S/ref=ox_sc_act_title_2?smid=A1CPSGZN365DEU&th=1"
+    "category": "Mobiles"
   }
   ,  {
     "title": "OnePlus 10 Pro 5G (Emerald Forest, 8GB RAM, 128GB Storage)",
@@ -96,6 +109,7 @@
     "oldPrice": "66999",
     "image": "https://i.ibb.co/Z69RtmVT/IMG-20250920-161635.jpg",
     "link": "https://www.amazon.in/gp/product/B09V2LX1R4/ref=ox_sc_act_title_1?smid=A1PMDMV3MPN3BU&th=1"
+    "category": "Mobiles"
   }
   ,  {
     "title": "POCO M6 Plus 5G Misty Lavender 8GB RAM 128GB ROM",
@@ -103,6 +117,7 @@
     "oldPrice": "17999",
     "image": "https://i.ibb.co/rGd7M69g/IMG-20250920-161950.jpg",
     "link": "https://www.amazon.in/gp/product/B0D9KJXN82/ref=ox_sc_act_title_3?smid=A1K6XQ7KUWCZYH&th=1"
+    "category": "Mobiles"
   }
   ,  {
     "title": "Poco X3 Pro(Steel Blue, 6GB RAM, 128GB Storage)",
@@ -110,6 +125,39 @@
     "oldPrice": "23999",
     "image": "https://i.ibb.co/JVrFZZY/IMG-20250920-162137.jpg",
     "link": "https://www.amazon.in/gp/product/B09DFQSSRG/ref=ox_sc_act_title_1?smid=A36B9X83AK1I18&psc=1"
+    "category": "Mobiles"
+  } 
+  ,  {
+    "title": "ADIDAS Fluo M Running Shoes For Men  (Black , 9) ",
+    "price": "1290",
+    "oldPrice": "3999",
+    "image": "https://i.ibb.co/CKxR4K21/IMG-20250921-104619.jpg ",
+    "link": "https://www.flipkart.com/adidas-fluo-m-running-shoes-men/p/itm37cdb2dc7f3b8?pid=SHOFUN8JQHKKGYC8&lid=LSTSHOFUN8JQHKKGYC8FAEKIK&marketplace=FLIPKART&q=shoes+for+men&store=osp%2Fcil&srno=s_1_1&otracker=AS_QueryStore_OrganicAutoSuggest_1_2_na_na_ps&otracker1=AS_QueryStore_OrganicAutoSuggest_1_2_na_na_ps&fm=search-autosuggest&iid=en_UeqnZRZ63kQFj3MYNw6918NWLpFYRp3tGDuWAAVHV35tlbp4pu__h7Wt1ba2yfoiw4TYAp50iLSbfCG870QlGPUFjCTyOHoHZs-Z5_PS_w0%3D&ppt=None&ppn=None&ssid=6ytqkass9s0000001758430662766&qH=9b802224ae37096b "
+    "category": "Fashion"
+  }
+  ,  {
+    "title": "REEBOK BILLINGTON SOLACE Outdoors For Men  (Blue , 8)",
+    "price": "1800",
+    "oldPrice": "4999",
+    "image": "https://i.ibb.co/mFvKRc5c/IMG-20250921-104633.jpg",
+    "link": "https://www.flipkart.com/reebok-billington-solace-outdoors-men/p/itm275fa41ce6d69?pid=SHOH8ZU7FYYZEBYG&lid=LSTSHOH8ZU7FYYZEBYGVIRPBT&marketplace=FLIPKART&q=shoes+for+men&store=osp%2Fcil&srno=s_1_2&otracker=AS_QueryStore_OrganicAutoSuggest_1_2_na_na_ps&otracker1=AS_QueryStore_OrganicAutoSuggest_1_2_na_na_ps&fm=search-autosuggest&iid=en_UeqnZRZ63kQFj3MYNw6918NWLpFYRp3tGDuWAAVHV37sJb7grMaL8k3kpHdgk-GoM1vh7VQustQ1CuKMpcf3p_UFjCTyOHoHZs-Z5_PS_w0%3D&ppt=sp&ppn=sp&qH=9b802224ae37096b"
+    "category": "Fashion"
+  }
+  ,  {
+    "title": "CAMPUS CRYSTA PRO Running Shoes For Men  (Blue , 9)",
+    "price": "527",
+    "oldPrice": "1499",
+    "image": "https://i.ibb.co/mVLMQwNK/IMG-20250921-104539.jpg",
+    "link": "https://www.flipkart.com/campus-crysta-pro-running-shoes-men/p/itm08f0ec4c15278?pid=SHOGANAAMWNRKNHC&lid=LSTSHOGANAAMWNRKNHCUWP9Q9&marketplace=FLIPKART&q=shoes+for+men&store=osp%2Fcil&srno=s_1_25&otracker=AS_QueryStore_OrganicAutoSuggest_1_2_na_na_ps&otracker1=AS_QueryStore_OrganicAutoSuggest_1_2_na_na_ps&fm=organic&iid=0a0e4459-39bf-4a4f-be3d-66c2f258fcd2.SHOGANAAMWNRKNHC.SEARCH&ppt=None&ppn=None&ssid=uxibr3062o0000001758450801992&qH=9b802224ae37096b"
+    "category": "Fashion"
+  }
+  ,  {
+    "title": "CAMPUS CRYSTA PRO Running Shoes For Men  (Grey , 8)#Ju",
+    "price": "555",
+    "oldPrice": "1499",
+    "image": "https://i.ibb.co/R4Jx6Sh5/IMG-20250921-161348.jpg",
+    "link": "https://www.flipkart.com/campus-crysta-pro-running-shoes-men/p/itmb72d8c0261dc5?pid=SHOGANAA5KJ4BZMF&lid=LSTSHOGANAA5KJ4BZMFUQFWC7&marketplace=FLIPKART&q=shoes+for+men&store=osp%2Fcil&srno=s_1_10&otracker=AS_QueryStore_OrganicAutoSuggest_1_2_na_na_ps&otracker1=AS_QueryStore_OrganicAutoSuggest_1_2_na_na_ps&fm=search-autosuggest&iid=4698cc38-30f8-4713-ad69-aa6d20d7d418.SHOGANAA5KJ4BZMF.SEARCH&ppt=sp&ppn=sp&ssid=4kk51vqtk00000001758451290329&qH=9b802224ae37096b"
+    "category": "Fashion"
   }
 ]
   
