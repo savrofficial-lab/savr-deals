@@ -14,7 +14,7 @@ export default function DealsGrid() {
   // Get unique categories
   const categories = ["All", ...new Set(deals.map((d) => d.category))];
 
-  // Filter deals based on category
+  // Filter deals
   const filteredDeals =
     selectedCategory === "All"
       ? deals
@@ -31,14 +31,14 @@ export default function DealsGrid() {
   return (
     <div>
       {/* Category Buttons */}
-      <div className="flex flex-wrap gap-2 mb-6">
+      <div className="flex flex-wrap gap-2 mb-6 justify-center">
         {categories.map((cat) => (
           <button
             key={cat}
             onClick={() => setSelectedCategory(cat)}
-            className={`px-4 py-2 rounded-full text-sm font-medium ${
+            className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
               selectedCategory === cat
-                ? "bg-sky-500 text-white"
+                ? "bg-sky-500 text-white shadow"
                 : "bg-gray-200 text-gray-700 hover:bg-gray-300"
             }`}
           >
@@ -52,21 +52,17 @@ export default function DealsGrid() {
         {filteredDeals.map((deal, idx) => (
           <div
             key={idx}
-            className="bg-white rounded-xl shadow hover:shadow-lg transition p-4 flex flex-col"
+            className="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition transform hover:-translate-y-1 flex flex-col p-4"
           >
             <img
               src={deal.image}
               alt={deal.title}
-              className="w-full h-40 object-contain mb-4"
+              className="w-full h-48 object-contain mb-4 transition-transform hover:scale-105"
             />
-            <h2 className="text-base font-semibold mb-2 text-gray-800">
-              {deal.title}
-            </h2>
+            <h2 className="text-lg font-semibold mb-2 text-gray-800">{deal.title}</h2>
 
             <div className="mt-2 flex items-center space-x-2">
-              <span className="text-lg font-bold text-gray-900">
-                ₹{deal.price}
-              </span>
+              <span className="text-xl font-bold text-gray-900">₹{deal.price}</span>
               {deal.oldPrice && (
                 <span className="text-sm text-gray-500 line-through">
                   ₹{deal.oldPrice}
@@ -78,7 +74,7 @@ export default function DealsGrid() {
               href={deal.link}
               target="_blank"
               rel="noopener noreferrer"
-              className="mt-auto bg-sky-500 hover:bg-sky-600 text-white font-semibold py-2 px-4 rounded-lg text-center"
+              className="mt-auto bg-sky-500 hover:bg-sky-600 text-white font-semibold py-2 px-4 rounded-lg text-center transition"
             >
               Shop Now
             </a>
