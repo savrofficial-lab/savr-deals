@@ -1,85 +1,89 @@
-     import React from "react";
+    import React from "react";
 import DealsGrid from "./components/DealsGrid";
 
 export default function App() {
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
-      {/* Header */}
-      <header className="bg-sky-500 shadow-md">
-        <div className="max-w-7xl mx-auto flex items-center justify-between px-6 py-4">
-          <img
-            src="/savrdeals-new-logo.png"
-            alt="Savrdeals"
-            className="h-16 w-auto object-contain"
-          />
-          <nav className="space-x-4 text-sm text-white hidden sm:flex">
-            <a href="#" className="hover:underline">Home</a>
-            <a href="#" className="hover:underline">Categories</a>
-            <a href="#" className="hover:underline">Reels</a>
-            <a href="#" className="hover:underline">Coupons</a>
-          </nav>
+      {/* Top header: only logo */}
+      <header className="bg-white shadow-sm">
+        <div className="max-w-7xl mx-auto flex items-center justify-center px-6 py-3">
+          <a href="/" className="flex items-center">
+            <img
+              src="/savrdeals-new-logo.png"
+              alt="Savrdeals"
+              className="h-14 w-auto object-contain"
+            />
+          </a>
         </div>
-
-        {/* Optional right-side nav */}
-        <nav className="space-x-8 text-white text-lg font-medium hidden md:flex max-w-7xl mx-auto px-6 pb-4">
-          <a href="#" className="hover:underline">Home</a>
-          <a href="#" className="hover:underline">Categories</a>
-          <a href="#" className="hover:underline">Reels</a>
-          <a href="#" className="hover:underline">Coupons</a>
-        </nav>
       </header>
 
-      {/* Main Content */}
-      <main className="flex-1 max-w-6xl mx-auto p-4 grid grid-cols-1 lg:grid-cols-4 gap-6 w-full">
-        <section className="lg:col-span-3">
-          <DealsGrid />
-        </section>
-        <aside className="hidden lg:block">
-          <div className="sticky top-20">
-            <div className="bg-white rounded-2xl shadow p-4 h-[600px] flex items-center justify-center">
-              <div className="text-center">
-                <div className="text-sm text-gray-500">Ad space</div>
-                <div className="mt-4 font-semibold">Tall Ad (Desktop)</div>
-              </div>
-            </div>
-          </div>
-        </aside>
+      {/* Hero / big banner – compact on small screens */}
+      <div className="bg-gradient-to-r from-sky-500 to-blue-600 text-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-10 text-center">
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold">
+            🔥 Savr — Best Mobile Deals Today
+          </h1>
+          <p className="mt-2 sm:mt-3 text-base sm:text-lg max-w-2xl mx-auto">
+            Updated daily with real discounts — scroll, discover, buy at the best price.
+          </p>
+        </div>
+      </div>
+
+      {/* Main content (Deals grid) */}
+      <main className="flex-1 max-w-6xl mx-auto p-4 w-full">
+        <DealsGrid />
       </main>
 
       {/* Footer */}
-      <footer className="bg-gray-100 mt-8 py-6 px-4 text-center text-gray-700 text-sm">
-        <div className="max-w-3xl mx-auto">
-          <p className="font-semibold text-lg mb-2">About Us</p>
-          <p className="mb-4">
-            We are building an easy-to-use platform to help you discover the best
-            online deals across multiple e-commerce stores. Currently running in
-            beta and non-profit.
-          </p>
+      <footer className="bg-gray-100 mt-8 py-8 px-4 text-gray-700 text-sm">
+        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* About */}
+          <div>
+            <p className="font-semibold text-lg mb-2">About Us</p>
+            <p className="mb-4">
+              We are building an easy-to-use platform to help you discover the best online deals
+              across multiple e-commerce stores. Currently running in beta and non-profit.
+            </p>
+          </div>
 
-          <p className="font-semibold text-lg mb-2">Contact</p>
-          <p>
-            Email:{" "}
-            <a
-              href="mailto:savrofficialdeals@email.com"
-              className="text-blue-600 underline"
-            >
-              savrofficialdeals@email.com
-            </a>{" "}
-            <br />
-            Instagram:{" "}
-            <a
-              href="https://instagram.com/savrofficialdeals"
-              className="text-blue-600 underline"
-            >
-              @savrofficialdeals
-            </a>
-          </p>
+          {/* Contact */}
+          <div>
+            <p className="font-semibold text-lg mb-2">Contact</p>
+            <p>
+              Email:{" "}
+              <a
+                href="mailto:savrofficialdeals@email.com"
+                className="text-blue-600 underline"
+              >
+                savrofficialdeals@email.com
+              </a>
+              <br />
+              Instagram:{" "}
+              <a
+                href="https://instagram.com/savrofficialdeals"
+                className="text-blue-600 underline"
+              >
+                @savrofficialdeals
+              </a>
+            </p>
+          </div>
 
-          <p className="mt-4 text-xs text-gray-500">
-            © {new Date().getFullYear()} Savrdeals. All rights reserved.
-          </p>
+          {/* Bottom nav + copyright */}
+          <div className="flex flex-col justify-between items-center md:items-end">
+            <nav className="flex gap-6 mb-4">
+              <a href="#" className="hover:text-sky-600">Home</a>
+              <a href="#" className="hover:text-sky-600">Categories</a>
+              <a href="#" className="hover:text-sky-600">Posts</a>
+              <a href="#" className="hover:text-sky-600">Reels</a>
+            </nav>
+
+            <p className="text-xs text-gray-500">
+              © {new Date().getFullYear()} Savrdeals. All rights reserved.
+            </p>
+          </div>
         </div>
       </footer>
     </div>
   );
 }
+             
