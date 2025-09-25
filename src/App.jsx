@@ -102,7 +102,7 @@ export default function App() {
                 <p className="font-semibold text-lg mb-2">Contact</p>
                 <p className="text-sm text-gray-700">
                   Email:{" "}
-                  <a href="mailto:savrofficialdeals@email.com" className="text-blue-600 underline">
+                  <a href="mailto:savrofficialdeal@email.com" className="text-blue-600 underline">
                     savrofficialdeals@email.com
                   </a>
                   <br />
