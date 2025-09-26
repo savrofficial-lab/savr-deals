@@ -35,7 +35,7 @@ export default function App() {
   const [activeTopTab, setActiveTopTab] = useState("Frontpage"); // UI-only tabs
   const [activeBottom, setActiveBottom] = useState("Home"); // tracks bottom nav highlight
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
+    <div className="bg-[linear-gradient(135deg,#fdf6e3,#fceabb,#f8d778)]">
       {/* === Header: small area with profile avatar on left and logo centered-ish === */}
       <header className="bg-white shadow-sm sticky top-0 z-30">
         <div className="max-w-7xl mx-auto px-3 py-3 flex items-center justify-between">
