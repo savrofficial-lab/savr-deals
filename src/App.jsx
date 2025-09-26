@@ -57,7 +57,7 @@ export default function App() {
           {/* centered logo */}
           <div className="absolute left-1/2 transform -translate-x-1/2">
             <a href="/">
-              <img src="/savrdeals-new-logo.png" alt="Savrdeals" className="h-10 w-auto object-contain" />
+              <img src="/savrdeals-logo.png" alt="Savrdeals" className="h-10 w-auto object-contain" />
             </a>
           </div>
 
