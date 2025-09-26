@@ -43,8 +43,10 @@ export default function App() {
     <div className="min-h-screen flex flex-col bg-[linear-gradient(135deg,#fdf6e3,#fceabb,#f8d778)]">
 
       {/* ===== Header (logo centered) ===== */}
-      <header className="bg-white/80 backdrop-blur-md sticky top-0 z-40 shadow-sm">
-        <div className="max-w-5xl mx-auto px-3 py-3 flex items-center justify-between">
+      <header
+        className="bg-gradient-to-b from-[#ffffffcc] to-[#f8f1e8cc] backdrop-blur-md sticky top-0 z-40 shadow-md"
+      >
+        <div className="max-w-5xl mx-auto px-3 py-4 flex items-center justify-between">
           {/* left placeholder avatar to balance centered logo */}
           <div className="flex items-center">
             <div className="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center text-sm text-gray-600">
@@ -65,7 +67,7 @@ export default function App() {
       </header>
 
       {/* ===== Top tabs: Frontpage | Forums | Hot Deals ===== */}
-      <div className="bg-white/80 sticky top-[56px] z-30">
+      <div className="bg-gradient-to-b from-[#f8f1e8cc] to-[#f8f1e8cc] sticky top-[64px] z-30">
         <div className="max-w-5xl mx-auto px-3 py-2">
           <div className="flex items-center gap-3 overflow-auto">
             {["Frontpage", "Forums", "Hot Deals"].map((t) => {
@@ -188,4 +190,4 @@ export default function App() {
       </nav>
     </div>
   );
-}
+}                    
