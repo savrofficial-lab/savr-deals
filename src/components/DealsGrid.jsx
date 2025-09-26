@@ -52,14 +52,16 @@ export default function DealsGrid() {
         {filteredDeals.map((deal, idx) => (
           <div
             key={idx}
-            className="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition transform hover:-translate-y-1 flex flex-col p-4"
+            className="bg-[#f8f1e8] rounded-2xl shadow-lg hover:shadow-2xl transition transform hover:-translate-y-1 flex flex-col p-4"
           >
             <img
               src={deal.image}
               alt={deal.title}
               className="w-full h-48 object-contain mb-4 transition-transform hover:scale-105"
             />
-            <h2 className="text-lg font-semibold mb-2 text-gray-800">{deal.title}</h2>
+            <h2 className="text-lg font-semibold mb-2 text-gray-800">
+              {deal.title}
+            </h2>
 
             <div className="mt-2 flex items-center space-x-2">
               <span className="text-xl font-bold text-gray-900">₹{deal.price}</span>
