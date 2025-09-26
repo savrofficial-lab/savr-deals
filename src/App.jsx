@@ -2,19 +2,19 @@
 import React, { useState } from "react";
 import DealsGrid from "./components/DealsGrid";
 
-/* Inline icons (use currentColor so color follows text color classes) */
+/* ===== Inline icons ===== */
 function IconHome({ className = "h-6 w-6" }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden>
-      <path d="M3 11.5L12 4l9 7.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
-      <path d="M5 21V12h14v9" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+      <path d="M3 11.5L12 4l9 7.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M5 21V12h14v9" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }
 function IconSearch({ className = "h-6 w-6" }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden>
-      <path d="M21 21l-4.35-4.35" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+      <path d="M21 21l-4.35-4.35" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
       <circle cx="11" cy="11" r="6" stroke="currentColor" strokeWidth="1.6" />
     </svg>
   );
@@ -22,7 +22,7 @@ function IconSearch({ className = "h-6 w-6" }) {
 function IconPlus({ className = "h-6 w-6" }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden>
-      <path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+      <path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }
@@ -30,73 +30,66 @@ function IconVideo({ className = "h-6 w-6" }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden>
       <rect x="3" y="5" width="14" height="14" rx="2" stroke="currentColor" strokeWidth="1.6" />
-      <path d="M17 8l4-2v12l-4-2" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+      <path d="M17 8l4-2v12l-4-2" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }
 
 export default function App() {
-  const [activeTopTab, setActiveTopTab] = useState("Frontpage"); // UI-only tab selection
-  const [activeBottom, setActiveBottom] = useState("Home"); // bottom nav highlight
+  const [activeTopTab, setActiveTopTab] = useState("Frontpage");
+  const [activeBottom, setActiveBottom] = useState("Home");
 
   return (
     <div className="min-h-screen flex flex-col bg-[linear-gradient(135deg,#fdf6e3,#fceabb,#f8d778)]">
+      {/* ===== Header ===== */}
+      <header className="bg-gradient-to-b from-[#ffffffcc] to-[#f8f1e8cc] backdrop-blur-md sticky top-0 z-40 shadow-md">
+        <div className="max-w-5xl mx-auto px-3 py-4 flex items-center justify-between">
+          <a href="/" className="flex items-center">
+            <img
+              src="/savrdeals-logo.png"
+              alt="Savrdeals"
+              className="h-16 w-auto object-contain"
+            />
+          </a>
+        </div>
+      </header>
 
-      
+      {/* ===== Top Tabs ===== */}
+      <div className="bg-gradient-to-b from-[#f8f1e8cc] to-[#f8f1e8cc] sticky top-[64px] z-30">
+        <div className="max-w-5xl mx-auto px-3 py-2">
+          <div className="flex items-center gap-3 overflow-auto">
+            {["Frontpage", "Forums", "Hot Deals"].map((t) => {
+              const active = t === activeTopTab;
+              return (
+                <button
+                  key={t}
+                  onClick={() => setActiveTopTab(t)}
+                  className={`whitespace-nowrap px-4 py-2 rounded-full text-sm font-medium transition ${
+                    active
+                      ? "bg-yellow-800 text-white"
+                      : "bg-white text-gray-700 hover:bg-gray-100"
+                  }`}
+                >
+                  {t}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </div>
 
-      {/* ===== Main scroll area (with bottom padding so bottom nav doesn't hide content) ===== */}
+      {/* ===== Main Content ===== */}
       <main className="flex-1 overflow-y-auto pb-40">
         <div className="max-w-5xl mx-auto px-3 sm:px-4 lg:px-6 pt-4">
-          {/* Small heading showing which top tab is active */}
-          <div className="mb-3">
-            <h2 className="text-lg font-semibold text-gray-800">{activeTopTab}</h2>
-          </div>
+          <h2 className="text-lg font-semibold text-gray-800 mb-3">
+            {activeTopTab}
+          </h2>
 
-          {/* DealsGrid (your existing component; keep as-is) */}
+          {/* Deals grid */}
           <DealsGrid />
 
-          {/* Footer content (kept inside the main so it's part of page SEO) */}
+          {/* Footer */}
           <div className="mt-8 pb-6">
-         {/* === HEADER with logo on the LEFT === */}
-<header className="bg-gradient-to-b from-[#ffffffcc] to-[#f8f1e8cc] backdrop-blur-md sticky top-0 z-40 shadow-md">
-  <div className="max-w-5xl mx-auto px-3 py-4 flex items-center justify-between">
-    {/* Logo on the left */}
-    <a href="/" className="flex items-center">
-      <img
-        src="/savrdeals-logo.png"   // your new transparent logo in /public
-        alt="Savrdeals"
-        className="h-16 w-auto object-contain"
-      />
-    </a>
-
-    {/* (optional) add something else on the right if you need */}
-    <div />
-  </div>
-</header>
-
-{/* === TOP TABS just under header === */}
-<div className="bg-gradient-to-b from-[#f8f1e8cc] to-[#f8f1e8cc] sticky top-[64px] z-30">
-  <div className="max-w-5xl mx-auto px-3 py-2">
-    <div className="flex items-center gap-3 overflow-auto">
-      {["Frontpage", "Forums", "Hot Deals"].map((t) => {
-        const active = t === activeTopTab;
-        return (
-          <button
-            key={t}
-            onClick={() => setActiveTopTab(t)}
-            className={`whitespace-nowrap px-4 py-2 rounded-full text-sm font-medium transition ${
-              active
-                ? "bg-yellow-800 text-white"
-                : "bg-white text-gray-700 border border-transparent hover:bg-gray-100"
-            }`}
-          >
-            {t}
-          </button>
-        );
-      })}
-    </div>
-  </div>
-</div>
             <div className="bg-white/95 rounded-2xl shadow p-5">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div>
@@ -106,7 +99,6 @@ export default function App() {
                     across multiple e-commerce stores. Currently running in beta and non-profit.
                   </p>
                 </div>
-
                 <div>
                   <p className="font-semibold text-lg mb-2">Contact</p>
                   <p className="text-sm text-gray-700">
@@ -121,7 +113,6 @@ export default function App() {
                     </a>
                   </p>
                 </div>
-
                 <div className="flex flex-col justify-between items-start md:items-end">
                   <nav className="flex gap-4 mb-2">
                     <a href="#" className="text-sm text-gray-700 hover:text-yellow-800">Home</a>
@@ -129,7 +120,9 @@ export default function App() {
                     <a href="#" className="text-sm text-gray-700 hover:text-yellow-800">Posts</a>
                     <a href="#" className="text-sm text-gray-700 hover:text-yellow-800">Reels</a>
                   </nav>
-                  <p className="text-xs text-gray-500">© {new Date().getFullYear()} Savrdeals. All rights reserved.</p>
+                  <p className="text-xs text-gray-500">
+                    © {new Date().getFullYear()} Savrdeals. All rights reserved.
+                  </p>
                 </div>
               </div>
             </div>
@@ -137,7 +130,7 @@ export default function App() {
         </div>
       </main>
 
-      {/* ===== Bottom navigation (fixed) ===== */}
+      {/* ===== Bottom Navigation ===== */}
       <nav className="fixed left-0 right-0 bottom-0 z-50 bg-white/95 border-t border-yellow-100 shadow-inner">
         <div className="max-w-5xl mx-auto px-4">
           <div className="relative">
@@ -160,7 +153,7 @@ export default function App() {
                 <span>Search</span>
               </button>
 
-              {/* Post (big plus) centered and elevated */}
+              {/* Post (big plus) */}
               <div className="relative -mt-6">
                 <button
                   onClick={() => setActiveBottom("Post")}
@@ -186,4 +179,4 @@ export default function App() {
       </nav>
     </div>
   );
-}                    
+}
