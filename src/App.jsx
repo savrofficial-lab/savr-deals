@@ -50,14 +50,13 @@ export default function App() {
           {/* left placeholder avatar to balance centered logo */}
           <div className="flex items-center">
             <div className="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center text-sm text-gray-600">
-              <span className="font-semibold">S</span>
             </div>
           </div>
 
           {/* centered logo */}
           <div className="absolute left-1/2 transform -translate-x-1/2">
             <a href="/">
-              <img src="/savrdeals-logo.png" alt="Savrdeals" className="h-10 w-auto object-contain" />
+              <img src="/savrdeals-logo.png" alt="Savrdeals" className="h-16 w-auto object-contain" />
             </a>
           </div>
 
