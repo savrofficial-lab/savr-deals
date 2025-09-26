@@ -42,50 +42,7 @@ export default function App() {
   return (
     <div className="min-h-screen flex flex-col bg-[linear-gradient(135deg,#fdf6e3,#fceabb,#f8d778)]">
 
-      {/* ===== Header (logo centered) ===== */}
-      <header
-        className="bg-gradient-to-b from-[#ffffffcc] to-[#f8f1e8cc] backdrop-blur-md sticky top-0 z-40 shadow-md"
-      >
-        <div className="max-w-5xl mx-auto px-3 py-4 flex items-center justify-between">
-          {/* left placeholder avatar to balance centered logo */}
-          <div className="flex items-center">
-            <div className="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center text-sm text-gray-600">
-            </div>
-          </div>
-
-          {/* centered logo */}
-          <div className="absolute left-1/2 transform -translate-x-1/2">
-            <a href="/">
-              <img src="/savrdeals-logo.png" alt="Savrdeals" className="h-16 w-auto object-contain" />
-            </a>
-          </div>
-
-          {/* right spacer for symmetry */}
-          <div style={{ width: 32 }} />
-        </div>
-      </header>
-
-      {/* ===== Top tabs: Frontpage | Forums | Hot Deals ===== */}
-      <div className="bg-gradient-to-b from-[#f8f1e8cc] to-[#f8f1e8cc] sticky top-[64px] z-30">
-        <div className="max-w-5xl mx-auto px-3 py-2">
-          <div className="flex items-center gap-3 overflow-auto">
-            {["Frontpage", "Forums", "Hot Deals"].map((t) => {
-              const active = t === activeTopTab;
-              return (
-                <button
-                  key={t}
-                  onClick={() => setActiveTopTab(t)}
-                  className={`whitespace-nowrap px-4 py-2 rounded-full text-sm font-medium transition ${
-                    active ? "bg-yellow-800 text-white" : "bg-white text-gray-700 border border-transparent hover:bg-gray-100"
-                  }`}
-                >
-                  {t}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      </div>
+      
 
       {/* ===== Main scroll area (with bottom padding so bottom nav doesn't hide content) ===== */}
       <main className="flex-1 overflow-y-auto pb-40">
@@ -100,6 +57,46 @@ export default function App() {
 
           {/* Footer content (kept inside the main so it's part of page SEO) */}
           <div className="mt-8 pb-6">
+         {/* === HEADER with logo on the LEFT === */}
+<header className="bg-gradient-to-b from-[#ffffffcc] to-[#f8f1e8cc] backdrop-blur-md sticky top-0 z-40 shadow-md">
+  <div className="max-w-5xl mx-auto px-3 py-4 flex items-center justify-between">
+    {/* Logo on the left */}
+    <a href="/" className="flex items-center">
+      <img
+        src="/savrdeals-logo.png"   // your new transparent logo in /public
+        alt="Savrdeals"
+        className="h-16 w-auto object-contain"
+      />
+    </a>
+
+    {/* (optional) add something else on the right if you need */}
+    <div />
+  </div>
+</header>
+
+{/* === TOP TABS just under header === */}
+<div className="bg-gradient-to-b from-[#f8f1e8cc] to-[#f8f1e8cc] sticky top-[64px] z-30">
+  <div className="max-w-5xl mx-auto px-3 py-2">
+    <div className="flex items-center gap-3 overflow-auto">
+      {["Frontpage", "Forums", "Hot Deals"].map((t) => {
+        const active = t === activeTopTab;
+        return (
+          <button
+            key={t}
+            onClick={() => setActiveTopTab(t)}
+            className={`whitespace-nowrap px-4 py-2 rounded-full text-sm font-medium transition ${
+              active
+                ? "bg-yellow-800 text-white"
+                : "bg-white text-gray-700 border border-transparent hover:bg-gray-100"
+            }`}
+          >
+            {t}
+          </button>
+        );
+      })}
+    </div>
+  </div>
+</div>
             <div className="bg-white/95 rounded-2xl shadow p-5">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div>
