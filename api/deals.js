@@ -4,9 +4,16 @@
 
 // api/deals.js
 // Import JSON directly (works on Vercel too)
-import dealsData from "../public/deals.json";
+// api/deals.js
+const path = require("path");
+const fs = require("fs");
 
-export default async function handler(req, res) {
+// Load JSON at runtime (safe on Vercel)
+const dealsData = JSON.parse(
+  fs.readFileSync(path.join(process.cwd(), "public", "deals.json"), "utf-8")
+);
+
+module.exports = async (req, res) => {
   try {
     let deals = dealsData;
 
@@ -27,9 +34,9 @@ export default async function handler(req, res) {
     }
 
     res.setHeader("Content-Type", "application/json");
-    return res.status(200).json(deals);
+    res.status(200).json(deals);
   } catch (err) {
     console.error("api/deals error:", err);
-    return res.status(200).json([]);
+    res.status(200).json([]);
   }
-}
+};
