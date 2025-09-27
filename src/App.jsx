@@ -34,6 +34,7 @@ function IconVideo({ className = "h-6 w-6" }) {
     </svg>
   );
 }
+      // ...keep your imports and icons...
 
 export default function App() {
   const [activeTopTab, setActiveTopTab] = useState("Frontpage");
@@ -41,21 +42,30 @@ export default function App() {
 
   return (
     <div className="min-h-screen flex flex-col bg-[linear-gradient(135deg,#fdf6e3,#fceabb,#f8d778)]">
-      {/* ===== Header ===== */}
+      {/* === HEADER smaller with logo on left === */}
       <header className="bg-gradient-to-b from-[#ffffffcc] to-[#f8f1e8cc] backdrop-blur-md sticky top-0 z-40 shadow-md">
-        <div className="max-w-5xl mx-auto px-3 py-4 flex items-center justify-between">
+        <div className="max-w-5xl mx-auto px-3 py-2 flex items-center justify-between">
+          {/* Logo left */}
           <a href="/" className="flex items-center">
             <img
               src="/savrdeals-logo.png"
               alt="Savrdeals"
-              className="h-20 w-auto object-contain"
+              className="h-10 w-auto object-contain"
             />
           </a>
         </div>
+        {/* search bar under header */}
+        <div className="max-w-5xl mx-auto px-3 pb-2">
+          <input
+            type="text"
+            placeholder="Search deals..."
+            className="w-full rounded-full border border-yellow-200 bg-white/90 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400"
+          />
+        </div>
       </header>
 
-      {/* ===== Top Tabs ===== */}
-      <div className="bg-gradient-to-b from-[#f8f1e8cc] to-[#f8f1e8cc] sticky top-[64px] z-30">
+      {/* === TOP TABS just under header === */}
+      <div className="bg-gradient-to-b from-[#f8f1e8cc] to-[#f8f1e8cc] sticky top-[88px] z-30">
         <div className="max-w-5xl mx-auto px-3 py-2">
           <div className="flex items-center gap-3 overflow-auto">
             {["Frontpage", "Forums", "Hot Deals"].map((t) => {
@@ -67,7 +77,7 @@ export default function App() {
                   className={`whitespace-nowrap px-4 py-2 rounded-full text-sm font-medium transition ${
                     active
                       ? "bg-yellow-800 text-white"
-                      : "bg-white text-gray-700 hover:bg-gray-100"
+                      : "bg-white text-gray-700 border border-transparent hover:bg-gray-100"
                   }`}
                 >
                   {t}
@@ -77,6 +87,10 @@ export default function App() {
           </div>
         </div>
       </div>
+
+      {/* === main area & footer stays the same ... */}
+
+
 
       {/* ===== Main Content ===== */}
       <main className="flex-1 overflow-y-auto pb-40">
