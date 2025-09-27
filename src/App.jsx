@@ -44,25 +44,24 @@ export default function App() {
     <div className="min-h-screen flex flex-col bg-[linear-gradient(135deg,#fdf6e3,#fceabb,#f8d778)]">
       {/* === HEADER smaller with logo on left === */}
       <header className="bg-gradient-to-b from-[#ffffffcc] to-[#f8f1e8cc] backdrop-blur-md sticky top-0 z-40 shadow-md">
-        <div className="max-w-5xl mx-auto px-3 py-2 flex items-center justify-between">
-          {/* Logo left */}
-          <a href="/" className="flex items-center">
-            <img
-              src="/savrdeals-logo.png"
-              alt="Savrdeals"
-              className="h-10 w-auto object-contain"
-            />
-          </a>
-        </div>
-        {/* search bar under header */}
-        <div className="max-w-5xl mx-auto px-3 pb-2">
-          <input
-            type="text"
-            placeholder="Search deals..."
-            className="w-full rounded-full border border-yellow-200 bg-white/90 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400"
-          />
-        </div>
-      </header>
+  <div className="max-w-5xl mx-auto px-3 py-2 flex items-center gap-3">
+    {/* big logo left */}
+    <a href="/" className="flex-shrink-0">
+      <img
+        src="/savrdeals-logo.png"
+        alt="Savrdeals"
+        className="h-18 w-auto object-contain" // your original size
+      />
+    </a>
+
+    {/* search bar takes remaining space */}
+    <input
+      type="text"
+      placeholder="Search deals..."
+      className="flex-1 rounded-full border border-yellow-200 bg-white/90 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400"
+    />
+  </div>
+</header>
 
       {/* === TOP TABS just under header === */}
       <div className="bg-gradient-to-b from-[#f8f1e8cc] to-[#f8f1e8cc] sticky top-[88px] z-30">
