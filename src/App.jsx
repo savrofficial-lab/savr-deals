@@ -48,7 +48,7 @@ export default function App() {
             <img
               src="/savrdeals-logo.png"
               alt="Savrdeals"
-              className="h-16 w-auto object-contain"
+              className="h-20 w-auto object-contain"
             />
           </a>
         </div>
