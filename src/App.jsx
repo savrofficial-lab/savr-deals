@@ -1,8 +1,8 @@
-// src/App.jsx
+  // src/App.jsx
 import React, { useState } from "react";
 import DealsGrid from "./components/DealsGrid";
 
-/* ===== Inline icons ===== */
+/* ---------- Inline Icons (no external lib) ---------- */
 function IconHome({ className = "h-6 w-6" }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden>
@@ -11,7 +11,7 @@ function IconHome({ className = "h-6 w-6" }) {
     </svg>
   );
 }
-function IconSearch({ className = "h-6 w-6" }) {
+function IconSearch({ className = "h-5 w-5" }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden>
       <path d="M21 21l-4.35-4.35" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
@@ -34,37 +34,50 @@ function IconVideo({ className = "h-6 w-6" }) {
     </svg>
   );
 }
-      // ...keep your imports and icons...
+
+/* ---------------------------------------------------- */
 
 export default function App() {
   const [activeTopTab, setActiveTopTab] = useState("Frontpage");
   const [activeBottom, setActiveBottom] = useState("Home");
+  const [searchText, setSearchText] = useState("");
 
   return (
     <div className="min-h-screen flex flex-col bg-[linear-gradient(135deg,#fdf6e3,#fceabb,#f8d778)]">
-      {/* === HEADER smaller with logo on left === */}
-      <header className="bg-gradient-to-b from-[#ffffffcc] to-[#f8f1e8cc] backdrop-blur-md sticky top-0 z-40 shadow-md">
-  <div className="max-w-5xl mx-auto px-3 py-2 flex items-center gap-3">
-    {/* big logo left */}
-    <a href="/" className="flex-shrink-0">
-      <img
-        src="/savrdeals-logo.png"
-        alt="Savrdeals"
-        className="h-16 w-auto object-contain" // your original size
-      />
-    </a>
+      {/* ================= HEADER (logo left + search) ================= */}
+      <header className="bg-gradient-to-b from-[#ffffffcc] to-[#f8f1e8cc] backdrop-blur-md sticky top-0 z-50 shadow-md">
+        <div className="max-w-5xl mx-auto px-3 py-2 flex items-center gap-4">
+          {/* Logo (keeps original size) */}
+          <a href="/" className="flex-shrink-0">
+            <img
+              src="/savrdeals-logo.png"
+              alt="Savrdeals"
+              className="h-16 w-auto object-contain"
+            />
+          </a>
 
-    {/* search bar takes remaining space */}
-    <input
-      type="text"
-      placeholder="Search deals..."
-      className="flex-1 rounded-full border border-yellow-200 bg-white/90 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400"
-    />
-  </div>
-</header>
+          {/* Search: icon inside + input expands to remaining width */}
+          <div className="relative flex-1">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+              <IconSearch className="h-5 w-5" />
+            </span>
+            <input
+              value={searchText}
+              onChange={(e) => setSearchText(e.target.value)}
+              type="search"
+              placeholder="Search deals, phones, brands..."
+              className="w-full pl-11 pr-4 py-2 rounded-full border border-yellow-200 bg-white/95 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400"
+              aria-label="Search deals"
+            />
+          </div>
 
-      {/* === TOP TABS just under header === */}
-      <div className="bg-gradient-to-b from-[#f8f1e8cc] to-[#f8f1e8cc] sticky top-[88px] z-30">
+          {/* small right spacer (keeps alignment tidy on wider screens) */}
+          <div className="hidden sm:block w-8" />
+        </div>
+      </header>
+
+      {/* ================= TOP TABS (Frontpage | Forums | Hot Deals) ================= */}
+      <div className="bg-gradient-to-b from-[#f8f1e8cc] to-[#f8f1e8cc] sticky top-[76px] z-40">
         <div className="max-w-5xl mx-auto px-3 py-2">
           <div className="flex items-center gap-3 overflow-auto">
             {["Frontpage", "Forums", "Hot Deals"].map((t) => {
@@ -87,63 +100,66 @@ export default function App() {
         </div>
       </div>
 
-      {/* === main area & footer stays the same ... */}
+      {/* ================= MAIN CONTENT ================= */}
+      <main className="flex-1 max-w-5xl mx-auto px-3 py-6 w-full" style={{ width: "100%" }}>
+        {/* show which tab is active */}
+        <div className="mb-3">
+          <h2 className="text-lg font-semibold text-gray-800">{activeTopTab}</h2>
+        </div>
 
+        {/* Frontpage = deals grid. (We leave search hookup for later — DealsGrid can accept a prop later) */}
+        {activeTopTab === "Frontpage" && <DealsGrid />}
 
+        {/* placeholders for other tabs */}
+        {activeTopTab === "Forums" && (
+          <div className="text-center text-gray-500 py-12">Forums coming soon — will allow user posts & comments.</div>
+        )}
+        {activeTopTab === "Hot Deals" && (
+          <div className="text-center text-gray-500 py-12">Hot Deals coming soon — curated short-list of today’s best offers.</div>
+        )}
 
-      {/* ===== Main Content ===== */}
-      <main className="flex-1 overflow-y-auto pb-40">
-        <div className="max-w-5xl mx-auto px-3 sm:px-4 lg:px-6 pt-4">
-          <h2 className="text-lg font-semibold text-gray-800 mb-3">
-            {activeTopTab}
-          </h2>
+        {/* ================= Footer block (kept in main for SEO) ================= */}
+        <div className="mt-8 pb-6">
+          <div className="bg-white/95 rounded-2xl shadow p-5">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div>
+                <p className="font-semibold text-lg mb-2">About Us</p>
+                <p className="text-sm text-gray-700">
+                  We are building an easy-to-use platform to help you discover the best online deals
+                  across multiple e-commerce stores. Currently running in beta and non-profit.
+                </p>
+              </div>
 
-          {/* Deals grid */}
-          <DealsGrid />
+              <div>
+                <p className="font-semibold text-lg mb-2">Contact</p>
+                <p className="text-sm text-gray-700">
+                  Email:{" "}
+                  <a href="mailto:savrofficialdeals@email.com" className="text-yellow-800 underline">
+                    savrofficialdeals@email.com
+                  </a>
+                  <br />
+                  Instagram:{" "}
+                  <a href="https://instagram.com/savrofficialdeals" className="text-yellow-800 underline">
+                    @savrofficialdeals
+                  </a>
+                </p>
+              </div>
 
-          {/* Footer */}
-          <div className="mt-8 pb-6">
-            <div className="bg-white/95 rounded-2xl shadow p-5">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div>
-                  <p className="font-semibold text-lg mb-2">About Us</p>
-                  <p className="text-sm text-gray-700">
-                    We are building an easy-to-use platform to help you discover the best online deals
-                    across multiple e-commerce stores. Currently running in beta and non-profit.
-                  </p>
-                </div>
-                <div>
-                  <p className="font-semibold text-lg mb-2">Contact</p>
-                  <p className="text-sm text-gray-700">
-                    Email:{" "}
-                    <a href="mailto:savrofficialdeals@email.com" className="text-yellow-800 underline">
-                      savrofficialdeals@email.com
-                    </a>
-                    <br />
-                    Instagram:{" "}
-                    <a href="https://instagram.com/savrofficialdeals" className="text-yellow-800 underline">
-                      @savrofficialdeals
-                    </a>
-                  </p>
-                </div>
-                <div className="flex flex-col justify-between items-start md:items-end">
-                  <nav className="flex gap-4 mb-2">
-                    <a href="#" className="text-sm text-gray-700 hover:text-yellow-800">Home</a>
-                    <a href="#" className="text-sm text-gray-700 hover:text-yellow-800">Categories</a>
-                    <a href="#" className="text-sm text-gray-700 hover:text-yellow-800">Posts</a>
-                    <a href="#" className="text-sm text-gray-700 hover:text-yellow-800">Reels</a>
-                  </nav>
-                  <p className="text-xs text-gray-500">
-                    © {new Date().getFullYear()} Savrdeals. All rights reserved.
-                  </p>
-                </div>
+              <div className="flex flex-col justify-between items-start md:items-end">
+                <nav className="flex gap-4 mb-2">
+                  <a href="#" className="text-sm text-gray-700 hover:text-yellow-800">Home</a>
+                  <a href="#" className="text-sm text-gray-700 hover:text-yellow-800">Categories</a>
+                  <a href="#" className="text-sm text-gray-700 hover:text-yellow-800">Posts</a>
+                  <a href="#" className="text-sm text-gray-700 hover:text-yellow-800">Reels</a>
+                </nav>
+                <p className="text-xs text-gray-500">© {new Date().getFullYear()} Savrdeals. All rights reserved.</p>
               </div>
             </div>
           </div>
         </div>
       </main>
 
-      {/* ===== Bottom Navigation ===== */}
+      {/* ================= BOTTOM NAV (fixed) ================= */}
       <nav className="fixed left-0 right-0 bottom-0 z-50 bg-white/95 border-t border-yellow-100 shadow-inner">
         <div className="max-w-5xl mx-auto px-4">
           <div className="relative">
@@ -166,7 +182,7 @@ export default function App() {
                 <span>Search</span>
               </button>
 
-              {/* Post (big plus) */}
+              {/* Post (big plus) centered elevated */}
               <div className="relative -mt-6">
                 <button
                   onClick={() => setActiveBottom("Post")}
