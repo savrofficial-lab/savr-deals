@@ -50,7 +50,7 @@ export default function App() {
       <img
         src="/savrdeals-logo.png"
         alt="Savrdeals"
-        className="h-18 w-auto object-contain" // your original size
+        className="h-16 w-auto object-contain" // your original size
       />
     </a>
 
