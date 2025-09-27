@@ -1,36 +1,54 @@
+    // src/components/DealsGrid.jsx
 import React, { useEffect, useState } from "react";
 
 export default function DealsGrid() {
   const [deals, setDeals] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState("All");
+  const [loading, setLoading] = useState(true);
 
+  // Fetch deals from our serverless endpoint
   useEffect(() => {
-    fetch("/deals.json")
+    setLoading(true);
+    fetch("/api/deals")
       .then((res) => res.json())
-      .then((data) => setDeals(data))
-      .catch((err) => console.error("Error loading deals:", err));
+      .then((data) => {
+        setDeals(Array.isArray(data) ? data : []);
+      })
+      .catch((err) => {
+        console.error("Error loading deals from /api/deals:", err);
+        setDeals([]);
+      })
+      .finally(() => setLoading(false));
   }, []);
 
-  // unique categories
-  const categories = ["All", ...new Set(deals.map((d) => d.category))];
+  // Build categories list from fetched deals
+  const categories = ["All", ...Array.from(new Set(deals.map((d) => d.category).filter(Boolean)))];
 
-  // filter deals
+  // Filter deals for the UI
   const filteredDeals =
     selectedCategory === "All"
       ? deals
       : deals.filter((d) => d.category === selectedCategory);
 
+  if (loading) {
+    return (
+      <p className="text-center text-gray-500 py-8">
+        Loading deals...
+      </p>
+    );
+  }
+
   if (!deals || deals.length === 0) {
     return (
       <p className="text-center text-gray-500">
-        No deals yet — update public/deals.json
+        No deals yet — update public/deals.json or check /api/deals
       </p>
     );
   }
 
   return (
     <div>
-      {/* category buttons */}
+      {/* Category Buttons */}
       <div className="flex flex-wrap gap-2 mb-6 justify-center">
         {categories.map((cat) => (
           <button
@@ -47,7 +65,7 @@ export default function DealsGrid() {
         ))}
       </div>
 
-      {/* deals grid */}
+      {/* Deals Grid */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
         {filteredDeals.map((deal, idx) => (
           <div
@@ -58,6 +76,7 @@ export default function DealsGrid() {
               <img
                 src={deal.image}
                 alt={deal.title}
+                loading="lazy"
                 className="w-full h-48 object-contain mb-3 transition-transform duration-300 hover:scale-105"
               />
             </div>
@@ -67,13 +86,9 @@ export default function DealsGrid() {
             </h2>
 
             <div className="mt-1 flex items-center space-x-2">
-              <span className="text-lg font-bold text-gray-900">
-                ₹{deal.price}
-              </span>
+              <span className="text-lg font-bold text-gray-900">₹{deal.price}</span>
               {deal.oldPrice && (
-                <span className="text-sm text-gray-500 line-through">
-                  ₹{deal.oldPrice}
-                </span>
+                <span className="text-sm text-gray-500 line-through">₹{deal.oldPrice}</span>
               )}
             </div>
 
