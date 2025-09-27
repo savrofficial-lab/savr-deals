@@ -11,10 +11,10 @@ export default function DealsGrid() {
       .catch((err) => console.error("Error loading deals:", err));
   }, []);
 
-  // Get unique categories
+  // unique categories
   const categories = ["All", ...new Set(deals.map((d) => d.category))];
 
-  // Filter deals
+  // filter deals
   const filteredDeals =
     selectedCategory === "All"
       ? deals
@@ -30,16 +30,16 @@ export default function DealsGrid() {
 
   return (
     <div>
-      {/* Category Buttons */}
+      {/* category buttons */}
       <div className="flex flex-wrap gap-2 mb-6 justify-center">
         {categories.map((cat) => (
           <button
             key={cat}
             onClick={() => setSelectedCategory(cat)}
-            className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+            className={`px-4 py-2 rounded-full text-sm font-medium transition ${
               selectedCategory === cat
-                ? "bg-sky-500 text-white shadow"
-                : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                ? "bg-yellow-800 text-white shadow"
+                : "bg-white text-gray-700 border border-gray-200 hover:bg-gray-100"
             }`}
           >
             {cat}
@@ -47,24 +47,29 @@ export default function DealsGrid() {
         ))}
       </div>
 
-      {/* Deals Grid */}
+      {/* deals grid */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
         {filteredDeals.map((deal, idx) => (
           <div
             key={idx}
-            className="bg-[#f8f1e8] rounded-2xl shadow-lg hover:shadow-2xl transition transform hover:-translate-y-1 flex flex-col p-4"
+            className="rounded-2xl bg-gradient-to-b from-[#fff9f2] to-[#fef5e6] border border-yellow-100 shadow-md hover:shadow-xl transition-transform hover:-translate-y-1 flex flex-col p-4"
           >
-            <img
-              src={deal.image}
-              alt={deal.title}
-              className="w-full h-48 object-contain mb-4 transition-transform hover:scale-105"
-            />
-            <h2 className="text-lg font-semibold mb-2 text-gray-800">
+            <div className="relative">
+              <img
+                src={deal.image}
+                alt={deal.title}
+                className="w-full h-48 object-contain mb-3 transition-transform duration-300 hover:scale-105"
+              />
+            </div>
+
+            <h2 className="text-base sm:text-lg font-semibold mb-1 text-gray-800">
               {deal.title}
             </h2>
 
-            <div className="mt-2 flex items-center space-x-2">
-              <span className="text-xl font-bold text-gray-900">₹{deal.price}</span>
+            <div className="mt-1 flex items-center space-x-2">
+              <span className="text-lg font-bold text-gray-900">
+                ₹{deal.price}
+              </span>
               {deal.oldPrice && (
                 <span className="text-sm text-gray-500 line-through">
                   ₹{deal.oldPrice}
@@ -76,7 +81,7 @@ export default function DealsGrid() {
               href={deal.link}
               target="_blank"
               rel="noopener noreferrer"
-              className="mt-auto bg-sky-500 hover:bg-sky-600 text-white font-semibold py-2 px-4 rounded-lg text-center transition"
+              className="mt-auto bg-yellow-700 hover:bg-yellow-800 text-white font-semibold py-2 px-4 rounded-xl text-center transition-colors"
             >
               Shop Now
             </a>
