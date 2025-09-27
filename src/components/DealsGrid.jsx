@@ -4,13 +4,12 @@ import React, { useEffect, useState } from "react";
 export default function DealsGrid() {
   const [deals, setDeals] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState("All");
+  const [allCategories, setAllCategories] = useState(["All"]);
+  const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
 
-  // Build categories list after fetching deals (from first load)
-  const [allCategories, setAllCategories] = useState(["All"]);
-
+  // On first load, fetch all deals to build category list
   useEffect(() => {
-    // On first load fetch everything so we can build category list
     fetch("/api/deals")
       .then((res) => res.json())
       .then((data) => {
@@ -24,13 +23,15 @@ export default function DealsGrid() {
       .catch((err) => console.error("Error fetching categories:", err));
   }, []);
 
-  // Fetch deals whenever category changes
+  // Fetch deals whenever category or search changes
   useEffect(() => {
     setLoading(true);
-    // build query param for category (server filters)
     const params = new URLSearchParams();
     if (selectedCategory && selectedCategory !== "All") {
       params.set("category", selectedCategory);
+    }
+    if (search.trim() !== "") {
+      params.set("q", search.trim());
     }
 
     fetch(`/api/deals?${params.toString()}`)
@@ -43,26 +44,42 @@ export default function DealsGrid() {
         setDeals([]);
       })
       .finally(() => setLoading(false));
-  }, [selectedCategory]);
+  }, [selectedCategory, search]);
 
   if (loading) {
     return (
-      <p className="text-center text-gray-500 py-8">
-        Loading deals…
-      </p>
+      <p className="text-center text-gray-500 py-8">Loading deals…</p>
     );
   }
 
   if (!deals || deals.length === 0) {
     return (
-      <p className="text-center text-gray-500">
-        No deals yet — update public/deals.json or check /api/deals
-      </p>
+      <div className="text-center text-gray-500">
+        <input
+          type="text"
+          placeholder="Search deals…"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="border rounded-lg px-3 py-2 mb-4 w-full max-w-sm"
+        />
+        <p>No deals yet — update public/deals.json or check /api/deals</p>
+      </div>
     );
   }
 
   return (
     <div>
+      {/* Search Box */}
+      <div className="flex justify-center mb-4">
+        <input
+          type="text"
+          placeholder="Search deals…"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="border rounded-lg px-3 py-2 w-full max-w-sm"
+        />
+      </div>
+
       {/* Category Buttons */}
       <div className="flex flex-wrap gap-2 mb-6 justify-center">
         {allCategories.map((cat) => (
