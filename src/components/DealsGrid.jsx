@@ -1,4 +1,4 @@
-    // src/components/DealsGrid.jsx
+// src/components/DealsGrid.jsx
 import React, { useEffect, useState } from "react";
 
 export default function DealsGrid() {
@@ -6,10 +6,34 @@ export default function DealsGrid() {
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [loading, setLoading] = useState(true);
 
-  // Fetch deals from our serverless endpoint
+  // Build categories list after fetching deals (from first load)
+  const [allCategories, setAllCategories] = useState(["All"]);
+
+  useEffect(() => {
+    // On first load fetch everything so we can build category list
+    fetch("/api/deals")
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data)) {
+          setAllCategories([
+            "All",
+            ...Array.from(new Set(data.map((d) => d.category).filter(Boolean))),
+          ]);
+        }
+      })
+      .catch((err) => console.error("Error fetching categories:", err));
+  }, []);
+
+  // Fetch deals whenever category changes
   useEffect(() => {
     setLoading(true);
-    fetch("/api/deals")
+    // build query param for category (server filters)
+    const params = new URLSearchParams();
+    if (selectedCategory && selectedCategory !== "All") {
+      params.set("category", selectedCategory);
+    }
+
+    fetch(`/api/deals?${params.toString()}`)
       .then((res) => res.json())
       .then((data) => {
         setDeals(Array.isArray(data) ? data : []);
@@ -19,21 +43,12 @@ export default function DealsGrid() {
         setDeals([]);
       })
       .finally(() => setLoading(false));
-  }, []);
-
-  // Build categories list from fetched deals
-  const categories = ["All", ...Array.from(new Set(deals.map((d) => d.category).filter(Boolean)))];
-
-  // Filter deals for the UI
-  const filteredDeals =
-    selectedCategory === "All"
-      ? deals
-      : deals.filter((d) => d.category === selectedCategory);
+  }, [selectedCategory]);
 
   if (loading) {
     return (
       <p className="text-center text-gray-500 py-8">
-        Loading deals...
+        Loading deals…
       </p>
     );
   }
@@ -50,7 +65,7 @@ export default function DealsGrid() {
     <div>
       {/* Category Buttons */}
       <div className="flex flex-wrap gap-2 mb-6 justify-center">
-        {categories.map((cat) => (
+        {allCategories.map((cat) => (
           <button
             key={cat}
             onClick={() => setSelectedCategory(cat)}
@@ -67,7 +82,7 @@ export default function DealsGrid() {
 
       {/* Deals Grid */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
-        {filteredDeals.map((deal, idx) => (
+        {deals.map((deal, idx) => (
           <div
             key={idx}
             className="rounded-2xl bg-gradient-to-b from-[#fff9f2] to-[#fef5e6] border border-yellow-100 shadow-md hover:shadow-xl transition-transform hover:-translate-y-1 flex flex-col p-4"
@@ -86,9 +101,13 @@ export default function DealsGrid() {
             </h2>
 
             <div className="mt-1 flex items-center space-x-2">
-              <span className="text-lg font-bold text-gray-900">₹{deal.price}</span>
+              <span className="text-lg font-bold text-gray-900">
+                ₹{deal.price}
+              </span>
               {deal.oldPrice && (
-                <span className="text-sm text-gray-500 line-through">₹{deal.oldPrice}</span>
+                <span className="text-sm text-gray-500 line-through">
+                  ₹{deal.oldPrice}
+                </span>
               )}
             </div>
 
