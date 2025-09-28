@@ -216,21 +216,20 @@ export default function App() {
               </div>
 
               {/* My Coins */}
- <button
-  onClick={() => {
-    setActiveBottom("Coins");
-    setActiveTopTab("Frontpage");
-    setShowUserMenu(false);
-    alert("My Coins — feature coming soon.");
-  }}
-  className={`flex flex-col items-center text-xs ${
-    activeBottom === "Coins" ? "text-yellow-800" : "text-gray-600"
-  }`}
->
-  <FaRegCopyright size={20} />
-  <span>My Coins</span>
-</button>
-              
+              <button
+                onClick={() => {
+                  setActiveBottom("Coins");
+                  setActiveTopTab("Frontpage");
+                  setShowUserMenu(false);
+                  // open coins panel in future
+                  alert("My Coins — feature coming soon.");
+                }}
+                className={`flex flex-col items-center text-xs ${activeBottom === "Coins" ? "text-yellow-800" : "text-gray-600"}`}
+              >
+                <IconCoin />
+                <span>My Coins</span>
+              </button>
+
               {/* You / Account */}
               <div className="relative">
                 <button
@@ -251,7 +250,7 @@ export default function App() {
                       { label: "Profile", action: () => alert("Profile (coming soon)") },
                       { label: "My Orders", action: () => alert("My Orders (coming soon)") },
                       { label: "Notifications", action: () => alert("Notifications (coming soon)") },
-                      { label: "Alert", action: () => alert("Alert (coming soon)") },
+                      { label: "Wishlist", action: () => alert("Wishlist (coming soon)") },
                       { label: "Logout", action: () => alert("Logout (not implemented)") },
                     ].map((item) => (
                       <button
