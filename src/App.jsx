@@ -226,7 +226,7 @@ export default function App() {
                 }}
                 className={`flex flex-col items-center text-xs ${activeBottom === "Coins" ? "text-yellow-800" : "text-gray-600"}`}
               >
-                <IconCoin />
+                <span className="text-xl">©️</span>
                 <span>My Coins</span>
               </button>
 
