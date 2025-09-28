@@ -216,20 +216,21 @@ export default function App() {
               </div>
 
               {/* My Coins */}
-              <button
-                onClick={() => {
-                  setActiveBottom("Coins");
-                  setActiveTopTab("Frontpage");
-                  setShowUserMenu(false);
-                  // open coins panel in future
-                  alert("My Coins — feature coming soon.");
-                }}
-                className={`flex flex-col items-center text-xs ${activeBottom === "Coins" ? "text-yellow-800" : "text-gray-600"}`}
-              >
-                <IconCoin />
-                <span>My Coins</span>
-              </button>
-
+ <button
+  onClick={() => {
+    setActiveBottom("Coins");
+    setActiveTopTab("Frontpage");
+    setShowUserMenu(false);
+    alert("My Coins — feature coming soon.");
+  }}
+  className={`flex flex-col items-center text-xs ${
+    activeBottom === "Coins" ? "text-yellow-800" : "text-gray-600"
+  }`}
+>
+  <FaRegCopyright size={20} />
+  <span>My Coins</span>
+</button>
+              
               {/* You / Account */}
               <div className="relative">
                 <button
