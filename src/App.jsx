@@ -2,8 +2,10 @@
 import React, { useEffect, useState } from "react";
 import DealsGrid from "./components/DealsGrid";
 import MyCoins from "./components/MyCoins";
+import LoginModal from "./components/LoginModal";
+import { supabase } from "./supabaseClient";
 
-/* ---------- Inline Icons ---------- */
+/* ---------- Icons (same as before) ---------- */
 function IconHome({ className = "h-6 w-6" }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden>
@@ -36,43 +38,70 @@ function IconUser({ className = "h-6 w-6" }) {
     </svg>
   );
 }
-function IconPostLetter({ className = "h-6 w-6" }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden>
-      <text x="12" y="15" textAnchor="middle" fontSize="12" fontWeight="700" fill="white">c</text>
-    </svg>
-  );
-}
 /* ---------------------------------------------------- */
 
 export default function App() {
-  // top tabs
-  const [activeTopTab, setActiveTopTab] = useState("Frontpage");
-  // bottom nav
-  const [activeBottom, setActiveBottom] = useState("Home");
+  // auth state: current user object or null
+  const [user, setUser] = useState(null);
 
-  // search states
+  // UI states
+  const [activeTopTab, setActiveTopTab] = useState("Frontpage");
+  const [activeBottom, setActiveBottom] = useState("Home");
   const [searchRaw, setSearchRaw] = useState("");
   const [search, setSearch] = useState("");
-
-  // account menu
   const [showUserMenu, setShowUserMenu] = useState(false);
 
-  // debounce the search so typing doesn't re-render every keystroke (keyboard won't collapse)
+  // Login modal + intended tab (used when user clicked a protected tab while logged out)
+  const [showLoginModal, setShowLoginModal] = useState(false);
+  const [intendedTab, setIntendedTab] = useState(null);
+
+  // debounce the search so typing doesn't re-render every keystroke
   useEffect(() => {
     const t = setTimeout(() => setSearch(searchRaw.trim()), 350);
     return () => clearTimeout(t);
   }, [searchRaw]);
 
-  // When bottom nav changes we close the user menu
-  useEffect(() => setShowUserMenu(false), [activeBottom]);
+  // subscribe to auth events and get current user
+  useEffect(() => {
+    // get existing session (if user already signed in)
+    supabase.auth.getUser().then(({ data }) => {
+      setUser(data?.user ?? null);
+    });
 
-  // Decide main content based on bottom nav (Home = top-tabs + Frontpage)
+    // listen for login/logout
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+      const u = session?.user ?? null;
+      setUser(u);
+
+      // if user just logged in and we have an intendedTab, navigate there
+      if (u && intendedTab) {
+        setActiveBottom(intendedTab);
+        setIntendedTab(null);
+        setShowLoginModal(false);
+      }
+    });
+
+    return () => listener.subscription.unsubscribe();
+  }, [intendedTab]);
+
+  // helper: when a protected tab is clicked
+  function handleProtectedClick(tabName) {
+    if (user) {
+      setActiveBottom(tabName);
+    } else {
+      // remember which tab we wanted, then open login modal
+      setIntendedTab(tabName);
+      setShowLoginModal(true);
+    }
+    // also close user menu if open
+    setShowUserMenu(false);
+  }
+
+  // render main area based on activeBottom
   const renderMain = () => {
     if (activeBottom === "Home") {
       return (
         <>
-          {/* Top tabs */}
           <div className="mb-3">
             <h2 className="text-lg font-semibold text-gray-800">{activeTopTab}</h2>
           </div>
@@ -98,7 +127,8 @@ export default function App() {
     }
 
     if (activeBottom === "Coins") {
-      return <MyCoins />; // MyCoins handles fetching real data
+      // pass logged-in user's id to MyCoins (it will fetch /api/coins)
+      return <MyCoins userId={user?.id} />;
     }
 
     if (activeBottom === "You") {
@@ -106,7 +136,23 @@ export default function App() {
         <div className="py-8">
           <div className="bg-white rounded-2xl shadow p-4">
             <p className="font-semibold">Profile</p>
-            <p className="text-sm text-gray-600 mt-2">Profile features will be added later. For now use the small account menu (top-right).</p>
+            <p className="text-sm text-gray-600 mt-2">Profile will be available after login.</p>
+            <div className="mt-4">
+              <p className="text-sm"><strong>Signed in as:</strong> {user?.email}</p>
+              <div className="mt-3">
+                <button
+                  onClick={async () => {
+                    await supabase.auth.signOut();
+                    setUser(null);
+                    setActiveBottom("Home");
+                    setShowUserMenu(false);
+                  }}
+                  className="px-4 py-2 border rounded"
+                >
+                  Logout
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       );
@@ -142,7 +188,7 @@ export default function App() {
         </div>
       </header>
 
-      {/* TOP TABS (visible when Home is active) */}
+      {/* TOP TABS (Home only) */}
       {activeBottom === "Home" && (
         <div className="bg-gradient-to-b from-[#f8f1e8cc] to-[#f8f1e8cc] sticky top-[72px] z-40">
           <div className="max-w-5xl mx-auto px-3 py-2">
@@ -164,13 +210,13 @@ export default function App() {
       <main className="flex-1 max-w-5xl mx-auto px-3 py-6 w-full">
         {renderMain()}
 
-        {/* Full footer in main for SEO */}
+        {/* Footer (kept for SEO) */}
         <div className="mt-8 pb-6">
           <div className="bg-white/95 rounded-2xl shadow p-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div>
                 <p className="font-semibold text-lg mb-2">About Us</p>
-                <p className="text-sm text-gray-700">Savrdeals helps you discover the best online deals across multiple e-commerce stores. We curate big discounts into a clean feed.</p>
+                <p className="text-sm text-gray-700">Savrdeals helps you discover the best online deals across multiple stores.</p>
               </div>
 
               <div>
@@ -195,7 +241,7 @@ export default function App() {
         </div>
       </main>
 
-      {/* BOTTOM NAV */}
+      {/* bottom nav */}
       <nav className="fixed left-0 right-0 bottom-0 z-50 bg-white/95 border-t border-yellow-100 shadow-inner">
         <div className="max-w-5xl mx-auto px-4">
           <div className="relative">
@@ -206,47 +252,33 @@ export default function App() {
                 <span>Home</span>
               </button>
 
-               {/* Post (big plus, centered elevated) */}
-              <div className="relative -mt-6">
-                <button
-                  onClick={() => {
-                    setActiveBottom("Post");
-                    setShowUserMenu(false);
-                    alert("Post flow coming soon (admin only for now).");
-                  }}
-                  className="bg-yellow-800 hover:bg-yellow-900 text-white rounded-full p-3 shadow-lg flex items-center justify-center"
-                  aria-label="Post a deal"
-                >
-                  <IconPlus className="h-6 w-6" />
-                </button>
-                <div className="text-center text-xs text-gray-700 mt-1">Post</div>
-              </div>
+              {/* Post (center) */}
+              <div className="relative -mt-6">
+                <button onClick={() => setActiveBottom("Post")} className="bg-yellow-800 hover:bg-yellow-900 text-white rounded-full p-3 shadow-lg flex items-center justify-center" aria-label="Post">
+                  <span className="text-lg font-bold">c</span>
+                </button>
+                <div className="text-center text-xs text-gray-700 mt-1">Post</div>
+              </div>
 
-              {/* My Coins */}
-              <button onClick={() => setActiveBottom("Coins")} className={`flex flex-col items-center text-xs ${activeBottom === "Coins" ? "text-yellow-800" : "text-gray-600"}`}>
+              {/* My Coins (protected) */}
+              <button onClick={() => handleProtectedClick("Coins")} className={`flex flex-col items-center text-xs ${activeBottom === "Coins" ? "text-yellow-800" : "text-gray-600"}`}>
                 <IconCoin />
                 <span>My Coins</span>
               </button>
 
-              {/* You */}
+              {/* You (protected) */}
               <div className="relative">
-                <button onClick={() => { setActiveBottom("You"); setShowUserMenu((s) => !s); }} className={`flex flex-col items-center text-xs ${activeBottom === "You" ? "text-yellow-800" : "text-gray-600"}`}>
+                <button onClick={() => handleProtectedClick("You")} className={`flex flex-col items-center text-xs ${activeBottom === "You" ? "text-yellow-800" : "text-gray-600"}`}>
                   <IconUser />
                   <span>You</span>
                 </button>
 
-                {/* account dropdown */}
-                {showUserMenu && (
+                {/* small account menu (optional) */}
+                {showUserMenu && user && (
                   <div className="absolute bottom-12 right-0 bg-white border rounded-lg shadow-lg w-44 text-sm">
-                    {[
-                      { label: "Profile", action: () => alert("Profile coming soon") },
-                      { label: "My Orders", action: () => alert("My Orders coming soon") },
-                      { label: "Notifications", action: () => alert("Notifications coming soon") },
-                      { label: "Wishlist", action: () => alert("Wishlist coming soon") },
-                      { label: "Logout", action: () => alert("Logout not implemented") },
-                    ].map((item) => (
-                      <button key={item.label} onClick={() => item.action()} className="w-full text-left px-4 py-2 hover:bg-gray-100">{item.label}</button>
-                    ))}
+                    <button onClick={() => setActiveBottom("You")} className="w-full text-left px-4 py-2 hover:bg-gray-100">Profile</button>
+                    <button onClick={() => alert("Orders coming soon")} className="w-full text-left px-4 py-2 hover:bg-gray-100">My Orders</button>
+                    <button onClick={async () => { await supabase.auth.signOut(); setUser(null); setActiveBottom("Home"); setShowUserMenu(false); }} className="w-full text-left px-4 py-2 hover:bg-gray-100">Logout</button>
                   </div>
                 )}
               </div>
@@ -254,6 +286,9 @@ export default function App() {
           </div>
         </div>
       </nav>
+
+      {/* Login modal (shown only when needed) */}
+      {showLoginModal && <LoginModal onClose={() => setShowLoginModal(false)} />}
     </div>
   );
 }
