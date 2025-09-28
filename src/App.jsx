@@ -250,7 +250,7 @@ export default function App() {
                       { label: "Profile", action: () => alert("Profile (coming soon)") },
                       { label: "My Orders", action: () => alert("My Orders (coming soon)") },
                       { label: "Notifications", action: () => alert("Notifications (coming soon)") },
-                      { label: "Wishlist", action: () => alert("Wishlist (coming soon)") },
+                      { label: "Alert", action: () => alert("Alert (coming soon)") },
                       { label: "Logout", action: () => alert("Logout (not implemented)") },
                     ].map((item) => (
                       <button
