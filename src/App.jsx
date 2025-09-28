@@ -206,13 +206,21 @@ export default function App() {
                 <span>Home</span>
               </button>
 
-              {/* Post (center) — small "c" letter */}
-              <div className="relative -mt-6">
-                <button onClick={() => { setActiveBottom("Post"); }} className="bg-yellow-800 hover:bg-yellow-900 text-white rounded-full p-3 shadow-lg flex items-center justify-center" aria-label="Post">
-                  <span className="text-lg font-bold">c</span>
-                </button>
-                <div className="text-center text-xs text-gray-700 mt-1">Post</div>
-              </div>
+               {/* Post (big plus, centered elevated) */}
+              <div className="relative -mt-6">
+                <button
+                  onClick={() => {
+                    setActiveBottom("Post");
+                    setShowUserMenu(false);
+                    alert("Post flow coming soon (admin only for now).");
+                  }}
+                  className="bg-yellow-800 hover:bg-yellow-900 text-white rounded-full p-3 shadow-lg flex items-center justify-center"
+                  aria-label="Post a deal"
+                >
+                  <IconPlus className="h-6 w-6" />
+                </button>
+                <div className="text-center text-xs text-gray-700 mt-1">Post</div>
+              </div>
 
               {/* My Coins */}
               <button onClick={() => setActiveBottom("Coins")} className={`flex flex-col items-center text-xs ${activeBottom === "Coins" ? "text-yellow-800" : "text-gray-600"}`}>
