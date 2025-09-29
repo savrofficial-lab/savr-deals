@@ -12,7 +12,14 @@ function IconHome({ className = "h-6 w-6" }) { /* same as before */ return (<svg
 function IconSearch({ className = "h-5 w-5" }) { return (<svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden><path d="M21 21l-4.35-4.35" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/><circle cx="11" cy="11" r="6" stroke="currentColor" strokeWidth="1.6" /></svg>); }
 function IconCoin({ className = "h-6 w-6" }) { return (<svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden><circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.6" /><text x="12" y="15" textAnchor="middle" fontSize="10" fontWeight="700" fill="currentColor">c</text></svg>); }
 function IconUser({ className = "h-6 w-6" }) { return (<svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden><circle cx="12" cy="8" r="4" stroke="currentColor" strokeWidth="1.6" /><path d="M4 20c1-4 7-4 8-4s7 0 8 4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" /></svg>); }
-
+function IconPlus({ className = "h-6 w-6" }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden>
+      <path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+/* ---------------------------- */
 /* ---------------------------------------------------- */
 
 export default function App() {
@@ -132,7 +139,9 @@ export default function App() {
               </div>
               <div>
                 <p className="font-semibold text-lg mb-2">Contact</p>
-                <p className="text-sm text-gray-700">Email: <a href="mailto:savrofficialdeals@email.com" className="text-yellow-800 underline">savrofficialdeals@email.com</a></p>
+                <p className="text-sm text-gray-700">Email: <a href="mailto:savrofficialdeals@email.com" className="text-yellow-800 underline">savrofficialdeals@email.com</a>
+                                                     Instagram: <a href="https://instagram.com/savrofficialdeals" className="text-yellow-800 underline">@savrofficialdeals</a>
+                </p>
               </div>
               <div className="flex flex-col justify-between items-start md:items-end">
                 <nav className="flex gap-4 mb-2">
@@ -153,7 +162,7 @@ export default function App() {
             {/* Post (requires login) */}
             <div className="relative -mt-6">
               <button onClick={() => requireLoginFor("Post")} className="bg-yellow-800 hover:bg-yellow-900 text-white rounded-full p-3 shadow-lg flex items-center justify-center" aria-label="Post">
-                <span className="text-lg font-bold">c</span>
+                <span className="text-lg font-bold">+</span>
               </button>
               <div className="text-center text-xs text-gray-700 mt-1">Post</div>
             </div>
