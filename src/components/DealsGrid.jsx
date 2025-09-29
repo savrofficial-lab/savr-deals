@@ -1,101 +1,64 @@
-// src/components/DealsGrid.jsx
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
+import { supabase } from "../supabaseClient";
 
-export default function DealsGrid({ search = "" }) {
+export default function DealsGrid() {
   const [deals, setDeals] = useState([]);
-  const [selectedCategory, setSelectedCategory] = useState("All");
-  const [allCategories, setAllCategories] = useState(["All"]);
   const [loading, setLoading] = useState(true);
 
-  // Populate category list once (from all deals)
   useEffect(() => {
-    fetch("/api/deals")
-      .then((res) => res.json())
-      .then((data) => {
-        if (Array.isArray(data)) {
-          setAllCategories(["All", ...Array.from(new Set(data.map((d) => d.category).filter(Boolean)))]);
-        }
-      })
-      .catch((err) => console.error("Error fetching categories:", err));
+    async function fetchDeals() {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from("deals")
+        .select("*")
+        .eq("published", true)
+        .order("created_at", { ascending: false });
+
+      if (error) {
+        console.error("Error fetching deals:", error);
+      } else {
+        setDeals(data);
+      }
+      setLoading(false);
+    }
+
+    fetchDeals();
   }, []);
 
-  // Fetch deals whenever selectedCategory or (debounced) search changes
-  useEffect(() => {
-    setLoading(true);
-    const controller = new AbortController();
-
-    const params = new URLSearchParams();
-    if (selectedCategory && selectedCategory !== "All") params.set("category", selectedCategory);
-    if (search && search.trim() !== "") params.set("q", search.trim());
-
-    const query = params.toString();
-    const url = `/api/deals${query ? "?" + query : ""}`;
-
-    fetch(url, { signal: controller.signal })
-      .then((res) => res.json())
-      .then((data) => {
-        setDeals(Array.isArray(data) ? data : []);
-      })
-      .catch((err) => {
-        if (err.name !== "AbortError") {
-          console.error("Error loading deals from /api/deals:", err);
-          setDeals([]);
-        }
-      })
-      .finally(() => setLoading(false));
-
-    return () => controller.abort();
-  }, [selectedCategory, search]);
-
   if (loading) {
-    return <p className="text-center text-gray-500 py-8">Loading deals…</p>;
+    return <div className="p-4 text-center">Loading deals…</div>;
   }
 
-  if (!deals || deals.length === 0) {
-    return <p className="text-center text-gray-500">No deals yet — update public/deals.json or check /api/deals</p>;
+  if (!deals.length) {
+    return <div className="p-4 text-center">No deals yet.</div>;
   }
 
   return (
-    <div>
-      {/* Category Buttons */}
-      <div className="flex flex-wrap gap-2 mb-6 justify-center">
-        {allCategories.map((cat) => (
-          <button
-            key={cat}
-            onClick={() => setSelectedCategory(cat)}
-            className={`px-4 py-2 rounded-full text-sm font-medium transition ${
-              selectedCategory === cat ? "bg-yellow-800 text-white shadow" : "bg-white text-gray-700 border border-gray-200 hover:bg-gray-100"
-            }`}
-          >
-            {cat}
-          </button>
-        ))}
-      </div>
-
-      {/* Deals Grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
-        {deals.map((deal, idx) => (
-          <div
-            key={idx}
-            className="rounded-2xl bg-gradient-to-b from-[#fff9f2] to-[#fef5e6] border border-yellow-100 shadow-md hover:shadow-xl transition-transform hover:-translate-y-1 flex flex-col p-4"
-          >
-            <div className="relative">
-              <img src={deal.image} alt={deal.title} loading="lazy" className="w-full h-48 object-contain mb-3 transition-transform duration-300 hover:scale-105" />
-            </div>
-
-            <h2 className="text-base sm:text-lg font-semibold mb-1 text-gray-800">{deal.title}</h2>
-
-            <div className="mt-1 flex items-center space-x-2">
-              <span className="text-lg font-bold text-gray-900">₹{deal.price}</span>
-              {deal.oldPrice && <span className="text-sm text-gray-500 line-through">₹{deal.oldPrice}</span>}
-            </div>
-
-            <a href={deal.link} target="_blank" rel="noopener noreferrer" className="mt-auto bg-yellow-700 hover:bg-yellow-800 text-white font-semibold py-2 px-4 rounded-xl text-center transition-colors">
-              Shop Now
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
+      {deals.map((deal) => (
+        <div key={deal.id} className="bg-white rounded-xl shadow p-4">
+          <img
+            src={deal.image_url}
+            alt={deal.title}
+            className="w-full h-48 object-cover rounded-lg"
+          />
+          <h2 className="text-lg font-bold mt-2">{deal.title}</h2>
+          <p className="text-gray-600 text-sm">{deal.description}</p>
+          <div className="flex justify-between items-center mt-2">
+            <span className="text-green-600 font-semibold">
+              ₹{deal.price}
+            </span>
+            <a
+              href={deal.affiliate_link}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-500 underline"
+            >
+              Shop now
             </a>
           </div>
-        ))}
-      </div>
+        </div>
+      ))}
     </div>
   );
 }
