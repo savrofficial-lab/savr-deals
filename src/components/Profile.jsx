@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from "react";
 import { supabase } from "../supabaseClient";
 
-export default function Profile({ userId }) {
+export default function Profile({ userId, userEmail }) {
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState({
     full_name: "",
@@ -17,18 +17,18 @@ export default function Profile({ userId }) {
       setLoading(false);
       return;
     }
-    setLoading(true);
     let mounted = true;
-
     (async function load() {
+      setLoading(true);
       const { data, error } = await supabase
         .from("profiles")
         .select("full_name,username,avatar_url,bio,created_at")
         .eq("user_id", userId)
         .single();
+
       if (!mounted) return;
       if (error && error.code === "PGRST116") {
-        // no row — leave defaults
+        // no row yet
         setProfile({
           full_name: "",
           username: "",
@@ -47,10 +47,7 @@ export default function Profile({ userId }) {
       }
       setLoading(false);
     })();
-
-    return () => {
-      mounted = false;
-    };
+    return () => (mounted = false);
   }, [userId]);
 
   async function saveProfile(e) {
@@ -64,8 +61,6 @@ export default function Profile({ userId }) {
       avatar_url: profile.avatar_url || null,
       bio: profile.bio || null,
     };
-
-    // upsert uses primary key (user_id) to insert or update
     const { error } = await supabase.from("profiles").upsert(payload);
     if (error) {
       alert("Error saving profile: " + error.message);
@@ -77,7 +72,6 @@ export default function Profile({ userId }) {
     setLoading(false);
   }
 
-  // small UI for avatar preview
   const AvatarPreview = ({ src }) =>
     src ? (
       <img src={src} alt="avatar" className="h-20 w-20 rounded-full object-cover" />
@@ -96,7 +90,7 @@ export default function Profile({ userId }) {
   if (loading) return <p className="text-center text-gray-500 py-8">Loading profile…</p>;
 
   return (
-    <div className="py-6 max-w-xl mx-auto">
+    <div className="py-6 max-w-3xl mx-auto">
       <div className="bg-white rounded-2xl shadow p-5">
         <div className="flex items-center gap-4">
           <AvatarPreview src={profile.avatar_url} />
@@ -105,6 +99,10 @@ export default function Profile({ userId }) {
               <div>
                 <div className="text-lg font-semibold">{profile.full_name || "No name yet"}</div>
                 <div className="text-sm text-gray-500">@{profile.username || "username"}</div>
+                {/* show email too */}
+                {userEmail && (
+                  <div className="text-xs text-gray-400">{userEmail}</div>
+                )}
               </div>
               <button
                 onClick={() => setEditing((s) => !s)}
@@ -151,17 +149,17 @@ export default function Profile({ userId }) {
         )}
       </div>
 
-      {/* show this user's posted deals */}
+      {/* user's posted deals table */}
       <div className="mt-6">
         <h3 className="font-semibold mb-3">Your posts</h3>
-        <UserDealsList userId={userId} />
+        <UserDealsTable userId={userId} />
       </div>
     </div>
   );
 }
 
-/* Small helper to list user's deals and allow delete/edit */
-function UserDealsList({ userId }) {
+/* horizontal mini-table of user deals */
+function UserDealsTable({ userId }) {
   const [deals, setDeals] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -172,7 +170,7 @@ function UserDealsList({ userId }) {
       setLoading(true);
       const { data, error } = await supabase
         .from("deals")
-        .select("id,title,price,old_price,image,created_at,published")
+        .select("id,title,category,link")
         .eq("posted_by", userId)
         .order("created_at", { ascending: false });
 
@@ -202,20 +200,34 @@ function UserDealsList({ userId }) {
   if (!deals.length) return <p className="text-sm text-gray-500">You haven't posted anything yet.</p>;
 
   return (
-    <div className="space-y-3">
+    <div className="divide-y divide-gray-200 border rounded">
+      <div className="grid grid-cols-4 font-semibold bg-gray-50 text-sm p-2">
+        <div>Product</div>
+        <div>Category</div>
+        <div className="text-center">Visit</div>
+        <div className="text-center">Delete</div>
+      </div>
       {deals.map((d) => (
-        <div key={d.id} className="bg-white rounded-lg p-3 shadow flex gap-3 items-center">
-          <img src={d.image || "/placeholder.png"} alt={d.title} className="h-16 w-16 object-contain rounded" />
-          <div className="flex-1">
-            <div className="font-medium">{d.title}</div>
-            <div className="text-xs text-gray-500">₹{d.price} {d.old_price ? <span className="line-through text-xs ml-2">₹{d.old_price}</span> : null}</div>
-            <div className="text-xs text-gray-400">{new Date(d.created_at).toLocaleString()}</div>
+        <div key={d.id} className="grid grid-cols-4 items-center text-sm p-2">
+          <div className="truncate">{d.title}</div>
+          <div className="truncate">{d.category || "-"}</div>
+          <div className="text-center">
+            <a
+              href={d.link}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-600 underline"
+            >
+              Go
+            </a>
           </div>
-          <div className="text-right text-xs">
-            <div className={`px-2 py-1 rounded ${d.published ? "bg-green-100 text-green-800" : "bg-yellow-100 text-yellow-800"}`}>
-              {d.published ? "Published" : "Pending"}
-            </div>
-            <button onClick={() => handleDelete(d.id)} className="mt-2 text-red-600 text-sm">Delete</button>
+          <div className="text-center">
+            <button
+              onClick={() => handleDelete(d.id)}
+              className="text-red-600 hover:underline"
+            >
+              Delete
+            </button>
           </div>
         </div>
       ))}
