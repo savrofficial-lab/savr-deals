@@ -12,20 +12,10 @@ function IconHome({ className = "h-6 w-6" }) { /* same as before */ return (<svg
 function IconSearch({ className = "h-5 w-5" }) { return (<svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden><path d="M21 21l-4.35-4.35" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/><circle cx="11" cy="11" r="6" stroke="currentColor" strokeWidth="1.6" /></svg>); }
 function IconCoin({ className = "h-6 w-6" }) { return (<svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden><circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.6" /><text x="12" y="15" textAnchor="middle" fontSize="10" fontWeight="700" fill="currentColor">c</text></svg>); }
 function IconUser({ className = "h-6 w-6" }) { return (<svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden><circle cx="12" cy="8" r="4" stroke="currentColor" strokeWidth="1.6" /><path d="M4 20c1-4 7-4 8-4s7 0 8 4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" /></svg>); }
-function IconPlus({ className = "h-6 w-6" }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden>
-      <path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-/* ---------------------------- */
 /* ---------------------------------------------------- */
 
 export default function App() {
   const [user, setUser] = useState(null);
-
-  // UI states
   const [activeTopTab, setActiveTopTab] = useState("Frontpage");
   const [activeBottom, setActiveBottom] = useState("Home");
   const [searchRaw, setSearchRaw] = useState("");
@@ -34,13 +24,11 @@ export default function App() {
   const [intendedTab, setIntendedTab] = useState(null);
   const [showUserMenu, setShowUserMenu] = useState(false);
 
-  // auth listener + initial user load
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => setUser(data?.user ?? null));
     const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
       const u = session?.user ?? null;
       setUser(u);
-      // if user just logged in and intendedTab set, navigate there
       if (u && intendedTab) {
         setActiveBottom(intendedTab);
         setIntendedTab(null);
@@ -50,7 +38,6 @@ export default function App() {
     return () => listener.subscription.unsubscribe();
   }, [intendedTab]);
 
-  // debounce search input
   useEffect(() => {
     const t = setTimeout(() => setSearch(searchRaw.trim()), 300);
     return () => clearTimeout(t);
@@ -79,19 +66,15 @@ export default function App() {
         </>
       );
     }
-
     if (activeBottom === "Post") {
       return <PostDeal userId={user?.id} onPosted={() => setActiveBottom("Home")} />;
     }
-
     if (activeBottom === "Coins") {
       return <MyCoins userId={user?.id} />;
     }
-
     if (activeBottom === "You") {
       return <Profile userId={user?.id} />;
     }
-
     return null;
   }
 
@@ -139,13 +122,11 @@ export default function App() {
               </div>
               <div>
                 <p className="font-semibold text-lg mb-2">Contact</p>
-                <p className="text-sm text-gray-700">Email: <a href="mailto:savrofficialdeals@email.com" className="text-yellow-800 underline">savrofficialdeals@email.com</a>
-                                                     Instagram: <a href="https://instagram.com/savrofficialdeals" className="text-yellow-800 underline">@savrofficialdeals</a>
+                <p className="text-sm text-gray-700">Email: <a href="mailto:savrofficialdeals@email.com" className="text-yellow-800 underline">savrofficialdeals@email.com</a><br/>
+                Instagram: <a href="https://instagram.com/savrofficialdeals" className="text-yellow-800 underline">@savrofficialdeals</a>
                 </p>
               </div>
               <div className="flex flex-col justify-between items-start md:items-end">
-                <nav className="flex gap-4 mb-2">
-                </nav>
                 <p className="text-xs text-gray-500">© {new Date().getFullYear()} Savrdeals. All rights reserved.</p>
               </div>
             </div>
