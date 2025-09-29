@@ -12,6 +12,21 @@ function IconHome({ className = "h-6 w-6" }) { /* same as before */ return (<svg
 function IconSearch({ className = "h-5 w-5" }) { return (<svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden><path d="M21 21l-4.35-4.35" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/><circle cx="11" cy="11" r="6" stroke="currentColor" strokeWidth="1.6" /></svg>); }
 function IconCoin({ className = "h-6 w-6" }) { return (<svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden><circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.6" /><text x="12" y="15" textAnchor="middle" fontSize="10" fontWeight="700" fill="currentColor">c</text></svg>); }
 function IconUser({ className = "h-6 w-6" }) { return (<svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden><circle cx="12" cy="8" r="4" stroke="currentColor" strokeWidth="1.6" /><path d="M4 20c1-4 7-4 8-4s7 0 8 4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" /></svg>); }
+function IconPlus({ className = "h-6 w-6" }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden>
+      <path
+        d="M12 5v14M5 12h14"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+
 /* ---------------------------------------------------- */
 
 export default function App() {
