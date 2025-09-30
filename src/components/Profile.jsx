@@ -16,7 +16,8 @@ export default function Profile({ userId }) {
 
   useEffect(() => {
     console.log("👤 Profile mounted with userId:", userId);
-
+    console.log("App auth user:", user); // after you set user in state
+    
     if (!userId) {
       setLoading(false);
       return;
