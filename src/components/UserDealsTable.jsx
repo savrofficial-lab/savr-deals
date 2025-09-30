@@ -9,7 +9,6 @@ export default function UserDealsTable({ userId }) {
   async function fetchDeals() {
     setLoading(true);
 
-    // fetch ALL deals
     const { data, error } = await supabase.from("deals").select("*");
 
     if (error) {
@@ -19,7 +18,6 @@ export default function UserDealsTable({ userId }) {
       return;
     }
 
-    // filter manually
     const filtered = (data || []).filter((d) => d.posted_by === userId);
 
     setDeals(filtered);
@@ -27,19 +25,22 @@ export default function UserDealsTable({ userId }) {
   }
 
   useEffect(() => {
-    if (userId) fetchDeals();
-    else {
+    if (userId) {
+      fetchDeals();
+    } else {
       setDeals([]);
       setLoading(false);
     }
   }, [userId]);
 
-  if (loading) return <div className="text-gray-500 text-sm">Loading your posts…</div>;
+  if (loading) {
+    return <div className="text-gray-500 text-sm">Loading your posts…</div>;
+  }
 
   return (
     <div>
       {deals.length === 0 ? (
-        <div className="text-gray-500 text-sm">You haven't posted any deals yet.</div>
+        <div className="text-gray-500 text-sm">You have not posted any deals yet.</div>
       ) : (
         <div className="overflow-x-auto">
           <table className="min-w-full border border-gray-200 text-sm">
