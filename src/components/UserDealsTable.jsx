@@ -7,8 +7,16 @@ export default function UserDealsTable({ userId }) {
   const [loading, setLoading] = useState(true);
 
   async function fetchDeals() {
+    if (!userId) {
+      console.warn("❌ No userId provided to UserDealsTable");
+      setDeals([]);
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
-    console.log("🔎 UserDealsTable: fetching for userId:", userId);
+    console.log("🔎 Fetching deals for userId:", userId);
+
     const { data, error } = await supabase
       .from("deals")
       .select("id, title, category, link, created_at, posted_by")
@@ -22,11 +30,13 @@ export default function UserDealsTable({ userId }) {
       console.log("✅ Deals fetched:", data);
       setDeals(data || []);
     }
+
     setLoading(false);
   }
 
   async function handleDelete(id) {
     if (!window.confirm("Delete this deal?")) return;
+
     const { error } = await supabase
       .from("deals")
       .delete()
@@ -34,27 +44,31 @@ export default function UserDealsTable({ userId }) {
       .eq("posted_by", userId);
 
     if (error) {
-      alert("Could not delete: " + error.message);
+      alert("❌ Could not delete: " + error.message);
     } else {
       setDeals((prev) => prev.filter((d) => d.id !== id));
     }
   }
 
+  // refetch when userId changes
   useEffect(() => {
-    if (userId) fetchDeals();
-    else {
-      console.warn("UserDealsTable: no userId provided");
-      setDeals([]);
-      setLoading(false);
-    }
+    fetchDeals();
   }, [userId]);
 
-  if (loading) return <div className="text-gray-500 text-sm">Loading your posts…</div>;
-  if (!deals.length) return <div className="text-gray-500 text-sm">You haven’t posted any deals yet.</div>;
+  if (loading) {
+    return <div className="text-gray-500 text-sm">Loading your posts…</div>;
+  }
+
+  if (!deals.length) {
+    return (
+      <div className="text-gray-500 text-sm">
+        You haven’t posted any deals yet.
+      </div>
+    );
+  }
 
   return (
     <div>
-      <div className="text-xs text-gray-500 mb-2">Debug: userId = {userId}</div>
       <div className="overflow-x-auto">
         <table className="min-w-full border border-gray-200 text-sm">
           <thead className="bg-gray-50">
@@ -63,21 +77,39 @@ export default function UserDealsTable({ userId }) {
               <th className="px-4 py-2 text-left">Category</th>
               <th className="px-4 py-2 text-left">Visit</th>
               <th className="px-4 py-2 text-left">Delete</th>
-              <th className="px-4 py-2 text-left">posted_by</th>
+              <th className="px-4 py-2 text-left">Posted</th>
             </tr>
           </thead>
           <tbody>
             {deals.map((deal) => (
               <tr key={deal.id} className="border-t">
-                <td className="px-4 py-2">{deal.title}</td>
+                <td className="px-4 py-2 font-medium">{deal.title}</td>
                 <td className="px-4 py-2">{deal.category || "-"}</td>
                 <td className="px-4 py-2">
-                  {deal.link ? <a href={deal.link} target="_blank" rel="noreferrer" className="text-yellow-800 font-semibold hover:underline">Go</a> : <span className="text-gray-400">No link</span>}
+                  {deal.link ? (
+                    <a
+                      href={deal.link}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-yellow-800 font-semibold hover:underline"
+                    >
+                      Go
+                    </a>
+                  ) : (
+                    <span className="text-gray-400">No link</span>
+                  )}
                 </td>
                 <td className="px-4 py-2">
-                  <button onClick={() => handleDelete(deal.id)} className="text-red-600 hover:underline">Delete</button>
+                  <button
+                    onClick={() => handleDelete(deal.id)}
+                    className="text-red-600 hover:underline"
+                  >
+                    Delete
+                  </button>
                 </td>
-                <td className="px-4 py-2 text-xs text-gray-500 break-all">{deal.posted_by}</td>
+                <td className="px-4 py-2 text-xs text-gray-500">
+                  {new Date(deal.created_at).toLocaleString()}
+                </td>
               </tr>
             ))}
           </tbody>
