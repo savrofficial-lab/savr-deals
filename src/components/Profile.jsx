@@ -15,6 +15,8 @@ export default function Profile({ userId }) {
   const [editing, setEditing] = useState(false);
 
   useEffect(() => {
+    console.log("👤 Profile mounted with userId:", userId);
+
     if (!userId) {
       setLoading(false);
       return;
@@ -32,7 +34,7 @@ export default function Profile({ userId }) {
       if (!mounted) return;
 
       if (error && error.code === "PGRST116") {
-        // no row yet — leave defaults
+        console.warn("⚠️ No profile row yet for userId:", userId);
         setProfile({
           full_name: "",
           username: "",
@@ -41,6 +43,7 @@ export default function Profile({ userId }) {
           bio: "",
         });
       } else if (data) {
+        console.log("✅ Profile data loaded:", data);
         setProfile({
           full_name: data.full_name || "",
           username: data.username || "",
@@ -49,7 +52,7 @@ export default function Profile({ userId }) {
           bio: data.bio || "",
         });
       } else if (error) {
-        console.error("Profile load error:", error);
+        console.error("❌ Profile load error:", error);
       }
       setLoading(false);
     })();
@@ -63,6 +66,7 @@ export default function Profile({ userId }) {
     e.preventDefault();
     if (!userId) return alert("Sign in first.");
     setLoading(true);
+
     const payload = {
       user_id: userId,
       full_name: profile.full_name,
@@ -71,6 +75,8 @@ export default function Profile({ userId }) {
       avatar_url: profile.avatar_url || null,
       bio: profile.bio || null,
     };
+
+    console.log("💾 Saving profile payload:", payload);
 
     // upsert uses primary key (user_id) to insert or update
     const { error } = await supabase.from("profiles").upsert(payload);
@@ -143,15 +149,15 @@ export default function Profile({ userId }) {
               className="w-full border rounded px-3 py-2"
             />
             <input
-  value={profile.username}
-  onChange={(e) =>
-    setProfile((p) => ({ ...p, username: e.target.value }))
-  }
-  placeholder="Username (unique)"
-  type="text"                 // ✅ explicit type
-  autoComplete="off"          // ✅ avoid autofill confusion
-  className="w-full border rounded px-3 py-2"
-/>
+              value={profile.username}
+              onChange={(e) =>
+                setProfile((p) => ({ ...p, username: e.target.value }))
+              }
+              placeholder="Username (unique)"
+              type="text"
+              autoComplete="off"
+              className="w-full border rounded px-3 py-2"
+            />
             <input
               value={profile.email}
               onChange={(e) =>
