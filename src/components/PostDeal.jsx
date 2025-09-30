@@ -1,8 +1,8 @@
 // src/components/PostDeal.jsx
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { supabase } from "../supabaseClient";
 
-export default function PostDeal({ userId, onPosted }) {
+export default function PostDeal({ onPosted }) {
   const [form, setForm] = useState({
     title: "",
     description: "",
@@ -14,19 +14,26 @@ export default function PostDeal({ userId, onPosted }) {
   });
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    // nothing special for now
-  }, []);
-
   async function handleSubmit(e) {
     e.preventDefault();
-    if (!userId) return alert("Please sign in to post a deal.");
+    setLoading(true);
+
+    // get current logged-in user from Supabase (guaranteed source)
+    const { data: userData, error: userErr } = await supabase.auth.getUser();
+    if (userErr || !userData?.user) {
+      alert("You must be signed in to post a deal.");
+      setLoading(false);
+      return;
+    }
+    const user = userData.user;
+    console.log("🔐 Posting as user:", user.id);
 
     if (!form.title || !form.link) {
-      return alert("Please provide at least a title and a product link.");
+      alert("Please provide at least a title and a product link.");
+      setLoading(false);
+      return;
     }
 
-    setLoading(true);
     const payload = {
       title: form.title,
       description: form.description || null,
@@ -35,18 +42,29 @@ export default function PostDeal({ userId, onPosted }) {
       image: form.image || null,
       link: form.link,
       category: form.category || null,
-      posted_by: userId,
-      published: true, // change to false if you want moderation
+      posted_by: user.id,        // <-- guaranteed user id
+      published: true,
     };
 
-    const { data, error } = await supabase.from("deals").insert([payload]);
+    console.log("🧾 Insert payload:", payload);
+    const { data, error } = await supabase.from("deals").insert([payload]).select();
+
     setLoading(false);
     if (error) {
+      console.error("❌ Insert error:", error);
       alert("Could not post: " + error.message);
-      console.error(error);
     } else {
-      alert("Posted! Thank you — your deal is live.");
-      setForm({ title: "", description: "", price: "", old_price: "", image: "", link: "", category: "" });
+      console.log("✅ Insert result:", data);
+      alert("Posted! Your deal is live.");
+      setForm({
+        title: "",
+        description: "",
+        price: "",
+        old_price: "",
+        image: "",
+        link: "",
+        category: "",
+      });
       if (typeof onPosted === "function") onPosted();
     }
   }
@@ -62,13 +80,11 @@ export default function PostDeal({ userId, onPosted }) {
             <input value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} placeholder="Price" className="w-1/2 border rounded px-3 py-2" />
             <input value={form.old_price} onChange={(e) => setForm({ ...form, old_price: e.target.value })} placeholder="Old price" className="w-1/2 border rounded px-3 py-2" />
           </div>
-          <input value={form.image} onChange={(e) => setForm({ ...form, image: e.target.value })} placeholder="Image URL (or upload later)" className="w-full border rounded px-3 py-2" />
+          <input value={form.image} onChange={(e) => setForm({ ...form, image: e.target.value })} placeholder="Image URL (optional)" className="w-full border rounded px-3 py-2" />
           <input value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} placeholder="Category (e.g. Mobiles)" className="w-full border rounded px-3 py-2" />
           <textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="Short description (optional)" className="w-full border rounded px-3 py-2" />
           <div className="flex gap-2">
-            <button type="submit" className="px-4 py-2 bg-yellow-800 text-white rounded" disabled={loading}>
-              {loading ? "Posting…" : "Post deal"}
-            </button>
+            <button type="submit" disabled={loading} className="px-4 py-2 bg-yellow-800 text-white rounded">{loading ? "Posting…" : "Post deal"}</button>
             <button type="button" onClick={() => setForm({ title: "", description: "", price: "", old_price: "", image: "", link: "", category: "" })} className="px-4 py-2 border rounded">Clear</button>
           </div>
         </form>
