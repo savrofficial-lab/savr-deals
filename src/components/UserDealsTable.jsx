@@ -6,26 +6,33 @@ export default function UserDealsTable({ userId }) {
   const [deals, setDeals] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  // fetch user deals
   async function fetchDeals() {
     setLoading(true);
     const { data, error } = await supabase
       .from("deals")
-      .select("id,title,category,link")
-      .eq("posted_by", userId)
+      .select("id, title, category, link, created_at")
+      .eq("posted_by", userId) // ✅ filter by posted_by
       .order("created_at", { ascending: false });
 
     if (error) {
       console.error("Error loading user deals:", error);
       setDeals([]);
     } else {
-      setDeals(data);
+      setDeals(data || []);
     }
     setLoading(false);
   }
 
+  // delete a deal
   async function handleDelete(id) {
     if (!window.confirm("Delete this deal?")) return;
-    const { error } = await supabase.from("deals").delete().eq("id", id).eq("posted_by", userId);
+    const { error } = await supabase
+      .from("deals")
+      .delete()
+      .eq("id", id)
+      .eq("posted_by", userId);
+
     if (error) {
       alert("Could not delete: " + error.message);
     } else {
@@ -37,8 +44,17 @@ export default function UserDealsTable({ userId }) {
     if (userId) fetchDeals();
   }, [userId]);
 
-  if (loading) return <div className="text-gray-500 text-sm">Loading your posts…</div>;
-  if (deals.length === 0) return <div className="text-gray-500 text-sm">You haven’t posted any deals yet.</div>;
+  if (loading) {
+    return <div className="text-gray-500 text-sm">Loading your posts…</div>;
+  }
+
+  if (deals.length === 0) {
+    return (
+      <div className="text-gray-500 text-sm">
+        You haven’t posted any deals yet.
+      </div>
+    );
+  }
 
   return (
     <div className="overflow-x-auto">
@@ -57,9 +73,18 @@ export default function UserDealsTable({ userId }) {
               <td className="px-4 py-2">{deal.title}</td>
               <td className="px-4 py-2">{deal.category || "-"}</td>
               <td className="px-4 py-2">
-                <a href={deal.link} target="_blank" rel="noopener noreferrer" className="text-yellow-800 font-semibold hover:underline">
-                  Go
-                </a>
+                {deal.link ? (
+                  <a
+                    href={deal.link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-yellow-800 font-semibold hover:underline"
+                  >
+                    Go
+                  </a>
+                ) : (
+                  <span className="text-gray-400">No link</span>
+                )}
               </td>
               <td className="px-4 py-2">
                 <button
