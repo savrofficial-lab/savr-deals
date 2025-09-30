@@ -13,24 +13,25 @@ export default function Profile() {
     bio: "",
   });
   const [editing, setEditing] = useState(false);
-  const [userId, setUserId] = useState(null);
+  const [user, setUser] = useState(null); // ✅ keep the full user object
 
-  // 🔑 Fetch current logged in user
+  // 🔑 Fetch current logged-in user
   useEffect(() => {
     async function fetchUser() {
       const { data, error } = await supabase.auth.getUser();
       if (error) {
         console.error("❌ Error fetching user:", error);
-        setUserId(null);
+        setUser(null);
       } else {
-        setUserId(data?.user?.id || null);
+        console.log("📌 Auth user:", data?.user);
+        setUser(data?.user || null);
       }
     }
     fetchUser();
   }, []);
 
   useEffect(() => {
-    if (!userId) {
+    if (!user?.id) {
       setLoading(false);
       return;
     }
@@ -42,13 +43,13 @@ export default function Profile() {
       const { data, error } = await supabase
         .from("profiles")
         .select("full_name,username,email,avatar_url,bio,created_at")
-        .eq("user_id", userId)
+        .eq("user_id", user.id)
         .single();
 
       if (!mounted) return;
 
       if (error && error.code === "PGRST116") {
-        console.warn("⚠️ No profile row yet for userId:", userId);
+        console.warn("⚠️ No profile row yet for userId:", user.id);
         setProfile({
           full_name: "",
           username: "",
@@ -74,15 +75,15 @@ export default function Profile() {
     return () => {
       mounted = false;
     };
-  }, [userId]);
+  }, [user?.id]);
 
   async function saveProfile(e) {
     e.preventDefault();
-    if (!userId) return alert("Sign in first.");
+    if (!user?.id) return alert("Sign in first.");
     setLoading(true);
 
     const payload = {
-      user_id: userId,
+      user_id: user.id,
       full_name: profile.full_name,
       username: profile.username || null,
       email: profile.email || null,
@@ -112,7 +113,7 @@ export default function Profile() {
       </div>
     );
 
-  if (!userId) {
+  if (!user?.id) {
     return (
       <div className="py-8 text-center text-gray-500">
         You must be signed in to view your profile. Tap the You tab and sign in.
@@ -217,7 +218,7 @@ export default function Profile() {
       {/* show this user's posted deals */}
       <div className="mt-6">
         <h3 className="font-semibold mb-3">Your posts</h3>
-        <UserDealsTable userId={userId} />
+        {user && <UserDealsTable userId={user.id} />}
       </div>
     </div>
   );
