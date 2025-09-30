@@ -3,19 +3,25 @@ import React, { useEffect, useState } from "react";
 import { supabase } from "../supabaseClient";
 import UserDealsTable from "./UserDealsTable";
 
-export default function Profile({ userId: propUserId }) {
-  const [userId, setUserId] = useState(propUserId || null);
+export default function Profile({ userId }) {
+  const [loading, setLoading] = useState(true);
+  const [profile, setProfile] = useState({
+    full_name: "",
+    username: "",
+    email: "",
+    avatar_url: "",
+    bio: "",
+  });
+  const [editing, setEditing] = useState(false);
 
   useEffect(() => {
-    if (!propUserId) {
-      supabase.auth.getUser().then(({ data, error }) => {
-        if (data?.user) {
-          setUserId(data.user.id);
-        }
-      });
+    console.log("👤 Profile mounted with userId:", userId);
+    
+    if (!userId) {
+      setLoading(false);
+      return;
     }
-  }, [propUserId]);
-  
+
     setLoading(true);
     let mounted = true;
 
