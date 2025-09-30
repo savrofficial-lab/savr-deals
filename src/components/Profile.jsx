@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import { supabase } from "../supabaseClient";
 import UserDealsTable from "./UserDealsTable";
 
-export default function Profile({ userId }) {
+export default function Profile() {
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState({
     full_name: "",
@@ -13,10 +13,23 @@ export default function Profile({ userId }) {
     bio: "",
   });
   const [editing, setEditing] = useState(false);
+  const [userId, setUserId] = useState(null);
+
+  // 🔑 Fetch current logged in user
+  useEffect(() => {
+    async function fetchUser() {
+      const { data, error } = await supabase.auth.getUser();
+      if (error) {
+        console.error("❌ Error fetching user:", error);
+        setUserId(null);
+      } else {
+        setUserId(data?.user?.id || null);
+      }
+    }
+    fetchUser();
+  }, []);
 
   useEffect(() => {
-    console.log("👤 Profile mounted with userId:", userId);
-    
     if (!userId) {
       setLoading(false);
       return;
@@ -79,7 +92,6 @@ export default function Profile({ userId }) {
 
     console.log("💾 Saving profile payload:", payload);
 
-    // upsert uses primary key (user_id) to insert or update
     const { error } = await supabase.from("profiles").upsert(payload);
     if (error) {
       alert("Error saving profile: " + error.message);
@@ -91,7 +103,6 @@ export default function Profile({ userId }) {
     setLoading(false);
   }
 
-  // small UI for avatar preview
   const AvatarPreview = ({ src }) =>
     src ? (
       <img src={src} alt="avatar" className="h-20 w-20 rounded-full object-cover" />
