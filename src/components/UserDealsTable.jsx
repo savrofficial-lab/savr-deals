@@ -5,30 +5,23 @@ import { supabase } from "../supabaseClient";
 export default function UserDealsTable({ userId }) {
   const [deals, setDeals] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [debugInfo, setDebugInfo] = useState("");
 
   async function fetchDeals() {
     setLoading(true);
-    let debug = `🔎 Logged-in userId: ${userId}\n`;
 
-    // fetch ALL deals (for debugging)
+    // fetch ALL deals
     const { data, error } = await supabase.from("deals").select("*");
 
     if (error) {
-      debug += `❌ Error loading deals: ${error.message}\n`;
-      setDebugInfo(debug);
+      console.error("Error loading deals:", error.message);
       setDeals([]);
       setLoading(false);
       return;
     }
 
-    debug += `📦 All deals from DB:\n${JSON.stringify(data, null, 2)}\n`;
-
     // filter manually
     const filtered = (data || []).filter((d) => d.posted_by === userId);
-    debug += `✅ After filtering for userId:\n${JSON.stringify(filtered, null, 2)}\n`;
 
-    setDebugInfo(debug);
     setDeals(filtered);
     setLoading(false);
   }
@@ -36,7 +29,6 @@ export default function UserDealsTable({ userId }) {
   useEffect(() => {
     if (userId) fetchDeals();
     else {
-      setDebugInfo("⚠️ No userId provided to UserDealsTable");
       setDeals([]);
       setLoading(false);
     }
@@ -46,13 +38,8 @@ export default function UserDealsTable({ userId }) {
 
   return (
     <div>
-      {/* 🔍 Debug output shown on screen */}
-      <div className="p-2 my-2 bg-gray-100 text-xs text-left whitespace-pre-wrap overflow-x-auto border">
-        {debugInfo}
-      </div>
-
       {deals.length === 0 ? (
-        <div className="text-gray-500 text-sm">You haven’t posted any deals yet.</div>
+        <div className="text-gray-500 text-sm">You haven't posted any deals yet.</div>
       ) : (
         <div className="overflow-x-auto">
           <table className="min-w-full border border-gray-200 text-sm">
@@ -72,7 +59,7 @@ export default function UserDealsTable({ userId }) {
                   <td className="px-4 py-2">{deal.category || "-"}</td>
                   <td className="px-4 py-2">
                     {deal.link ? (
-                      <a
+                      
                         href={deal.link}
                         target="_blank"
                         rel="noreferrer"
