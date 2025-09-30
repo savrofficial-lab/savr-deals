@@ -9,16 +9,19 @@ export default function UserDealsTable({ userId }) {
   // fetch user deals
   async function fetchDeals() {
     setLoading(true);
+    console.log("🔎 Fetching deals for userId:", userId);
+
     const { data, error } = await supabase
       .from("deals")
-      .select("id, title, category, link, created_at")
+      .select("id, title, category, link, created_at, posted_by")
       .eq("posted_by", userId) // ✅ filter by posted_by
       .order("created_at", { ascending: false });
 
     if (error) {
-      console.error("Error loading user deals:", error);
+      console.error("❌ Error loading user deals:", error);
       setDeals([]);
     } else {
+      console.log("✅ Deals fetched:", data);
       setDeals(data || []);
     }
     setLoading(false);
@@ -41,7 +44,12 @@ export default function UserDealsTable({ userId }) {
   }
 
   useEffect(() => {
-    if (userId) fetchDeals();
+    if (userId) {
+      console.log("📌 UserDealsTable mounted with userId:", userId);
+      fetchDeals();
+    } else {
+      console.warn("⚠️ No userId provided to UserDealsTable");
+    }
   }, [userId]);
 
   if (loading) {
@@ -49,6 +57,7 @@ export default function UserDealsTable({ userId }) {
   }
 
   if (deals.length === 0) {
+    console.warn("⚠️ No deals found for userId:", userId);
     return (
       <div className="text-gray-500 text-sm">
         You haven’t posted any deals yet.
