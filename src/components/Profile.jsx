@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import { supabase } from "../supabaseClient";
 import UserDealsTable from "./UserDealsTable";
 
-export default function Profile() {
+export default function Profile({ userId }) {
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState({
     full_name: "",
@@ -13,25 +13,9 @@ export default function Profile() {
     bio: "",
   });
   const [editing, setEditing] = useState(false);
-  const [user, setUser] = useState(null); // ✅ keep the full user object
-
-  // 🔑 Fetch current logged-in user
-  useEffect(() => {
-    async function fetchUser() {
-      const { data, error } = await supabase.auth.getUser();
-      if (error) {
-        console.error("❌ Error fetching user:", error);
-        setUser(null);
-      } else {
-        console.log("📌 Auth user:", data?.user);
-        setUser(data?.user || null);
-      }
-    }
-    fetchUser();
-  }, []);
 
   useEffect(() => {
-    if (!user?.id) {
+    if (!userId) {
       setLoading(false);
       return;
     }
@@ -43,13 +27,13 @@ export default function Profile() {
       const { data, error } = await supabase
         .from("profiles")
         .select("full_name,username,email,avatar_url,bio,created_at")
-        .eq("user_id", user.id)
+        .eq("user_id", userId)
         .single();
 
       if (!mounted) return;
 
       if (error && error.code === "PGRST116") {
-        console.warn("⚠️ No profile row yet for userId:", user.id);
+        console.warn("⚠️ No profile row yet for userId:", userId);
         setProfile({
           full_name: "",
           username: "",
@@ -58,7 +42,6 @@ export default function Profile() {
           bio: "",
         });
       } else if (data) {
-        console.log("✅ Profile data loaded:", data);
         setProfile({
           full_name: data.full_name || "",
           username: data.username || "",
@@ -75,23 +58,21 @@ export default function Profile() {
     return () => {
       mounted = false;
     };
-  }, [user?.id]);
+  }, [userId]);
 
   async function saveProfile(e) {
     e.preventDefault();
-    if (!user?.id) return alert("Sign in first.");
+    if (!userId) return alert("Sign in first.");
     setLoading(true);
 
     const payload = {
-      user_id: user.id,
+      user_id: userId,
       full_name: profile.full_name,
       username: profile.username || null,
       email: profile.email || null,
       avatar_url: profile.avatar_url || null,
       bio: profile.bio || null,
     };
-
-    console.log("💾 Saving profile payload:", payload);
 
     const { error } = await supabase.from("profiles").upsert(payload);
     if (error) {
@@ -112,14 +93,6 @@ export default function Profile() {
         A
       </div>
     );
-
-  if (!user?.id) {
-    return (
-      <div className="py-8 text-center text-gray-500">
-        You must be signed in to view your profile. Tap the You tab and sign in.
-      </div>
-    );
-  }
 
   if (loading) return <p className="text-center text-gray-500 py-8">Loading profile…</p>;
 
@@ -218,7 +191,7 @@ export default function Profile() {
       {/* show this user's posted deals */}
       <div className="mt-6">
         <h3 className="font-semibold mb-3">Your posts</h3>
-        {user && <UserDealsTable userId={user.id} />}
+        {userId && <UserDealsTable userId={userId} />}
       </div>
     </div>
   );
