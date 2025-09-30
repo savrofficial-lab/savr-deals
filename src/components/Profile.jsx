@@ -143,13 +143,15 @@ export default function Profile({ userId }) {
               className="w-full border rounded px-3 py-2"
             />
             <input
-              value={profile.username}
-              onChange={(e) =>
-                setProfile((p) => ({ ...p, username: e.target.value }))
-              }
-              placeholder="Username (unique)"
-              className="w-full border rounded px-3 py-2"
-            />
+  value={profile.username}
+  onChange={(e) =>
+    setProfile((p) => ({ ...p, username: e.target.value }))
+  }
+  placeholder="Username (unique)"
+  type="text"                 // ✅ explicit type
+  autoComplete="off"          // ✅ avoid autofill confusion
+  className="w-full border rounded px-3 py-2"
+/>
             <input
               value={profile.email}
               onChange={(e) =>
