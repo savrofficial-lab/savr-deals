@@ -6,7 +6,7 @@ import LoginModal from "./components/LoginModal";
 import Profile from "./components/Profile";
 import PostDeal from "./components/PostDeal";
 import { supabase } from "./supabaseClient";
-
+import YouTab from "./components/YouTab";
 /* ---------- Small inline icons ---------- */
 function IconHome({ className = "h-6 w-6" }) {
   return (
@@ -118,7 +118,7 @@ export default function App() {
     }
 
     if (activeBottom === "You") {
-      return <Profile userId={user?.id} />;
+  return <YouTab />;
     }
 
     return null;
