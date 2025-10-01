@@ -85,6 +85,12 @@ export default function Profile({ userId }) {
     setLoading(false);
   }
 
+  // 🔴 Logout function
+  async function handleLogout() {
+    await supabase.auth.signOut();
+    window.location.reload(); // force UI refresh
+  }
+
   const AvatarPreview = ({ src }) =>
     src ? (
       <img src={src} alt="avatar" className="h-20 w-20 rounded-full object-cover" />
@@ -111,12 +117,21 @@ export default function Profile({ userId }) {
                   @{profile.username || "username"}
                 </div>
               </div>
-              <button
-                onClick={() => setEditing((s) => !s)}
-                className="px-3 py-1 text-sm border rounded"
-              >
-                {editing ? "Cancel" : "Edit"}
-              </button>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setEditing((s) => !s)}
+                  className="px-3 py-1 text-sm border rounded"
+                >
+                  {editing ? "Cancel" : "Edit"}
+                </button>
+                {/* 🔴 Logout button added here */}
+                <button
+                  onClick={handleLogout}
+                  className="px-3 py-1 text-sm bg-red-600 text-white rounded"
+                >
+                  Logout
+                </button>
+              </div>
             </div>
             <p className="mt-2 text-sm text-gray-600">
               {profile.bio || "No bio yet."}
