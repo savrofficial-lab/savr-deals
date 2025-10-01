@@ -1,5 +1,6 @@
 // src/App.jsx
 import React, { useEffect, useState } from "react";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom"; // ⬅️ Added
 import DealsGrid from "./components/DealsGrid";
 import MyCoins from "./components/MyCoins";
 import LoginModal from "./components/LoginModal";
@@ -7,6 +8,8 @@ import Profile from "./components/Profile";
 import PostDeal from "./components/PostDeal";
 import { supabase } from "./supabaseClient";
 import YouTab from "./components/YouTab";
+import DealDetail from "./components/DealDetail"; // ⬅️ Added
+
 /* ---------- Small inline icons ---------- */
 function IconHome({ className = "h-6 w-6" }) {
   return (
@@ -69,7 +72,6 @@ export default function App() {
     const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
       const u = session?.user ?? null;
       setUser(u);
-      // if user just logged in and intendedTab set, navigate there
       if (u && intendedTab) {
         setActiveBottom(intendedTab);
         setIntendedTab(null);
@@ -118,180 +120,188 @@ export default function App() {
     }
 
     if (activeBottom === "You") {
-  return <YouTab />;
+      return <YouTab />;
     }
 
     return null;
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-[linear-gradient(135deg,#fdf6e3,#fceabb,#f8d778)]">
-      {/* Header */}
-      <header className="bg-gradient-to-b from-[#ffffffcc] to-[#f8f1e8cc] backdrop-blur-md sticky top-0 z-50 shadow-md">
-        <div className="max-w-5xl mx-auto px-3 py-2 flex items-center gap-4">
-          <a href="/" className="flex-shrink-0">
-            <img src="/savrdeals-logo.png" alt="Savrdeals" className="h-14 w-auto object-contain" />
-          </a>
-          <div className="relative flex-1">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
-              <IconSearch />
-            </span>
-            <input
-              value={searchRaw}
-              onChange={(e) => setSearchRaw(e.target.value)}
-              placeholder="Search deals, phones, brands..."
-              className="w-full pl-11 pr-4 py-2 rounded-full border border-yellow-200 bg-white/95 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400"
-            />
-          </div>
-          <div className="hidden sm:block w-8" />
-        </div>
-      </header>
-
-      {/* Top tabs */}
-      {activeBottom === "Home" && (
-        <div className="bg-gradient-to-b from-[#f8f1e8cc] to-[#f8f1e8cc] sticky top-[72px] z-40">
-          <div className="max-w-5xl mx-auto px-3 py-2">
-            <div className="flex items-center gap-3 overflow-auto">
-              {["Frontpage", "Forums", "Hot Deals"].map((t) => {
-                const active = t === activeTopTab;
-                return (
-                  <button
-                    key={t}
-                    onClick={() => setActiveTopTab(t)}
-                    className={`whitespace-nowrap px-4 py-2 rounded-full text-sm font-medium transition ${
-                      active
-                        ? "bg-yellow-800 text-white"
-                        : "bg-white text-gray-700 border border-transparent hover:bg-gray-100"
-                    }`}
-                  >
-                    {t}
-                  </button>
-                );
-              })}
+    <Router>
+      <div className="min-h-screen flex flex-col bg-[linear-gradient(135deg,#fdf6e3,#fceabb,#f8d778)]">
+        {/* Header */}
+        <header className="bg-gradient-to-b from-[#ffffffcc] to-[#f8f1e8cc] backdrop-blur-md sticky top-0 z-50 shadow-md">
+          <div className="max-w-5xl mx-auto px-3 py-2 flex items-center gap-4">
+            <a href="/" className="flex-shrink-0">
+              <img src="/savrdeals-logo.png" alt="Savrdeals" className="h-14 w-auto object-contain" />
+            </a>
+            <div className="relative flex-1">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
+                <IconSearch />
+              </span>
+              <input
+                value={searchRaw}
+                onChange={(e) => setSearchRaw(e.target.value)}
+                placeholder="Search deals, phones, brands..."
+                className="w-full pl-11 pr-4 py-2 rounded-full border border-yellow-200 bg-white/95 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400"
+              />
             </div>
+            <div className="hidden sm:block w-8" />
           </div>
-        </div>
-      )}
+        </header>
 
-      {/* Main */}
-      <main className="flex-1 max-w-5xl mx-auto px-3 py-6 w-full">
-        {renderMain()}
-
-        {/* Footer */}
-        <div className="mt-8 pb-6">
-          <div className="bg-white/95 rounded-2xl shadow p-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div>
-                <p className="font-semibold text-lg mb-2">About Us</p>
-                <p className="text-sm text-gray-700">
-                  Savrdeals helps you discover the best online deals across multiple stores.
-                </p>
-              </div>
-              <div>
-                <p className="font-semibold text-lg mb-2">Contact</p>
-                <p className="text-sm text-gray-700">
-                  Email:{" "}
-                  <a href="mailto:savrofficialdeals@email.com" className="text-yellow-800 underline">
-                    savrofficialdeals@email.com
-                  </a>
-                  <br />
-                  Instagram:{" "}
-                  <a href="https://instagram.com/savrofficialdeals" className="text-yellow-800 underline">
-                    @savrofficialdeals
-                  </a>
-                </p>
-              </div>
-              <div className="flex flex-col justify-between items-start md:items-end">
-                <nav className="flex gap-4 mb-2"></nav>
-                <p className="text-xs text-gray-500">© {new Date().getFullYear()} Savrdeals. All rights reserved.</p>
+        {/* Top tabs */}
+        {activeBottom === "Home" && (
+          <div className="bg-gradient-to-b from-[#f8f1e8cc] to-[#f8f1e8cc] sticky top-[72px] z-40">
+            <div className="max-w-5xl mx-auto px-3 py-2">
+              <div className="flex items-center gap-3 overflow-auto">
+                {["Frontpage", "Forums", "Hot Deals"].map((t) => {
+                  const active = t === activeTopTab;
+                  return (
+                    <button
+                      key={t}
+                      onClick={() => setActiveTopTab(t)}
+                      className={`whitespace-nowrap px-4 py-2 rounded-full text-sm font-medium transition ${
+                        active
+                          ? "bg-yellow-800 text-white"
+                          : "bg-white text-gray-700 border border-transparent hover:bg-gray-100"
+                      }`}
+                    >
+                      {t}
+                    </button>
+                  );
+                })}
               </div>
             </div>
           </div>
-        </div>
-      </main>
+        )}
 
-      {/* Bottom nav */}
-      <nav className="fixed left-0 right-0 bottom-0 z-50 bg-white/95 border-t border-yellow-100 shadow-inner">
-        <div className="max-w-5xl mx-auto px-4">
-          <div className="flex justify-between items-center py-2">
-            <button
-              onClick={() => {
-                setActiveBottom("Home");
-                setActiveTopTab("Frontpage");
-              }}
-              className={`flex flex-col items-center text-xs ${
-                activeBottom === "Home" ? "text-yellow-800" : "text-gray-600"
-              }`}
-            >
-              <IconHome />
-              <span>Home</span>
-            </button>
+        {/* Main with Routes */}
+        <main className="flex-1 max-w-5xl mx-auto px-3 py-6 w-full">
+          <Routes>
+            {/* Default = old tab system */}
+            <Route path="/" element={renderMain()} />
 
-            {/* Post (requires login) */}
-            <div className="relative -mt-6">
+            {/* Deal Detail page */}
+            <Route path="/deal/:id" element={<DealDetail />} />
+          </Routes>
+
+          {/* Footer stays same */}
+          <div className="mt-8 pb-6">
+            <div className="bg-white/95 rounded-2xl shadow p-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div>
+                  <p className="font-semibold text-lg mb-2">About Us</p>
+                  <p className="text-sm text-gray-700">
+                    Savrdeals helps you discover the best online deals across multiple stores.
+                  </p>
+                </div>
+                <div>
+                  <p className="font-semibold text-lg mb-2">Contact</p>
+                  <p className="text-sm text-gray-700">
+                    Email:{" "}
+                    <a href="mailto:savrofficialdeals@email.com" className="text-yellow-800 underline">
+                      savrofficialdeals@email.com
+                    </a>
+                    <br />
+                    Instagram:{" "}
+                    <a href="https://instagram.com/savrofficialdeals" className="text-yellow-800 underline">
+                      @savrofficialdeals
+                    </a>
+                  </p>
+                </div>
+                <div className="flex flex-col justify-between items-start md:items-end">
+                  <nav className="flex gap-4 mb-2"></nav>
+                  <p className="text-xs text-gray-500">© {new Date().getFullYear()} Savrdeals. All rights reserved.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </main>
+
+        {/* Bottom nav stays same */}
+        <nav className="fixed left-0 right-0 bottom-0 z-50 bg-white/95 border-t border-yellow-100 shadow-inner">
+          <div className="max-w-5xl mx-auto px-4">
+            <div className="flex justify-between items-center py-2">
               <button
-                onClick={() => requireLoginFor("Post")}
-                className="bg-yellow-800 hover:bg-yellow-900 text-white rounded-full p-3 shadow-lg flex items-center justify-center"
-                aria-label="Post"
-              >
-                <IconPlus className="h-6 w-6" />
-              </button>
-              <div className="text-center text-xs text-gray-700 mt-1">Post</div>
-            </div>
-
-            {/* Coins (protected) */}
-            <button
-              onClick={() => requireLoginFor("Coins")}
-              className={`flex flex-col items-center text-xs ${
-                activeBottom === "Coins" ? "text-yellow-800" : "text-gray-600"
-              }`}
-            >
-              <IconCoin />
-              <span>My Coins</span>
-            </button>
-
-            {/* You (protected) */}
-            <div className="relative">
-              <button
-                onClick={() => requireLoginFor("You")}
+                onClick={() => {
+                  setActiveBottom("Home");
+                  setActiveTopTab("Frontpage");
+                }}
                 className={`flex flex-col items-center text-xs ${
-                  activeBottom === "You" ? "text-yellow-800" : "text-gray-600"
+                  activeBottom === "Home" ? "text-yellow-800" : "text-gray-600"
                 }`}
               >
-                <IconUser />
-                <span>You</span>
+                <IconHome />
+                <span>Home</span>
               </button>
-              {showUserMenu && user && (
-                <div className="absolute bottom-12 right-0 bg-white border rounded-lg shadow-lg w-44 text-sm">
-                  <button onClick={() => setActiveBottom("You")} className="w-full text-left px-4 py-2 hover:bg-gray-100">
-                    Profile
-                  </button>
-                  <button
-                    onClick={() => setActiveBottom("Coins")}
-                    className="w-full text-left px-4 py-2 hover:bg-gray-100"
-                  >
-                    My Coins
-                  </button>
-                  <button
-                    onClick={async () => {
-                      await supabase.auth.signOut();
-                      setUser(null);
-                      setActiveBottom("Home");
-                      setShowUserMenu(false);
-                    }}
-                    className="w-full text-left px-4 py-2 hover:bg-gray-100"
-                  >
-                    Logout
-                  </button>
-                </div>
-              )}
+
+              {/* Post (requires login) */}
+              <div className="relative -mt-6">
+                <button
+                  onClick={() => requireLoginFor("Post")}
+                  className="bg-yellow-800 hover:bg-yellow-900 text-white rounded-full p-3 shadow-lg flex items-center justify-center"
+                  aria-label="Post"
+                >
+                  <IconPlus className="h-6 w-6" />
+                </button>
+                <div className="text-center text-xs text-gray-700 mt-1">Post</div>
+              </div>
+
+              {/* Coins (protected) */}
+              <button
+                onClick={() => requireLoginFor("Coins")}
+                className={`flex flex-col items-center text-xs ${
+                  activeBottom === "Coins" ? "text-yellow-800" : "text-gray-600"
+                }`}
+              >
+                <IconCoin />
+                <span>My Coins</span>
+              </button>
+
+              {/* You (protected) */}
+              <div className="relative">
+                <button
+                  onClick={() => requireLoginFor("You")}
+                  className={`flex flex-col items-center text-xs ${
+                    activeBottom === "You" ? "text-yellow-800" : "text-gray-600"
+                  }`}
+                >
+                  <IconUser />
+                  <span>You</span>
+                </button>
+                {showUserMenu && user && (
+                  <div className="absolute bottom-12 right-0 bg-white border rounded-lg shadow-lg w-44 text-sm">
+                    <button onClick={() => setActiveBottom("You")} className="w-full text-left px-4 py-2 hover:bg-gray-100">
+                      Profile
+                    </button>
+                    <button
+                      onClick={() => setActiveBottom("Coins")}
+                      className="w-full text-left px-4 py-2 hover:bg-gray-100"
+                    >
+                      My Coins
+                    </button>
+                    <button
+                      onClick={async () => {
+                        await supabase.auth.signOut();
+                        setUser(null);
+                        setActiveBottom("Home");
+                        setShowUserMenu(false);
+                      }}
+                      className="w-full text-left px-4 py-2 hover:bg-gray-100"
+                    >
+                      Logout
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
-        </div>
-      </nav>
+        </nav>
 
-      {/* Login modal */}
-      {showLoginModal && <LoginModal onClose={() => setShowLoginModal(false)} />}
-    </div>
+        {/* Login modal */}
+        {showLoginModal && <LoginModal onClose={() => setShowLoginModal(false)} />}
+      </div>
+    </Router>
   );
-                  }
+}
