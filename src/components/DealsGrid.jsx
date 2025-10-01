@@ -1,6 +1,7 @@
 // src/components/DealsGrid.jsx
 import React, { useEffect, useState } from "react";
 import { supabase } from "../supabaseClient";
+import { Link } from "react-router-dom"; // ✅ only new import
 
 export default function DealsGrid({ search }) {
   const [deals, setDeals] = useState([]);
@@ -177,14 +178,13 @@ export default function DealsGrid({ search }) {
                   )}
                 </div>
 
-                <a
-                  href={href}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                {/* ✅ only change: internal navigation */}
+                <Link
+                  to={`/deal/${deal.id}`}
                   className="bg-yellow-800 hover:bg-yellow-900 text-white font-semibold px-3 py-2 rounded-lg text-xs"
                 >
                   Shop Now
-                </a>
+                </Link>
               </div>
             </div>
           );
