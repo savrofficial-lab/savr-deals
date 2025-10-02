@@ -19,7 +19,7 @@ export default function DealDetail() {
       try {
         let { data, error } = await supabase
           .from("deals")
-          .select("id, title, description, image, old_price, link, posted_by")
+          .select("id, title, description, image, price, old_price, link, posted_by")
           .eq("id", id)
           .single();
         if (error) throw error;
