@@ -102,13 +102,15 @@ export default function DealDetail() {
         <div className="flex-1">
           <h1 className="text-xl font-bold">{deal.title}</h1>
           <div className="mt-2">
-                          <div className="mt-auto flex items-center justify-between gap-3">
-                <div>
-                  <div className="text-sm font-bold text-gray-900">₹{price}</div>
-                  {oldPrice && (
-                    <div className="text-xs text-gray-500 line-through">₹{oldPrice}</div>
-                  )}
-                </div>
+                          <div className="text-sm font-bold text-gray-900">
+  ₹{deal.price || "N/A"}
+</div>
+{deal.old_price && (
+  <div className="text-xs text-gray-500 line-through">
+    ₹{deal.old_price}
+  </div>
+)}
+
             )}
           </div>
           {/* ✅ Shop Now button */}
