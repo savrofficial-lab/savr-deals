@@ -1,3 +1,4 @@
+// src/components/DealDetail.jsx
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { supabase } from "../supabaseClient";
@@ -9,15 +10,16 @@ export default function DealDetail() {
   const [error, setError] = useState(null);
   const [comments, setComments] = useState([]);
   const [reporting, setReporting] = useState(false);
+  const [liked, setLiked] = useState(false);
 
-  // Fetch deal info
+  // ✅ Fetch deal info
   useEffect(() => {
     async function fetchDeal() {
       setLoading(true);
       try {
         let { data, error } = await supabase
           .from("deals")
-          .select("id, title, description, image, old_price, new_price, likes, posted_by, created_at")
+          .select("id, title, description, image, old_price, link, posted_by")
           .eq("id", id)
           .single();
         if (error) throw error;
@@ -30,51 +32,33 @@ export default function DealDetail() {
     fetchDeal();
   }, [id]);
 
-  // Fetch comments
+  // ✅ Fetch comments
   useEffect(() => {
     async function fetchComments() {
-      let { data, error } = await supabase
+      let { data } = await supabase
         .from("comments")
-        .select("id, text, posted_by, created_at")
+        .select("id, text, created_at")
         .eq("deal_id", id)
         .order("created_at", { ascending: true });
-      if (!error) {
-        setComments(data || []); // ✅ ensures no crash if data = null
-      }
+      setComments(data || []);
     }
     fetchComments();
   }, [id]);
 
-  async function handleLike() {
-    if (!deal) return;
-
-    // replace this with your actual logged-in user id later
-    const userId = "test-user";  
-
-    // check if already liked
-    let { data: existingLike } = await supabase
-      .from("likes")
-      .select("id")
-      .eq("deal_id", id)
-      .eq("user_id", userId)
-      .single();
-
-    if (existingLike) {
-      alert("You already liked this deal!");
-      return;
-    }
-
-    // insert new like
-    await supabase.from("likes").insert({
-      deal_id: id,
-      user_id: userId,
-    });
-
-    const newLikes = (deal.likes || 0) + 1;
-    setDeal({ ...deal, likes: newLikes });
-    await supabase.from("deals").update({ likes: newLikes }).eq("id", id);
+  // ✅ Handle Like (localStorage based)
+  function handleLike() {
+    if (liked) return; // prevent multiple likes
+    setLiked(true);
+    localStorage.setItem(`liked_deal_${id}`, "true");
   }
 
+  useEffect(() => {
+    if (localStorage.getItem(`liked_deal_${id}`)) {
+      setLiked(true);
+    }
+  }, [id]);
+
+  // ✅ Handle Report
   async function handleReport(reason) {
     setReporting(false);
     await supabase.from("reports").insert({
@@ -84,28 +68,23 @@ export default function DealDetail() {
     alert("Thanks for reporting!");
   }
 
+  // ✅ Handle Comment
   async function addComment(e) {
     e.preventDefault();
     const text = e.target.comment.value.trim();
     if (!text) return;
-
-    const userId = "test-user"; // replace with actual logged-in user later
-
     const { data, error } = await supabase
       .from("comments")
-      .insert({ deal_id: id, text, user_id: userId })
+      .insert({ deal_id: id, text })
       .select()
       .single();
-
-    if (!error && data) {
+    if (!error) {
       setComments([...comments, data]);
       e.target.reset();
     } else {
-      console.error(error);
-      alert("Failed to add comment");
+      alert("Failed to comment: " + error.message);
     }
   }
-  
 
   if (loading) return <p className="text-center py-6">Loading...</p>;
   if (error) return <p className="text-center text-red-500">{error}</p>;
@@ -122,11 +101,22 @@ export default function DealDetail() {
         />
         <div className="flex-1">
           <h1 className="text-xl font-bold">{deal.title}</h1>
-          <p className="text-gray-600 mt-1">Posted on {new Date(deal.created_at).toLocaleDateString()}</p>
           <div className="mt-2">
-            <span className="line-through text-gray-500 mr-2">₹{deal.old_price}</span>
-            <span className="text-lg text-green-600 font-semibold">₹{deal.new_price}</span>
+            {deal.old_price && (
+              <span className="line-through text-gray-500 mr-2">
+                ₹{deal.old_price}
+              </span>
+            )}
           </div>
+          {/* ✅ Shop Now button */}
+          <a
+            href={deal.link}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-3 inline-block px-4 py-2 bg-yellow-800 text-white rounded-lg hover:bg-yellow-900"
+          >
+            Shop Now
+          </a>
         </div>
       </div>
 
@@ -142,9 +132,12 @@ export default function DealDetail() {
       <div className="mt-4 flex items-center gap-4">
         <button
           onClick={handleLike}
-          className="px-3 py-1 bg-green-100 hover:bg-green-200 rounded-lg"
+          disabled={liked}
+          className={`px-3 py-1 rounded-lg ${
+            liked ? "bg-green-300" : "bg-green-100 hover:bg-green-200"
+          }`}
         >
-          👍 {deal.likes || 0}
+          👍 {liked ? "Liked" : "Like"}
         </button>
 
         <button
@@ -172,17 +165,6 @@ export default function DealDetail() {
           </div>
         </div>
       )}
-      {/* Shop Now Button */}
-      {deal.link && (
-        <a
-          href={deal.link}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="mt-4 inline-block px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700"
-        >
-          🛒 Shop Now
-        </a>
-      )}
 
       {/* Comments */}
       <div className="mt-6">
@@ -194,7 +176,10 @@ export default function DealDetail() {
             placeholder="Write a comment..."
             className="flex-1 border px-3 py-2 rounded-lg"
           />
-          <button type="submit" className="px-4 py-2 bg-yellow-800 text-white rounded-lg">
+          <button
+            type="submit"
+            className="px-4 py-2 bg-yellow-800 text-white rounded-lg"
+          >
             Post
           </button>
         </form>
