@@ -17,7 +17,7 @@ export default function DealDetail() {
       try {
         let { data, error } = await supabase
           .from("deals")
-          .select("id, title, description, image, old_price, new_price, likes, user_id, created_at")
+          .select("id, title, description, image, old_price, new_price, likes, posted_by, created_at")
           .eq("id", id)
           .single();
         if (error) throw error;
@@ -35,7 +35,7 @@ export default function DealDetail() {
     async function fetchComments() {
       let { data, error } = await supabase
         .from("comments")
-        .select("id, text, user_id, created_at")
+        .select("id, text, posted_by, created_at")
         .eq("deal_id", id)
         .order("created_at", { ascending: true });
       if (!error) {
