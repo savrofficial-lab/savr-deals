@@ -47,6 +47,29 @@ export default function DealDetail() {
 
   async function handleLike() {
     if (!deal) return;
+
+    // replace this with your actual logged-in user id later
+    const userId = "test-user";  
+
+    // check if already liked
+    let { data: existingLike } = await supabase
+      .from("likes")
+      .select("id")
+      .eq("deal_id", id)
+      .eq("user_id", userId)
+      .single();
+
+    if (existingLike) {
+      alert("You already liked this deal!");
+      return;
+    }
+
+    // insert new like
+    await supabase.from("likes").insert({
+      deal_id: id,
+      user_id: userId,
+    });
+
     const newLikes = (deal.likes || 0) + 1;
     setDeal({ ...deal, likes: newLikes });
     await supabase.from("deals").update({ likes: newLikes }).eq("id", id);
@@ -65,15 +88,23 @@ export default function DealDetail() {
     e.preventDefault();
     const text = e.target.comment.value.trim();
     if (!text) return;
+
+    const userId = "test-user"; // replace with actual logged-in user later
+
     const { data, error } = await supabase
       .from("comments")
-      .insert({ deal_id: id, text })
+      .insert({ deal_id: id, text, user_id: userId })
       .select()
       .single();
-    if (!error) {
+
+    if (!error && data) {
       setComments([...comments, data]);
       e.target.reset();
+    } else {
+      console.error(error);
+      alert("Failed to add comment");
     }
+  }
   }
 
   if (loading) return <p className="text-center py-6">Loading...</p>;
@@ -140,6 +171,17 @@ export default function DealDetail() {
             ))}
           </div>
         </div>
+      )}
+      {/* Shop Now Button */}
+      {deal.link && (
+        <a
+          href={deal.link}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mt-4 inline-block px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700"
+        >
+          🛒 Shop Now
+        </a>
       )}
 
       {/* Comments */}
