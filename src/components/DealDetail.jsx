@@ -17,7 +17,7 @@ export default function DealDetail() {
       try {
         let { data, error } = await supabase
           .from("deals")
-          .select("id, title, description, image_url, old_price, new_price, likes, user_id, created_at")
+          .select("id, title, description, image, old_price, new_price, likes, user_id, created_at")
           .eq("id", id)
           .single();
         if (error) throw error;
@@ -33,12 +33,14 @@ export default function DealDetail() {
   // Fetch comments
   useEffect(() => {
     async function fetchComments() {
-      let { data } = await supabase
+      let { data, error } = await supabase
         .from("comments")
         .select("id, text, user_id, created_at")
         .eq("deal_id", id)
         .order("created_at", { ascending: true });
-      setComments(data || []);
+      if (!error) {
+        setComments(data || []); // ✅ ensures no crash if data = null
+      }
     }
     fetchComments();
   }, [id]);
@@ -83,7 +85,7 @@ export default function DealDetail() {
       {/* Image & Title */}
       <div className="flex gap-4">
         <img
-          src={deal.image_url || "/placeholder.png"}
+          src={deal.image || "/placeholder.png"}
           alt={deal.title}
           className="w-40 h-40 object-cover rounded-lg"
         />
