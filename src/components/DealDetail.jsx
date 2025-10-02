@@ -105,7 +105,7 @@ export default function DealDetail() {
       alert("Failed to add comment");
     }
   }
-  }
+  
 
   if (loading) return <p className="text-center py-6">Loading...</p>;
   if (error) return <p className="text-center text-red-500">{error}</p>;
