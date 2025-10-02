@@ -109,9 +109,8 @@ export default function DealDetail() {
   <div className="text-xs text-gray-500 line-through">
     ₹{deal.old_price}
   </div>
-)}
 
-            )}
+           )}
           </div>
           {/* ✅ Shop Now button */}
           <a
