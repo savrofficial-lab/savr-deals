@@ -103,7 +103,7 @@ export default function DealDetail() {
           <h1 className="text-xl font-bold">{deal.title}</h1>
           <div className="mt-2">
                           <div className="text-sm font-bold text-gray-900">
-  ₹{deal.price || "N/A"}
+  ₹{deal.price}
 </div>
 {deal.old_price && (
   <div className="text-xs text-gray-500 line-through">
