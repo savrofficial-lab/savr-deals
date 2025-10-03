@@ -54,23 +54,24 @@ export default function DealDetail() {
   // ✅ Fetch likes
   useEffect(() => {
     async function fetchLikes() {
-      let { data, error } = await supabase
-        .from("likes")
-        .select("id", { count: "exact", head: true })
-        .eq("deal_id", id);
+      let { count, error } = await supabase
+  .from("likes")
+  .select("*", { count: "exact", head: true })
+  .eq("deal_id", id);
 
-      if (!error) setLikeCount(data?.length || 0);
+if (!error) setLikeCount(count || 0);
 
       // check if user already liked
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         let { data: existing } = await supabase
-          .from("likes")
-          .select("id")
-          .eq("deal_id", id)
-          .eq("user_id", user.id)
-          .single();
-        if (existing) setLiked(true);
+  .from("likes")
+  .select("id")
+  .eq("deal_id", id)
+  .eq("user_id", user.id)
+  .maybeSingle();
+
+if (existing) setLiked(true);
       }
     }
     fetchLikes();
