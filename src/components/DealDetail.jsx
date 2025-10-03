@@ -51,15 +51,7 @@ useEffect(() => {
   // ✅ Handle Like (localStorage based)
   function handleLike() {
     if (liked) return; // prevent multiple likes
-    setLiked(true);
-    localStorage.setItem(`liked_deal_${id}`, "true");
-  }
-
-  useEffect(() => {
-    if (localStorage.getItem(`liked_deal_${id}`)) {
-      setLiked(true);
-    }
-  }, [id]);
+  
 
   // ✅ Handle Report
   async function handleReport(reason) {
@@ -89,7 +81,52 @@ async function addComment(e) {
     .insert({
       deal_id: id,
       text,
-      user_id: user.id, // ✅ link comment to user
+      user_id: user.id, // ✅ link// ✅ Like handling
+const [likeCount, setLikeCount] = useState(0);
+
+useEffect(() => {
+  async function fetchLikes() {
+    let { data, error } = await supabase
+      .from("likes")
+      .select("id", { count: "exact", head: true })
+      .eq("deal_id", id);
+
+    if (!error) setLikeCount(data?.length || 0);
+
+    // check if user already liked
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      let { data: existing } = await supabase
+        .from("likes")
+        .select("id")
+        .eq("deal_id", id)
+        .eq("user_id", user.id)
+        .single();
+      if (existing) setLiked(true);
+    }
+  }
+  fetchLikes();
+}, [id]);
+
+async function handleLike() {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    alert("Login to like this deal");
+    return;
+  }
+
+  if (liked) return;
+
+  const { error } = await supabase
+    .from("likes")
+    .insert({ deal_id: id, user_id: user.id });
+
+  if (!error) {
+    setLiked(true);
+    setLikeCount(likeCount + 1);
+  }
+}
+  comment to user
     })
     .select(
       `id, text, created_at, user_id,
@@ -154,14 +191,14 @@ async function addComment(e) {
       {/* Actions */}
       <div className="mt-4 flex items-center gap-4">
         <button
-          onClick={handleLike}
-          disabled={liked}
-          className={`px-3 py-1 rounded-lg ${
-            liked ? "bg-green-300" : "bg-green-100 hover:bg-green-200"
-          }`}
-        >
-          👍 {liked ? "Liked" : "Like"}
-        </button>
+  onClick={handleLike}
+  disabled={liked}
+  className={`px-3 py-1 rounded-lg flex items-center gap-1 ${
+    liked ? "bg-green-300" : "bg-green-100 hover:bg-green-200"
+  }`}
+>
+  👍 {liked ? "Liked" : "Like"} ({likeCount})
+</button>
 
         <button
           onClick={() => setReporting(true)}
@@ -219,12 +256,28 @@ async function addComment(e) {
           className="w-8 h-8 rounded-full cursor-pointer"
         />
         {/* Popup on hover */}
-        <div className="absolute hidden group-hover:block top-10 left-0 bg-white shadow-lg rounded-xl p-3 w-48 z-10">
-          <p className="font-semibold">{c.profiles?.username}</p>
-          <p className="text-xs text-gray-500">Coins: {c.profiles?.coins || 0}</p>
-          <p className="text-xs text-gray-500">Posts: {c.profiles?.posts_count || 0}</p>
-        </div>
-      </div>
+<div className="absolute hidden group-hover:flex flex-col gap-2 top-10 left-0 bg-white shadow-xl rounded-xl p-4 w-64 z-10 border">
+  <div className="flex items-center gap-3">
+    <img
+      src={c.profiles?.avatar_url || "/default-avatar.png"}
+      alt={c.profiles?.username}
+      className="w-12 h-12 rounded-full border"
+    />
+    <div>
+      <p className="font-semibold text-gray-900">{c.profiles?.username}</p>
+      {/* Placeholder for future badge */}
+      <span className="text-xs bg-yellow-200 text-yellow-900 px-2 py-0.5 rounded-full">
+        ⭐ Badge
+      </span>
+    </div>
+  </div>
+
+  <div className="mt-2 text-sm text-gray-600 space-y-1">
+    <p>Posts: {c.profiles?.posts_count || 0}</p>
+    <p>Coins: {c.profiles?.coins || 0}</p>
+    <p>Leaderboard Rank: #{c.profiles?.rank || "N/A"}</p>
+  </div>
+</div>
 
       {/* Comment text */}
       <div>
