@@ -42,7 +42,7 @@ export default function DealDetail() {
         .from("comments")
         .select(`
           id, text, created_at, user_id,
-          profiles (username, avatar_url, posts_count, coins, rank)
+          profiles (username, avatar_url, posts_count, coins)
         `)
         .eq("deal_id", id)
         .order("created_at", { ascending: true });
@@ -127,7 +127,7 @@ export default function DealDetail() {
       })
       .select(
         `id, text, created_at, user_id,
-         profiles (username, avatar_url, posts_count, coins, rank)`
+         profiles (username, avatar_url, posts_count, coins)`
       )
       .single();
 
