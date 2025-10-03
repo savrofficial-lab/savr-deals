@@ -246,37 +246,53 @@ export default function DealDetail() {
         <ul className="space-y-2">
           {comments.map((c) => (
             <li key={c.id} className="flex items-start gap-2 border-b pb-2">
-              {/* Avatar with Popup */}
-              <div className="relative group">
-                <img
-                  src={c.profiles?.avatar_url || "/default-avatar.png"}
-                  alt={c.profiles?.username}
-                  className="w-8 h-8 rounded-full cursor-pointer"
-                />
-                <div className="absolute hidden group-hover:flex flex-col gap-2 top-10 left-0 bg-white shadow-xl rounded-xl p-4 w-64 z-10 border">
-                  <div className="flex items-center gap-3">
-                    <img
-                      src={c.profiles?.avatar_url || "/default-avatar.png"}
-                      alt={c.profiles?.username}
-                      className="w-12 h-12 rounded-full border"
-                    />
-                    <div>
-                      <p className="font-semibold text-gray-900">
-                        {c.profiles?.username}
-                      </p>
-                      <span className="text-xs bg-yellow-200 text-yellow-900 px-2 py-0.5 rounded-full">
-                        ⭐ Badge
-                      </span>
-                    </div>
-                  </div>
-                  <div className="mt-2 text-sm text-gray-600 space-y-1">
-                    <p>Posts: {c.profiles?.posts_count || 0}</p>
-                    <p>Coins: {c.profiles?.coins || 0}</p>
-                    <p>Leaderboard Rank: Coming soon</p>
-                  </div>
-                </div>
-              </div>
+             {/* Avatar with Popup */}
+<div className="relative group">
+  {/* Small avatar (8x8) */}
+  {c.profiles?.avatar_url ? (
+    <img
+      src={c.profiles.avatar_url}
+      alt={c.profiles.username || "Anonymous"}
+      className="w-8 h-8 rounded-full cursor-pointer object-cover"
+    />
+  ) : (
+    <div className="w-8 h-8 rounded-full bg-yellow-500 flex items-center justify-center text-white font-bold cursor-pointer">
+      {(c.profiles?.username?.[0] || "A").toUpperCase()}
+    </div>
+  )}
 
+  {/* Popup */}
+  <div className="absolute hidden group-hover:flex flex-col gap-2 top-10 left-0 bg-white shadow-xl rounded-xl p-4 w-64 z-10 border">
+    <div className="flex items-center gap-3">
+      {/* Big avatar (12x12) */}
+      {c.profiles?.avatar_url ? (
+        <img
+          src={c.profiles.avatar_url}
+          alt={c.profiles.username || "Anonymous"}
+          className="w-12 h-12 rounded-full border object-cover"
+        />
+      ) : (
+        <div className="w-12 h-12 rounded-full bg-yellow-500 flex items-center justify-center text-white font-bold">
+          {(c.profiles?.username?.[0] || "A").toUpperCase()}
+        </div>
+      )}
+
+      <div>
+        <p className="font-semibold text-gray-900">
+          {c.profiles?.username || "Anonymous"}
+        </p>
+        <span className="text-xs bg-yellow-200 text-yellow-900 px-2 py-0.5 rounded-full">
+          ⭐ Badge
+        </span>
+      </div>
+    </div>
+    <div className="mt-2 text-sm text-gray-600 space-y-1">
+      <p>Posts: {c.profiles?.posts_count || 0}</p>
+      <p>Coins: {c.profiles?.coins || 0}</p>
+      <p>Leaderboard Rank: Coming soon</p>
+    </div>
+  </div>
+</div> 
               {/* Comment text */}
               <div>
                 <p className="text-gray-800">{c.text}</p>
