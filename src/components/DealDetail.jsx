@@ -38,15 +38,30 @@ export default function DealDetail() {
   // ✅ Fetch comments with user info
   useEffect(() => {
     async function fetchComments() {
-      let { data } = await supabase
-        .from("comments")
-        .select(`
-          id, text, created_at, user_id,
-          profiles (username, avatar_url, posts_count, coins)
-        `)
-        .eq("deal_id", id)
-        .order("created_at", { ascending: true });
-      setComments(data || []);
+      let { data: commentsData, error } = await supabase
+  .from("comments")
+  .select(`
+    id, text, created_at, user_id,
+    profiles (id, username, avatar_url, coins)
+  `)
+  .eq("deal_id", id)
+  .order("created_at", { ascending: true });
+
+if (!error && commentsData) {
+  // Fetch posts count for each commenter
+  const enriched = await Promise.all(
+    commentsData.map(async (c) => {
+      let { count } = await supabase
+        .from("deals")
+        .select("*", { count: "exact", head: true })
+        .eq("posted_by", c.user_id);
+
+      return { ...c, posts_count: count || 0 };
+    })
+  );
+
+  setComments(enriched);
+}
     }
     fetchComments();
   }, [id]);
@@ -288,7 +303,7 @@ if (existing) setLiked(true);
       </div>
     </div>
     <div className="mt-2 text-sm text-gray-600 space-y-1">
-      <p>Posts: {c.profiles?.posts_count || 0}</p>
+      <p>Posts: {c.posts_count || 0}</p>
       <p>Coins: {c.profiles?.coins || 0}</p>
       <p>Leaderboard Rank: Coming soon</p>
     </div>
