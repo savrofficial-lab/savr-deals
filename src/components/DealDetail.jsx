@@ -272,7 +272,7 @@ export default function DealDetail() {
                   <div className="mt-2 text-sm text-gray-600 space-y-1">
                     <p>Posts: {c.profiles?.posts_count || 0}</p>
                     <p>Coins: {c.profiles?.coins || 0}</p>
-                    <p>Leaderboard Rank: #{c.profiles?.rank || "N/A"}</p>
+                    <p>Leaderboard Rank: Coming soon</p>
                   </div>
                 </div>
               </div>
