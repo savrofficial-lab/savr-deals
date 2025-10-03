@@ -32,18 +32,21 @@ export default function DealDetail() {
     fetchDeal();
   }, [id]);
 
-  // ✅ Fetch comments
-  useEffect(() => {
-    async function fetchComments() {
-      let { data } = await supabase
-        .from("comments")
-        .select("id, text, created_at")
-        .eq("deal_id", id)
-        .order("created_at", { ascending: true });
-      setComments(data || []);
-    }
-    fetchComments();
-  }, [id]);
+  // ✅ Fetch comments with user info
+useEffect(() => {
+  async function fetchComments() {
+    let { data } = await supabase
+      .from("comments")
+      .select(`
+        id, text, created_at, user_id,
+        profiles (username, avatar_url)
+      `)
+      .eq("deal_id", id)
+      .order("created_at", { ascending: true });
+    setComments(data || []);
+  }
+  fetchComments();
+}, [id]);
 
   // ✅ Handle Like (localStorage based)
   function handleLike() {
@@ -69,22 +72,38 @@ export default function DealDetail() {
   }
 
   // ✅ Handle Comment
-  async function addComment(e) {
-    e.preventDefault();
-    const text = e.target.comment.value.trim();
-    if (!text) return;
-    const { data, error } = await supabase
-      .from("comments")
-      .insert({ deal_id: id, text })
-      .select()
-      .single();
-    if (!error) {
-      setComments([...comments, data]);
-      e.target.reset();
-    } else {
-      alert("Failed to comment: " + error.message);
-    }
+async function addComment(e) {
+  e.preventDefault();
+  const text = e.target.comment.value.trim();
+  if (!text) return;
+
+  // get current user
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    alert("You must be logged in to comment.");
+    return;
   }
+
+  const { data, error } = await supabase
+    .from("comments")
+    .insert({
+      deal_id: id,
+      text,
+      user_id: user.id, // ✅ link comment to user
+    })
+    .select(
+      `id, text, created_at, user_id,
+       profiles (username, avatar_url)` // ✅ fetch user data immediately
+    )
+    .single();
+
+  if (!error) {
+    setComments([...comments, data]);
+    e.target.reset();
+  } else {
+    alert("Failed to comment: " + error.message);
+  }
+}
 
   if (loading) return <p className="text-center py-6">Loading...</p>;
   if (error) return <p className="text-center text-red-500">{error}</p>;
@@ -190,15 +209,33 @@ export default function DealDetail() {
 
         {comments.length === 0 && <p className="text-gray-500">No comments yet.</p>}
         <ul className="space-y-2">
-          {comments.map((c) => (
-            <li key={c.id} className="border-b pb-2">
-              <p className="text-gray-800">{c.text}</p>
-              <span className="text-xs text-gray-500">
-                {new Date(c.created_at).toLocaleString()}
-              </span>
-            </li>
-          ))}
-        </ul>
+  {comments.map((c) => (
+    <li key={c.id} className="flex items-start gap-2 border-b pb-2">
+      {/* Avatar with Popup */}
+      <div className="relative group">
+        <img
+          src={c.profiles?.avatar_url || "/default-avatar.png"}
+          alt={c.profiles?.username}
+          className="w-8 h-8 rounded-full cursor-pointer"
+        />
+        {/* Popup on hover */}
+        <div className="absolute hidden group-hover:block top-10 left-0 bg-white shadow-lg rounded-xl p-3 w-48 z-10">
+          <p className="font-semibold">{c.profiles?.username}</p>
+          <p className="text-xs text-gray-500">Coins: {c.profiles?.coins || 0}</p>
+          <p className="text-xs text-gray-500">Posts: {c.profiles?.posts_count || 0}</p>
+        </div>
+      </div>
+
+      {/* Comment text */}
+      <div>
+        <p className="text-gray-800">{c.text}</p>
+        <span className="text-xs text-gray-500">
+          {new Date(c.created_at).toLocaleString()}
+        </span>
+      </div>
+    </li>
+  ))}
+</ul>
       </div>
     </div>
   );
