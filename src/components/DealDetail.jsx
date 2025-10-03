@@ -38,29 +38,29 @@ export default function DealDetail() {
   // ✅ Fetch comments with user info
   useEffect(() => {
     async function fetchComments() {
-      let { data: commentsData, error } = await supabase
-  .from("comments")
-  .select(`
-    id, text, created_at, user_id,
-    profiles (id, username, avatar_url, coins)
-  `)
-  .eq("deal_id", id)
-  .order("created_at", { ascending: true });
+  let { data: commentsData, error } = await supabase
+    .from("comments")
+    .select(`
+      id, text, created_at, user_id,
+      profiles:profiles!user_id (id, username, avatar_url, coins)
+    `)
+    .eq("deal_id", id)
+    .order("created_at", { ascending: true });
 
-if (!error && commentsData) {
-  // Fetch posts count for each commenter
-  const enriched = await Promise.all(
-    commentsData.map(async (c) => {
-      let { count } = await supabase
-        .from("deals")
-        .select("*", { count: "exact", head: true })
-        .eq("posted_by", c.user_id);
+  if (!error && commentsData) {
+    // Fetch posts count for each commenter
+    const enriched = await Promise.all(
+      commentsData.map(async (c) => {
+        const { count, error: countError } = await supabase
+          .from("deals")
+          .select("id", { count: "exact", head: true })
+          .eq("posted_by", c.user_id);
 
-      return { ...c, posts_count: count || 0 };
-    })
-  );
+        return { ...c, posts_count: count ?? 0 };
+      })
+    );
 
-  setComments(enriched);
+    setComments(enriched);
 }
     }
     fetchComments();
