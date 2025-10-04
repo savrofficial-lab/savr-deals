@@ -1,129 +1,199 @@
 // src/components/MyCoins.jsx
 import React, { useEffect, useState } from "react";
 import { supabase } from "../supabaseClient";
-
-/**
- * MyCoins component
- * - expects prop `userId` (uuid string) from parent App
- * - if row doesn't exist it will create one for the logged-in user
- * - all reads/inserts use the client anon key + RLS (so user must be signed in)
- */
+import { motion } from "framer-motion";
+import { Trophy, RefreshCw } from "lucide-react";
 
 export default function MyCoins({ userId: propUserId }) {
   const [userId, setUserId] = useState(propUserId || "");
   const [loading, setLoading] = useState(false);
   const [balance, setBalance] = useState(0);
   const [pending, setPending] = useState(0);
-  const [ledger, setLedger] = useState([]); // optional: if you later store ledger in DB
+  const [username, setUsername] = useState("");
+  const [leaderboard, setLeaderboard] = useState([]);
 
   useEffect(() => {
     if (propUserId) setUserId(propUserId);
   }, [propUserId]);
 
+  // ✅ Fetch coin balance + profile
   useEffect(() => {
     if (!userId) return;
-
-    let mounted = true;
     setLoading(true);
 
-    async function load() {
-      // Try to fetch coins row for this user
-      const { data, error } = await supabase
+    async function loadData() {
+      // Fetch balance from coins table
+      const { data: coinData, error: coinErr } = await supabase
         .from("coins")
-        .select("balance, pending, created_at")
+        .select("balance, pending")
         .eq("user_id", userId)
         .single();
 
-      // If no row exists, create one automatically (safe because we added an INSERT policy)
-      if (error && error.code === "PGRST116") {
-        // this covers "No rows found" path for PostgREST; fallback logic below will also handle other cases
-      }
+      // Fetch username from profiles table
+      const { data: profileData } = await supabase
+        .from("profiles")
+        .select("username")
+        .eq("id", userId)
+        .single();
 
-      if (error && (error.message?.includes("No rows found") || error.status === 406)) {
-        // Insert initial row
-        const { error: insertErr } = await supabase
-          .from("coins")
-          .insert({ user_id: userId, balance: 0, pending: 0 });
-        if (insertErr) {
-          console.error("Error inserting initial coins row:", insertErr);
-          setBalance(0);
-          setPending(0);
-        } else {
-          setBalance(0);
-          setPending(0);
-        }
-      } else if (data) {
-        if (!mounted) return;
-        setBalance(Number(data.balance || 0));
-        setPending(Number(data.pending || 0));
-      } else if (error && !data) {
-        // Generic fallback: try again or set empty
-        console.error("Error reading coins row:", error);
-        setBalance(0);
-        setPending(0);
+      if (coinData) {
+        setBalance(Number(coinData.balance || 0));
+        setPending(Number(coinData.pending || 0));
       }
+      if (profileData) setUsername(profileData.username);
 
-      // (Optional) if you later add a ledger table, you can fetch it here.
-      if (mounted) setLoading(false);
+      setLoading(false);
     }
 
-    load();
+    loadData();
+
+    // ✅ Real-time updates via Supabase channel
+    const subscription = supabase
+      .channel("coins-updates")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "coins" },
+        (payload) => {
+          if (payload.new?.user_id === userId) {
+            setBalance(Number(payload.new.balance || 0));
+            setPending(Number(payload.new.pending || 0));
+          }
+        }
+      )
+      .subscribe();
 
     return () => {
-      mounted = false;
+      supabase.removeChannel(subscription);
     };
   }, [userId]);
 
-  // quick refresh
-  async function refresh() {
+  // ✅ Fetch leaderboard (top 5)
+  useEffect(() => {
+    async function loadLeaderboard() {
+      const { data } = await supabase
+        .from("profiles")
+        .select("username, coins")
+        .order("coins", { ascending: false })
+        .limit(5);
+
+      if (data) setLeaderboard(data);
+    }
+    loadLeaderboard();
+  }, []);
+
+  const refresh = async () => {
     if (!userId) return;
     setLoading(true);
-    const { data, error } = await supabase
+    const { data } = await supabase
       .from("coins")
       .select("balance, pending")
       .eq("user_id", userId)
       .single();
-
     if (data) {
       setBalance(Number(data.balance || 0));
       setPending(Number(data.pending || 0));
-    } else {
-      console.error("refresh error:", error);
     }
     setLoading(false);
-  }
+  };
 
   if (!userId) {
     return (
       <div className="py-8 text-center text-gray-500">
-        You must be signed in to view your coins. Tap the <strong>You</strong> tab and sign in.
+        You must be signed in to view your coins. Tap the <strong>You</strong>{" "}
+        tab and sign in.
       </div>
     );
   }
 
-  if (loading) {
-    return <p className="text-center text-gray-500 py-8">Loading coins…</p>;
-  }
-
   return (
-    <div className="py-4">
+    <div className="min-h-screen bg-gradient-to-b from-yellow-50 via-orange-50 to-white p-4">
       <div className="max-w-xl mx-auto">
-        <div className="bg-white rounded-2xl shadow p-4 mb-4 text-center">
-          <div className="text-sm text-gray-500">Available coins</div>
-          <div className="text-3xl font-bold text-yellow-800 mt-1">
-            {balance} <span className="text-sm text-gray-500">coins</span>
-          </div>
-          <div className="text-sm text-gray-500 mt-1">{pending} pending</div>
-
-          <div className="mt-4 flex justify-center gap-3">
-            <button onClick={refresh} className="px-4 py-2 bg-gray-100 rounded">Refresh</button>
-            <button className="px-4 py-2 bg-yellow-800 text-white rounded">Redeem (coming soon)</button>
-          </div>
+        {/* Header */}
+        <div className="text-center mb-6">
+          <h2 className="text-2xl font-bold text-yellow-800">
+            {username ? `${username}'s Wallet` : "My Coins"}
+          </h2>
+          <p className="text-sm text-gray-500">
+            Earn coins by posting deals, commenting, and getting upvotes!
+          </p>
         </div>
 
-        <div>
-          <h3 className="font-semibold mb-2">Activity (coming soon)</h3>
-          {ledger.length === 0 && <p className="text-sm text-gray-500">No activity yet.</p>}
+        {/* Coin Display */}
+        <motion.div
+          initial={{ scale: 0.9, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          className="bg-white shadow-lg rounded-2xl p-6 text-center"
+        >
+          <div className="text-gray-500 text-sm mb-1">Available Coins</div>
+          <motion.div
+            key={balance}
+            initial={{ scale: 0.8 }}
+            animate={{ scale: 1 }}
+            transition={{ type: "spring", stiffness: 200 }}
+            className="text-5xl font-extrabold text-yellow-500 drop-shadow-sm"
+          >
+            {balance}
+          </motion.div>
+          <div className="text-sm text-gray-400 mt-1">{pending} pending</div>
+
+          <div className="mt-4 flex justify-center gap-3">
+            <button
+              onClick={refresh}
+              disabled={loading}
+              className="flex items-center gap-2 px-4 py-2 bg-gray-100 rounded-lg hover:bg-gray-200 transition"
+            >
+              <RefreshCw size={16} /> Refresh
+            </button>
+            <button className="px-4 py-2 bg-yellow-600 text-white rounded-lg shadow hover:bg-yellow-700 transition">
+              Redeem (soon)
+            </button>
+          </div>
+        </motion.div>
+
+        {/* Leaderboard Section */}
+        <div className="mt-8 bg-white shadow-md rounded-2xl p-5">
+          <div className="flex items-center gap-2 mb-3">
+            <Trophy className="text-yellow-600" />
+            <h3 className="text-lg font-semibold text-gray-800">
+              Top 5 Deal Hunters
+            </h3>
+          </div>
+
+          {leaderboard.length > 0 ? (
+            <ul className="divide-y">
+              {leaderboard.map((u, idx) => (
+                <li
+                  key={u.username}
+                  className="flex justify-between items-center py-2"
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="font-bold text-yellow-700">
+                      #{idx + 1}
+                    </span>
+                    <span className="font-medium text-gray-800">
+                      {u.username}
+                    </span>
+                  </div>
+                  <span className="font-semibold text-yellow-600">
+                    {u.coins || 0} 🪙
+                  </span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-gray-500 text-sm text-center">
+              No leaderboard data yet.
+            </p>
+          )}
+        </div>
+
+        {/* Activity Placeholder */}
+        <div className="mt-8 bg-white rounded-2xl shadow p-4">
+          <h3 className="font-semibold text-gray-700 mb-2">Activity</h3>
+          <p className="text-sm text-gray-500">
+            Coming soon: your deal posts, likes, and bonus milestones will show
+            up here!
+          </p>
         </div>
       </div>
     </div>
