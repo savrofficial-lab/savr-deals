@@ -33,7 +33,6 @@ export default function DealDetail() {
   const normalizeComment = (c) => {
     return {
       id: c.id,
-      text: c.content ?? c.text ?? "", // prefer content then text
       created_at: c.created_at,
       user_id: c.user_id,
       profiles: c.profiles ?? null,
@@ -71,7 +70,6 @@ export default function DealDetail() {
         .from("comments")
         .select(`
           id,
-          content,
           text,
           created_at,
           user_id,
@@ -170,7 +168,6 @@ export default function DealDetail() {
 
       const { data, error } = await supabase.from("comments").insert(payload).select(`
         id,
-        content,
         text,
         created_at,
         user_id,
