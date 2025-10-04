@@ -33,6 +33,7 @@ export default function DealDetail() {
   const normalizeComment = (c) => {
     return {
       id: c.id,
+      text: c.text ?? "", // prefer content then text
       created_at: c.created_at,
       user_id: c.user_id,
       profiles: c.profiles ?? null,
