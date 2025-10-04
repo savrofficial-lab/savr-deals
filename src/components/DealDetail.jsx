@@ -96,7 +96,7 @@ export default function DealDetail() {
       .from("comments")
       .delete()
       .eq("id", commentId)
-      .eq("user_id", currentUserId); // extra protection
+      .eq("user_id", currentUserId); // protection
 
     if (!error) {
       setComments((prev) => prev.filter((c) => c.id !== commentId));
@@ -175,10 +175,7 @@ export default function DealDetail() {
         <h2 className="font-semibold mb-3">Comments</h2>
 
         {/* Add comment box */}
-        <form
-          onSubmit={handleAddComment}
-          className="flex gap-2 mb-4"
-        >
+        <form onSubmit={handleAddComment} className="flex gap-2 mb-4">
           <input
             value={commentDraft}
             onChange={(e) => setCommentDraft(e.target.value)}
@@ -195,11 +192,8 @@ export default function DealDetail() {
         ) : (
           <ul className="space-y-3">
             {comments.map((c) => (
-              <li
-                key={c.id}
-                className="relative flex gap-3 items-start border-b pb-3"
-              >
-                {/* Avatar */}
+              <li key={c.id} className="relative flex gap-3 items-start border-b pb-3">
+                {/* Avatar with popup */}
                 <div className="relative group">
                   {c.profiles?.avatar_url ? (
                     <img
@@ -212,6 +206,35 @@ export default function DealDetail() {
                       {(c.profiles?.username?.[0] || "A").toUpperCase()}
                     </div>
                   )}
+
+                  {/* Hover popup */}
+                  <div className="absolute hidden group-hover:flex flex-col gap-2 top-12 left-0 bg-white shadow-xl rounded-xl p-4 w-64 z-10 border">
+                    <div className="flex items-center gap-3">
+                      {c.profiles?.avatar_url ? (
+                        <img
+                          src={c.profiles.avatar_url}
+                          alt={c.profiles?.username}
+                          className="w-12 h-12 rounded-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-12 h-12 rounded-full bg-yellow-500 flex items-center justify-center text-white font-bold text-lg">
+                          {(c.profiles?.username?.[0] || "A").toUpperCase()}
+                        </div>
+                      )}
+                      <div>
+                        <p className="font-semibold text-gray-900">{c.profiles?.username || "Anonymous"}</p>
+                        <span className="text-xs bg-yellow-200 text-yellow-900 px-2 py-0.5 rounded-full">
+                          ⭐ Badge
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="mt-2 text-sm text-gray-600 space-y-1">
+                      <p>Posts: {c.profiles?.posts_count ?? 0}</p>
+                      <p>Coins: {c.profiles?.coins ?? 0}</p>
+                      <p>Leaderboard Rank: Coming soon</p>
+                    </div>
+                  </div>
                 </div>
 
                 {/* Comment content */}
