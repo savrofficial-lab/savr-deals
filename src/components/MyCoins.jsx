@@ -69,17 +69,26 @@ export default function MyCoins({ userId: propUserId }) {
 
   // ✅ Fetch leaderboard (top 5)
   useEffect(() => {
-    async function loadLeaderboard() {
-      const { data: leaderboard, error } = await supabase
-             .from("leaderboard")
-            .select("*")
-            .order("rank", { ascending: true })
-            .limit(5);
+  const fetchLeaderboard = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("leaderboard")
+        .select("*")
+        .order("rank", { ascending: true });
 
-      if (data) setLeaderboard(data);
+      if (error) {
+        console.error("Leaderboard fetch error:", error.message);
+      } else {
+        console.log("Leaderboard data:", data); // 👈 for debugging
+        setLeaderboard(data || []);
+      }
+    } catch (err) {
+      console.error("Unexpected leaderboard error:", err);
     }
-    loadLeaderboard();
-  }, []);
+  };
+
+  fetchLeaderboard();
+}, []);
 
   const refresh = async () => {
     if (!userId) return;
