@@ -70,10 +70,10 @@ export default function MyCoins({ userId: propUserId }) {
   // ✅ Fetch leaderboard (top 5)
   useEffect(() => {
     async function loadLeaderboard() {
-      const { data } = await supabase
-        .from("profiles")
-        .select("username, coins")
-        .order("coins", { ascending: false })
+      const { data: leaderboard, error } = await supabase
+  .from("leaderboard")
+  .select("*")
+  .order("rank", { ascending: true });
         .limit(5);
 
       if (data) setLeaderboard(data);
