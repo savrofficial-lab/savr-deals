@@ -22,33 +22,43 @@ export default function MyCoins({ userId: propUserId }) {
     setLoading(true);
 
     async function loadData() {
-      // Fetch balance from coins table
-      // Fetch balance from profiles table directly
-const { data: profileData, error: profileErr } = await supabase
-  .from("profiles")
-  .select("username, coins")
-  .eq("id", userId)
-  .single();
+  try {
+    // Fetch from profiles table
+    const { data: profileData, error: profileErr } = await supabase
+      .from("profiles")
+      .select("username, coins")
+      .eq("id", userId)
+      .single();
 
-if (profileData) {
-  setUsername(profileData.username);
-  setBalance(Number(profileData.coins || 0));
-}
+    if (profileErr) {
+      console.error("Profile fetch error:", profileErr.message);
+    }
 
-      // Fetch username from profiles table
-      const { data: profileData } = await supabase
-        .from("profiles")
-        .select("username")
-        .eq("id", userId)
-        .single();
+    if (profileData) {
+      setUsername(profileData.username);
+      setBalance(Number(profileData.coins || 0));
+    }
 
-      if (coinData) {
-        setBalance(Number(coinData.balance || 0));
-        setPending(Number(coinData.pending || 0));
-      }
-      if (profileData) setUsername(profileData.username);
+    // Fetch from coins table for pending info
+    const { data: coinData, error: coinErr } = await supabase
+      .from("coins")
+      .select("balance, pending")
+      .eq("user_id", userId)
+      .single();
 
-      setLoading(false);
+    if (coinErr) {
+      console.error("Coin fetch error:", coinErr.message);
+    }
+
+    if (coinData) {
+      setBalance(Number(coinData.balance || 0));
+      setPending(Number(coinData.pending || 0));
+    }
+  } catch (err) {
+    console.error("Unexpected loadData error:", err);
+  } finally {
+    setLoading(false);
+  }
     }
 
     loadData();
