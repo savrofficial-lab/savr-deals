@@ -65,6 +65,31 @@ export default function App() {
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [intendedTab, setIntendedTab] = useState(null);
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [showCategories, setShowCategories] = useState(false);
+const [categories, setCategories] = useState([]);
+
+useEffect(() => {
+  async function fetchCategories() {
+    const { data, error } = await supabase
+      .from("deals")
+      .select("category")
+      .not("category", "is", null);
+
+    if (!error && data) {
+      // Remove duplicates + trim empty
+      const uniqueCats = Array.from(
+        new Set(
+          data
+            .map((d) => d.category?.trim())
+            .filter((c) => c && c.length > 0)
+        )
+      ).sort();
+      setCategories(uniqueCats);
+    }
+  }
+
+  fetchCategories();
+}, []);
 
   // auth listener + initial user load
   useEffect(() => {
@@ -151,30 +176,68 @@ export default function App() {
         </header>
 
         {/* Top tabs */}
-        {activeBottom === "Home" && (
-          <div className="bg-gradient-to-b from-[#f8f1e8cc] to-[#f8f1e8cc] sticky top-[72px] z-40">
-            <div className="max-w-5xl mx-auto px-3 py-2">
-              <div className="flex items-center gap-3 overflow-auto">
-                {["Frontpage", "Forums", "Hot Deals"].map((t) => {
-                  const active = t === activeTopTab;
-                  return (
-                    <button
-                      key={t}
-                      onClick={() => setActiveTopTab(t)}
-                      className={`whitespace-nowrap px-4 py-2 rounded-full text-sm font-medium transition ${
-                        active
-                          ? "bg-yellow-800 text-white"
-                          : "bg-white text-gray-700 border border-transparent hover:bg-gray-100"
-                      }`}
-                    >
-                      {t}
-                    </button>
-                  );
-                })}
-              </div>
+{activeBottom === "Home" && (
+  <div className="bg-gradient-to-b from-[#f8f1e8cc] to-[#f8f1e8cc] sticky top-[72px] z-40">
+    <div className="max-w-5xl mx-auto px-3 py-2">
+      <div className="flex items-center gap-3 overflow-auto relative">
+        {["Frontpage", "Categories", "Forums", "Hot Deals"].map((t) => {
+          const active = t === activeTopTab;
+          const isCategories = t === "Categories";
+
+          return (
+            <div key={t} className="relative">
+              <button
+                onClick={() => {
+                  if (isCategories) {
+                    setShowCategories((prev) => !prev);
+                  } else {
+                    setActiveTopTab(t);
+                    setShowCategories(false);
+                  }
+                }}
+                className={`whitespace-nowrap px-4 py-2 rounded-full text-sm font-medium flex items-center gap-1 transition ${
+                  active
+                    ? "bg-yellow-800 text-white"
+                    : "bg-white text-gray-700 border border-transparent hover:bg-gray-100"
+                }`}
+              >
+                {t}
+                {isCategories && (
+                  <span className={`text-xs transition-transform ${showCategories ? "rotate-180" : ""}`}>
+                    ▼
+                  </span>
+                )}
+              </button>
+
+              {/* Dropdown Popup (Dynamic Categories) */}
+              {isCategories && showCategories && (
+                <div className="absolute left-0 top-full mt-2 bg-white shadow-lg rounded-xl border border-yellow-100 z-50 p-3 grid grid-cols-2 sm:grid-cols-3 gap-2 w-56 sm:w-72">
+                  {categories.length === 0 ? (
+                    <p className="text-sm text-gray-500 col-span-2 text-center py-2">No categories yet</p>
+                  ) : (
+                    categories.map((cat) => (
+                      <button
+                        key={cat}
+                        onClick={() => {
+                          setActiveTopTab("Frontpage");
+                          setShowCategories(false);
+                          setSearchRaw(cat); // filters by category automatically
+                        }}
+                        className="text-sm text-gray-700 hover:bg-yellow-50 rounded-lg px-2 py-1 text-left"
+                      >
+                        {cat}
+                      </button>
+                    ))
+                  )}
+                </div>
+              )}
             </div>
-          </div>
-        )}
+          );
+        })}
+      </div>
+    </div>
+  </div>
+)}
 
         {/* Main with Routes */}
         <main className="flex-1 max-w-5xl mx-auto px-3 py-6 w-full">
