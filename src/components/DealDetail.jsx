@@ -24,6 +24,25 @@ export default function DealDetail() {
     };
     getUser();
   }, []);
+  // ✅ Real-time coin updates for current user
+  useEffect(() => {
+    if (!currentUserId) return;
+
+    const coinSubscription = supabase
+      .channel("profile-coins-updates")
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "profiles", filter: `id=eq.${currentUserId}` },
+        (payload) => {
+          console.log("💰 Coins updated:", payload.new.coins);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(coinSubscription);
+    };
+  }, [currentUserId]);
 
   const normalizeComment = (c) => ({
     id: c.id,
