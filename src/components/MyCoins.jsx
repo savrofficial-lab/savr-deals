@@ -23,11 +23,17 @@ export default function MyCoins({ userId: propUserId }) {
 
     async function loadData() {
       // Fetch balance from coins table
-      const { data: coinData, error: coinErr } = await supabase
-        .from("coins")
-        .select("balance, pending")
-        .eq("user_id", userId)
-        .single();
+      // Fetch balance from profiles table directly
+const { data: profileData, error: profileErr } = await supabase
+  .from("profiles")
+  .select("username, coins")
+  .eq("id", userId)
+  .single();
+
+if (profileData) {
+  setUsername(profileData.username);
+  setBalance(Number(profileData.coins || 0));
+}
 
       // Fetch username from profiles table
       const { data: profileData } = await supabase
@@ -61,9 +67,23 @@ export default function MyCoins({ userId: propUserId }) {
         }
       )
       .subscribe();
+    // ✅ Real-time listener for profiles.coins (instant updates)
+    const profileSub = supabase
+      .channel("profile-coins")
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "profiles", filter: `id=eq.${userId}` },
+        (payload) => {
+          const newCoins = Number(payload.new?.coins || 0);
+          console.log("⚡ Profile coins updated:", newCoins);
+          setBalance(newCoins);
+        }
+      )
+      .subscribe();
 
     return () => {
       supabase.removeChannel(subscription);
+      supabase.removeChannel(profileSub);
     };
   }, [userId]);
 
