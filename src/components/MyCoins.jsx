@@ -15,54 +15,55 @@ export default function MyCoins({ userId: propUserId }) {
   useEffect(() => {
     if (propUserId) setUserId(propUserId);
   }, [propUserId]);
+  
 
   // ✅ Fetch coin balance + profile
   useEffect(() => {
-    if (!userId) return;
-    setLoading(true);
+  if (!userId) return;
+  setLoading(true);
 
-    async function loadData() {
-  try {
-    // Fetch from profiles table
-    const { data: profileData, error: profileErr } = await supabase
-      .from("profiles")
-      .select("username, coins")
-      .eq("id", userId)
-      .single();
+  async function loadData() {
+    try {
+      // Fetch from profiles table
+      const { data: profileData, error: profileErr } = await supabase
+        .from("profiles")
+        .select("username, coins")
+        .eq("id", userId)
+        .single();
 
-    if (profileErr) {
-      console.error("Profile fetch error:", profileErr.message);
+      if (profileErr) {
+        console.error("Profile fetch error:", profileErr.message);
+      }
+
+      if (profileData) {
+        setUsername(profileData.username);
+        setBalance(Number(profileData.coins || 0));
+      }
+
+      // Fetch from coins table for pending info
+      const { data: coinData, error: coinErr } = await supabase
+        .from("coins")
+        .select("balance, pending")
+        .eq("user_id", userId)
+        .single();
+
+      if (coinErr) {
+        console.error("Coin fetch error:", coinErr.message);
+      }
+
+      if (coinData) {
+        setBalance(Number(coinData.balance || 0));
+        setPending(Number(coinData.pending || 0));
+      }
+    } catch (err) {
+      console.error("Unexpected loadData error:", err);
+    } finally {
+      setLoading(false);
     }
-
-    if (profileData) {
-      setUsername(profileData.username);
-      setBalance(Number(profileData.coins || 0));
-    }
-
-    // Fetch from coins table for pending info
-    const { data: coinData, error: coinErr } = await supabase
-      .from("coins")
-      .select("balance, pending")
-      .eq("user_id", userId)
-      .single();
-
-    if (coinErr) {
-      console.error("Coin fetch error:", coinErr.message);
-    }
-
-    if (coinData) {
-      setBalance(Number(coinData.balance || 0));
-      setPending(Number(coinData.pending || 0));
-    }
-  } catch (err) {
-    console.error("Unexpected loadData error:", err);
-  } finally {
-    setLoading(false);
   }
-    }
 
-    loadData();
-
+  loadData();
+  
     // ✅ Real-time updates via Supabase channel
     const subscription = supabase
       .channel("coins-updates")
