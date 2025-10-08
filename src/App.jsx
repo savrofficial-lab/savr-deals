@@ -105,7 +105,6 @@ export default function App() {
   const [search, setSearch] = useState("");
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [intendedTab, setIntendedTab] = useState(null);
-  const [showUserMenu, setShowUserMenu] = useState(false);
 
   const DEFAULT_CATEGORIES = [
     "All",
@@ -169,39 +168,24 @@ export default function App() {
       setIntendedTab(tabName);
       setShowLoginModal(true);
     }
-    setShowUserMenu(false);
   }
 
   // ---------------- FETCH CATEGORIES ----------------
   useEffect(() => {
-    let mounted = true;
     (async () => {
-      try {
-        const { data, error } = await supabase
-          .from("deals")
-          .select("category")
-          .eq("published", true);
-        if (error) {
-          console.warn("Could not load categories:", error);
-          return;
-        }
-        if (!mounted) return;
-        const catsFromDb = Array.from(
+      const { data, error } = await supabase
+        .from("deals")
+        .select("category")
+        .eq("published", true);
+      if (!error && data) {
+        const cats = Array.from(
           new Set(
-            (data || [])
-              .map((r) => (r.category || "").toString().trim())
-              .filter(Boolean)
+            data.map((d) => (d.category || "").trim()).filter(Boolean)
           )
         );
-        const merged = Array.from(new Set([...DEFAULT_CATEGORIES, ...catsFromDb]));
-        setCategories(merged);
-      } catch (err) {
-        console.error("Unexpected categories error:", err);
+        setCategories([...DEFAULT_CATEGORIES, ...cats]);
       }
     })();
-    return () => {
-      mounted = false;
-    };
   }, []);
 
   // ---------------- OUTSIDE CLICK ----------------
@@ -211,9 +195,20 @@ export default function App() {
         setShowCategories(false);
       }
     }
-    document.addEventListener("click", handleClickOutside);
-    return () => document.removeEventListener("click", handleClickOutside);
-  }, []);
+
+    // Delay attaching after opening
+    let listener;
+    if (showCategories) {
+      setTimeout(() => {
+        document.addEventListener("click", handleClickOutside);
+        listener = handleClickOutside;
+      }, 50);
+    }
+
+    return () => {
+      if (listener) document.removeEventListener("click", listener);
+    };
+  }, [showCategories]);
 
   // ---------------- MAIN RENDER ----------------
   function renderMain() {
@@ -340,46 +335,23 @@ export default function App() {
                         className="absolute left-0 mt-2 w-56 bg-white shadow-xl rounded-xl p-2 z-[9999] border max-h-[340px] overflow-y-auto"
                         onClick={(e) => e.stopPropagation()}
                       >
-                        <button
-                          onClick={() => {
-                            setSelectedCategory("");
-                            setSearchRaw("");
-                            setShowCategories(false);
-                          }}
-                          className={`block w-full text-left px-3 py-2 rounded hover:bg-gray-100 text-sm ${
-                            selectedCategory === ""
-                              ? "bg-yellow-100 text-yellow-800"
-                              : ""
-                          }`}
-                        >
-                          All
-                        </button>
-
-                        {categories.length === 0 && (
-                          <div className="text-center text-gray-500 text-sm py-2">
-                            No categories
-                          </div>
-                        )}
-
-                        {categories
-                          .filter((cat) => cat && cat !== "All")
-                          .map((cat) => (
-                            <button
-                              key={cat}
-                              onClick={() => {
-                                setSelectedCategory(cat);
-                                setSearchRaw("");
-                                setShowCategories(false);
-                              }}
-                              className={`block w-full text-left px-3 py-2 rounded hover:bg-gray-100 text-sm ${
-                                selectedCategory === cat
-                                  ? "bg-yellow-100 text-yellow-800"
-                                  : ""
-                              }`}
-                            >
-                              {cat}
-                            </button>
-                          ))}
+                        {categories.map((cat) => (
+                          <button
+                            key={cat}
+                            onClick={() => {
+                              setSelectedCategory(cat === "All" ? "" : cat);
+                              setSearchRaw("");
+                              setShowCategories(false);
+                            }}
+                            className={`block w-full text-left px-3 py-2 rounded hover:bg-gray-100 text-sm ${
+                              selectedCategory === cat
+                                ? "bg-yellow-100 text-yellow-800"
+                                : ""
+                            }`}
+                          >
+                            {cat}
+                          </button>
+                        ))}
                       </motion.div>
                     )}
                   </AnimatePresence>
