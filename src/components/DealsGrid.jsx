@@ -1,13 +1,15 @@
-// src/components/DealsGrid.jsx
 import React, { useEffect, useState } from "react";
 import { supabase } from "../supabaseClient";
+import { Link } from "react-router-dom";
+import { ChevronDown } from "lucide-react"; // for dropdown icon
 
-export default function DealsGrid({ search, externalCategory = undefined, hideInlineCategories = false }) {
+export default function DealsGrid({ search }) {
   const [deals, setDeals] = useState([]);
   const [allCategories, setAllCategories] = useState(["All"]);
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState("");
+  const [showDropdown, setShowDropdown] = useState(false); // 👈 popup state
 
   // Helpers
   const imgFor = (d) => d.image || d.image_url || d.img || d.thumbnail || "/placeholder.png";
@@ -15,14 +17,7 @@ export default function DealsGrid({ search, externalCategory = undefined, hideIn
   const priceFor = (d) => d.price ?? d.discounted_price ?? "";
   const oldPriceFor = (d) => d.oldPrice ?? d.old_price ?? d.mrp ?? "";
 
-  // Keep in sync with externalCategory (parent-controlled)
-  useEffect(() => {
-    if (externalCategory !== undefined) {
-      setSelectedCategory(externalCategory && externalCategory !== "" ? externalCategory : "All");
-    }
-  }, [externalCategory]);
-
-  // Load categories (used by dropdown generation or internal buttons)
+  // Load categories from published deals
   useEffect(() => {
     let mounted = true;
     (async () => {
@@ -36,6 +31,7 @@ export default function DealsGrid({ search, externalCategory = undefined, hideIn
           console.error("Error fetching categories:", error);
           return;
         }
+
         if (!mounted) return;
         const cats = Array.from(
           new Set(
@@ -54,7 +50,7 @@ export default function DealsGrid({ search, externalCategory = undefined, hideIn
     };
   }, []);
 
-  // Fetch deals when category/search changes
+  // Fetch deals
   useEffect(() => {
     let mounted = true;
     async function fetchDeals() {
@@ -64,7 +60,6 @@ export default function DealsGrid({ search, externalCategory = undefined, hideIn
         let query = supabase.from("deals").select("*").eq("published", true);
 
         if (selectedCategory && selectedCategory !== "All") {
-          // server-side exact match
           query = query.eq("category", selectedCategory);
         }
 
@@ -73,11 +68,11 @@ export default function DealsGrid({ search, externalCategory = undefined, hideIn
         }
 
         const { data, error } = await query;
-
         if (!mounted) return;
+
         if (error) {
           console.error("Supabase query error:", error);
-          setErrorMsg(error.message || "Could not load deals. Please refresh.");
+          setErrorMsg(error.message || "Could not load deals.");
           setDeals([]);
         } else {
           setDeals(Array.isArray(data) ? data : []);
@@ -98,32 +93,47 @@ export default function DealsGrid({ search, externalCategory = undefined, hideIn
     };
   }, [selectedCategory, search]);
 
+  // UI states
   if (loading) return <div className="text-center text-gray-500 py-8">Loading deals…</div>;
   if (errorMsg) return <div className="text-center text-red-600 py-8">Error: {errorMsg}</div>;
-  if (!deals || deals.length === 0) return <div className="text-center text-gray-500 py-8">No deals yet.</div>;
+  if (!deals || deals.length === 0)
+    return <div className="text-center text-gray-500 py-8">No deals yet.</div>;
 
   return (
-    <div>
-      {/* Category buttons (only when not explicitly hidden) */}
-      {!hideInlineCategories && (
-        <div className="flex flex-wrap gap-2 mb-6 justify-center">
-          {allCategories.map((cat) => (
-            <button
-              key={cat}
-              onClick={() => setSelectedCategory(cat)}
-              className={`px-4 py-2 rounded-full text-sm font-medium transition ${
-                selectedCategory === cat
-                  ? "bg-yellow-800 text-white shadow"
-                  : "bg-white text-gray-700 border border-gray-200 hover:bg-gray-100"
-              }`}
-            >
-              {cat}
-            </button>
-          ))}
-        </div>
-      )}
+    <div className="relative">
+      {/* 🔽 Category dropdown (top-right small arrow) */}
+      <div className="flex justify-center mb-6 relative">
+        <button
+          onClick={() => setShowDropdown(!showDropdown)}
+          className="flex items-center gap-1 px-4 py-2 bg-white border border-gray-300 rounded-full shadow-sm hover:bg-gray-100 transition"
+        >
+          Categories <ChevronDown className="w-4 h-4" />
+        </button>
 
-      {/* Deals grid */}
+        {/* Popup */}
+        {showDropdown && (
+          <div className="absolute top-12 bg-white rounded-xl shadow-lg border border-gray-200 p-3 w-56 z-10">
+            {allCategories.map((cat) => (
+              <button
+                key={cat}
+                onClick={() => {
+                  setSelectedCategory(cat);
+                  setShowDropdown(false);
+                }}
+                className={`block w-full text-left px-4 py-2 rounded-lg text-sm ${
+                  selectedCategory === cat
+                    ? "bg-yellow-800 text-white"
+                    : "hover:bg-gray-100 text-gray-700"
+                }`}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Deals grid (untouched) */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
         {deals.map((deal, idx) => {
           const imageSrc = imgFor(deal);
@@ -131,7 +141,6 @@ export default function DealsGrid({ search, externalCategory = undefined, hideIn
           const price = priceFor(deal);
           const oldPrice = oldPriceFor(deal);
 
-          // discount badge calc
           let discountBadge = null;
           const p = parseFloat(price);
           const op = parseFloat(oldPrice);
@@ -170,17 +179,16 @@ export default function DealsGrid({ search, externalCategory = undefined, hideIn
               <div className="mt-auto flex items-center justify-between gap-3">
                 <div>
                   <div className="text-sm font-bold text-gray-900">₹{price}</div>
-                  {oldPrice && <div className="text-xs text-gray-500 line-through">₹{oldPrice}</div>}
+                  {oldPrice && (
+                    <div className="text-xs text-gray-500 line-through">₹{oldPrice}</div>
+                  )}
                 </div>
-
-                <a
-                  href={href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="bg-yellow-800 hover:bg-yellow-900 text-white font-semibold px-3 py-2 rounded-lg text-xs"
+                <Link
+                  to={`/deal/${deal.id}`}
+                  className="px-3 py-2 bg-yellow-800 text-white rounded"
                 >
-                  Shop Now
-                </a>
+                  View Deal
+                </Link>
               </div>
             </div>
           );
