@@ -8,6 +8,7 @@ const categoriesList = [
   "Laptops & Computers",
   "Men's fashion",
   "Electronics",
+  "Watches",
   "TVs",
   "Women's Fashion",
   "Grocery",
