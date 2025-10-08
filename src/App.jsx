@@ -109,7 +109,7 @@ export default function App() {
   const [search, setSearch] = useState("");
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [intendedTab, setIntendedTab] = useState(null);
-
+  const [showUserMenu, setShowUserMenu] = useState(false);
   const DEFAULT_CATEGORIES = [
     "All",
     "Mobiles",
