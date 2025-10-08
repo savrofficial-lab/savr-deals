@@ -174,14 +174,15 @@ export default function App() {
 
   // ---------- Auto-close categories dropdown when clicking outside ----------
   useEffect(() => {
-    function handleDocClick(e) {
-      if (showCategories && categoriesRef.current && !categoriesRef.current.contains(e.target)) {
-        setShowCategories(false);
-      }
+  function handleClickOutside(e) {
+    if (categoriesRef.current && !categoriesRef.current.contains(e.target)) {
+      setShowCategories(false);
     }
-    document.addEventListener("mousedown", handleDocClick);
-    return () => document.removeEventListener("mousedown", handleDocClick);
-  }, [showCategories]);
+  }
+  document.addEventListener("click", handleClickOutside);
+  return () => document.removeEventListener("click", handleClickOutside);
+}, []);
+   
 
   // --------- Render logic for the main area (kept as you had it) ----------
   function renderMain() {
@@ -269,31 +270,31 @@ export default function App() {
                 </button>
 
                 {/* Categories dropdown button (between Frontpage & Forums) */}
-                {/* Categories Dropdown */}
+                {/* Categories Dropdown (final fix) */}
 <div className="relative" ref={categoriesRef}>
   <button
     type="button"
     onClick={(e) => {
-      e.preventDefault();
       e.stopPropagation();
+      e.preventDefault();
       setShowCategories((prev) => !prev);
       setActiveTopTab("Frontpage");
     }}
-    className="whitespace-nowrap px-4 py-2 rounded-full text-sm font-medium bg-white text-gray-700 border border-transparent hover:bg-gray-100 flex items-center gap-2 select-none"
+    className="whitespace-nowrap px-4 py-2 rounded-full text-sm font-medium bg-white text-gray-700 hover:bg-gray-100 border border-gray-200 flex items-center gap-2 select-none"
   >
-    Categories <span className="ml-1">{showCategories ? "▲" : "▼"}</span>
+    Categories <span>{showCategories ? "▲" : "▼"}</span>
   </button>
 
   {showCategories && (
     <div
-      className="absolute left-0 mt-2 w-56 bg-white shadow-xl rounded-xl p-2 z-50 border max-h-[340px] overflow-y-auto"
+      className="absolute left-0 mt-2 w-56 bg-white shadow-xl rounded-xl p-2 z-[9999] border max-h-[340px] overflow-y-auto"
       onClick={(e) => e.stopPropagation()}
     >
       <button
         onClick={() => {
           setSelectedCategory("");
-          setShowCategories(false);
           setSearchRaw("");
+          setShowCategories(false);
         }}
         className={`block w-full text-left px-3 py-2 rounded hover:bg-gray-100 text-sm ${
           selectedCategory === "" ? "bg-yellow-100 text-yellow-800" : ""
@@ -302,30 +303,31 @@ export default function App() {
         All
       </button>
 
+      {categories.length === 0 && (
+        <div className="text-center text-gray-500 text-sm py-2">No categories</div>
+      )}
+
       {categories
-        .filter(Boolean)
-        .map((cat) => {
-          if (cat === "All") return null;
-          return (
-            <button
-              key={cat}
-              onClick={() => {
-                setSelectedCategory(cat);
-                setShowCategories(false);
-                setSearchRaw("");
-              }}
-              className={`block w-full text-left px-3 py-2 rounded hover:bg-gray-100 text-sm ${
-                selectedCategory === cat ? "bg-yellow-100 text-yellow-800" : ""
-              }`}
-            >
-              {cat}
-            </button>
-          );
-        })}
+        .filter((cat) => cat && cat !== "All")
+        .map((cat) => (
+          <button
+            key={cat}
+            onClick={() => {
+              setSelectedCategory(cat);
+              setSearchRaw("");
+              setShowCategories(false);
+            }}
+            className={`block w-full text-left px-3 py-2 rounded hover:bg-gray-100 text-sm ${
+              selectedCategory === cat ? "bg-yellow-100 text-yellow-800" : ""
+            }`}
+          >
+            {cat}
+          </button>
+        ))}
     </div>
   )}
 </div>
-                 
+                          
 
                 <button
                   onClick={() => setActiveTopTab("Forums")}
