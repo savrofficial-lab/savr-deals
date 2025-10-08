@@ -458,4 +458,7 @@ export default function App() {
 
         {/* Login modal */}
         {showLoginModal && <LoginModal onClose={() => setShowLoginModal(false)} />}
- 
+      </div>
+    </Router>
+  );
+}
