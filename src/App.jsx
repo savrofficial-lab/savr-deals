@@ -269,58 +269,63 @@ export default function App() {
                 </button>
 
                 {/* Categories dropdown button (between Frontpage & Forums) */}
-                <div ref={categoriesRef} className="relative">
-                  <button
-                    onClick={() => {
-                      setShowCategories((s) => !s);
-                      // make sure frontpage is active when picking category
-                      setActiveTopTab("Frontpage");
-                    }}
-                    className="whitespace-nowrap px-4 py-2 rounded-full text-sm font-medium bg-white text-gray-700 border border-transparent hover:bg-gray-100 flex items-center gap-2"
-                  >
-                    Categories <ChevronDown className="h-4 w-4" />
-                  </button>
+                {/* Categories Dropdown */}
+<div className="relative" ref={categoriesRef}>
+  <button
+    type="button"
+    onClick={(e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      setShowCategories((prev) => !prev);
+      setActiveTopTab("Frontpage");
+    }}
+    className="whitespace-nowrap px-4 py-2 rounded-full text-sm font-medium bg-white text-gray-700 border border-transparent hover:bg-gray-100 flex items-center gap-2 select-none"
+  >
+    Categories <span className="ml-1">{showCategories ? "▲" : "▼"}</span>
+  </button>
 
-                  {showCategories && (
-                    <div className="absolute left-0 mt-2 w-56 bg-white shadow-xl rounded-xl p-2 z-50 border max-h-[340px] overflow-y-auto">
-                      {/* Always show easy "All" item first */}
-                      <button
-                        onClick={() => {
-                          // Use empty string to represent "All" (keeps DealsGrid behavior)
-                          setSelectedCategory("");
-                          setShowCategories(false);
-                          setSearchRaw("");
-                        }}
-                        className={`block w-full text-left px-3 py-2 rounded hover:bg-gray-100 text-sm ${selectedCategory === "" ? "bg-yellow-100 text-yellow-800" : ""}`}
-                      >
-                        All
-                      </button>
+  {showCategories && (
+    <div
+      className="absolute left-0 mt-2 w-56 bg-white shadow-xl rounded-xl p-2 z-50 border max-h-[340px] overflow-y-auto"
+      onClick={(e) => e.stopPropagation()}
+    >
+      <button
+        onClick={() => {
+          setSelectedCategory("");
+          setShowCategories(false);
+          setSearchRaw("");
+        }}
+        className={`block w-full text-left px-3 py-2 rounded hover:bg-gray-100 text-sm ${
+          selectedCategory === "" ? "bg-yellow-100 text-yellow-800" : ""
+        }`}
+      >
+        All
+      </button>
 
-                      {/* Now list categories from state (which contains your fixed list plus DB merges) */}
-                      {categories
-                        .filter(Boolean)
-                        .map((cat) => {
-                          // skip the "All" duplicate if it exists in categories array
-                          if (cat === "All") return null;
-                          return (
-                            <button
-                              key={cat}
-                              onClick={() => {
-                                // preserve your earlier approach: if user picks a real category,
-                                // set that value; clear search box.
-                                setSelectedCategory(cat);
-                                setShowCategories(false);
-                                setSearchRaw("");
-                              }}
-                              className={`block w-full text-left px-3 py-2 rounded hover:bg-gray-100 text-sm ${selectedCategory === cat ? "bg-yellow-100 text-yellow-800" : ""}`}
-                            >
-                              {cat}
-                            </button>
-                          );
-                        })}
-                    </div>
-                  )}
-                </div>
+      {categories
+        .filter(Boolean)
+        .map((cat) => {
+          if (cat === "All") return null;
+          return (
+            <button
+              key={cat}
+              onClick={() => {
+                setSelectedCategory(cat);
+                setShowCategories(false);
+                setSearchRaw("");
+              }}
+              className={`block w-full text-left px-3 py-2 rounded hover:bg-gray-100 text-sm ${
+                selectedCategory === cat ? "bg-yellow-100 text-yellow-800" : ""
+              }`}
+            >
+              {cat}
+            </button>
+          );
+        })}
+    </div>
+  )}
+</div>
+                 
 
                 <button
                   onClick={() => setActiveTopTab("Forums")}
