@@ -9,6 +9,7 @@ import PostDeal from "./components/PostDeal";
 import { supabase } from "./supabaseClient";
 import YouTab from "./components/YouTab";
 import DealDetail from "./components/DealDetail"; // ⬅️ Added
+import CategoriesDropdown from "./components/CategoriesDropdown";
 
 /* ---------- Small inline icons ---------- */
 function IconHome({ className = "h-6 w-6" }) {
@@ -104,7 +105,16 @@ export default function App() {
           <div className="mb-3">
             <h2 className="text-lg font-semibold text-gray-800">{activeTopTab}</h2>
           </div>
-          {activeTopTab === "Frontpage" && <DealsGrid search={search} />}
+         {activeTopTab === "Frontpage" && (
+  <>
+    {/* Categories Dropdown */}
+    <CategoriesDropdown
+      onSelectCategory={(cat) => setSearchRaw(cat)}
+    />
+    {/* Deals Grid */}
+    <DealsGrid search={search} />
+  </>
+)}
           {activeTopTab === "Forums" && <div className="text-center text-gray-500 py-12">Forums coming soon.</div>}
           {activeTopTab === "Hot Deals" && <div className="text-center text-gray-500 py-12">Hot Deals coming soon.</div>}
         </>
