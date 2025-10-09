@@ -2,56 +2,62 @@
 import React, { useEffect, useState } from "react";
 import { supabase } from "../supabaseClient";
 import { Link } from "react-router-dom";
-import { ChevronDown } from "lucide-react"; // optional icon; if failing, replace with inline svg
+import { ChevronDown, ArrowUp } from "lucide-react"; // lucide-react is used elsewhere in your app
 
-export default function DealsGrid({ search, selectedCategory: propSelectedCategory = "", hideHeaderCategories = false }) {
+/**
+ * DealsGrid
+ *
+ * Props:
+ *  - search: string (optional)          => server-side ilike on title
+ *  - selectedCategory: string (optional) => category filter passed from parent ("" or "All" means no filter)
+ *  - hideHeaderCategories: boolean      => if true, DON'T render the local categories control (App provides categories)
+ */
+export default function DealsGrid({
+  search = "",
+  selectedCategory: propSelectedCategory = "",
+  hideHeaderCategories = false,
+}) {
   const [deals, setDeals] = useState([]);
   const [allCategories, setAllCategories] = useState(["All"]);
-  const [selectedCategoryInternal, setSelectedCategoryInternal] = useState(propSelectedCategory || "All");
+  const [selectedCategoryInternal, setSelectedCategoryInternal] = useState(
+    propSelectedCategory === "" || propSelectedCategory == null ? "All" : propSelectedCategory
+  );
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState("");
-  const [showDropdown, setShowDropdown] = useState(false); // for local popup if header isn't used
+  const [showDropdown, setShowDropdown] = useState(false); // local popup
 
-  // when parent passes selectedCategory, reflect it
+  // Keep internal selection in sync when parent passes a category
   useEffect(() => {
-    if (propSelectedCategory !== undefined && propSelectedCategory !== null) {
-      // propSelectedCategory "" or "All" => show All
-      setSelectedCategoryInternal(propSelectedCategory === "" ? "All" : propSelectedCategory);
+    if (propSelectedCategory === "" || propSelectedCategory == null) {
+      setSelectedCategoryInternal("All");
+    } else {
+      setSelectedCategoryInternal(propSelectedCategory);
     }
   }, [propSelectedCategory]);
 
-  // Helpers
+  // Helpers (safe field lookups)
   const imgFor = (d) => d.image || d.image_url || d.img || d.thumbnail || "/placeholder.png";
   const linkFor = (d) => d.link || d.affiliate_link || d.url || "#";
-  const priceFor = (d) => d.price ?? d.discounted_price ?? "";
+  const priceFor = (d) => d.price ?? d.discounted_price ?? d.amount ?? "";
   const oldPriceFor = (d) => d.oldPrice ?? d.old_price ?? d.mrp ?? "";
 
-  // Load categories from published deals (for local dropdown fallback)
+  // Load categories (used for the local dropdown fallback)
   useEffect(() => {
     let mounted = true;
     (async () => {
       try {
-        const { data, error } = await supabase
-          .from("deals")
-          .select("category")
-          .eq("published", true);
-
+        const { data, error } = await supabase.from("deals").select("category").eq("published", true);
         if (error) {
-          console.error("Error fetching categories:", error);
+          console.warn("Could not load categories:", error);
           return;
         }
-
         if (!mounted) return;
         const cats = Array.from(
-          new Set(
-            (data || [])
-              .map((r) => (r.category || "").toString().trim())
-              .filter(Boolean)
-          )
+          new Set((data || []).map((r) => (r.category || "").toString().trim()).filter(Boolean))
         );
         setAllCategories(["All", ...cats]);
       } catch (err) {
-        console.error("Unexpected error fetching categories:", err);
+        console.error("Unexpected categories error:", err);
       }
     })();
     return () => {
@@ -59,15 +65,15 @@ export default function DealsGrid({ search, selectedCategory: propSelectedCatego
     };
   }, []);
 
-  // Fetch deals (reacts to selectedCategoryInternal or incoming search)
+  // Fetch deals + like counts whenever selectedCategoryInternal or search changes
   useEffect(() => {
     let mounted = true;
+
     async function fetchDeals() {
       setLoading(true);
       setErrorMsg("");
 
       try {
-        // base query always enforces published = true
         let query = supabase.from("deals").select("*").eq("published", true);
 
         // category filter (server-side)
@@ -78,23 +84,58 @@ export default function DealsGrid({ search, selectedCategory: propSelectedCatego
 
         // search filter (server-side)
         if (search && search.trim() !== "") {
-          // apply ilike for case-insensitive partial match on title
           query = query.ilike("title", `%${search.trim()}%`);
         }
 
-        // execute
-        const { data, error } = await query;
+        // you can add ordering/pagination here as needed
+        const { data: dealsData, error: dealsError } = await query.order("id", { ascending: false });
 
         if (!mounted) return;
 
-        if (error) {
-          console.error("Supabase query error:", error);
-          setErrorMsg(error.message || "Could not load deals. Please refresh.");
+        if (dealsError) {
+          console.error("Supabase query error (deals):", dealsError);
+          setErrorMsg(dealsError.message || "Could not load deals.");
           setDeals([]);
-        } else {
-          setDeals(Array.isArray(data) ? data : []);
-          setErrorMsg("");
+          setLoading(false);
+          return;
         }
+
+        const list = Array.isArray(dealsData) ? dealsData : [];
+
+        if (list.length === 0) {
+          setDeals([]);
+          setLoading(false);
+          return;
+        }
+
+        // Fetch like counts *only for visible deals* (single query)
+        const ids = list.map((d) => d.id).filter(Boolean);
+        let likeCounts = {};
+        if (ids.length > 0) {
+          const { data: likesData, error: likesError } = await supabase
+            .from("likes")
+            .select("deal_id")
+            .in("deal_id", ids);
+
+          if (likesError) {
+            console.warn("Could not fetch likes counts:", likesError);
+            // fallback: all zero
+            likeCounts = {};
+          } else {
+            likeCounts = likesData.reduce((acc, l) => {
+              acc[l.deal_id] = (acc[l.deal_id] || 0) + 1;
+              return acc;
+            }, {});
+          }
+        }
+
+        // Merge like counts
+        const merged = list.map((d) => ({
+          ...d,
+          like_count: likeCounts[d.id] || 0,
+        }));
+
+        setDeals(merged);
       } catch (err) {
         console.error("Unexpected fetch error:", err);
         setErrorMsg(String(err));
@@ -105,6 +146,7 @@ export default function DealsGrid({ search, selectedCategory: propSelectedCatego
     }
 
     fetchDeals();
+
     return () => {
       mounted = false;
     };
@@ -115,13 +157,21 @@ export default function DealsGrid({ search, selectedCategory: propSelectedCatego
   if (errorMsg) return <div className="text-center text-red-600 py-8">Error: {errorMsg}</div>;
   if (!deals || deals.length === 0) return <div className="text-center text-gray-500 py-8">No deals yet.</div>;
 
+  // currency formatter helper
+  const fmt = (v) => {
+    if (v == null || v === "") return "";
+    const n = Number(v);
+    if (Number.isNaN(n)) return v;
+    return n.toLocaleString();
+  };
+
   return (
     <div className="relative">
       {/* If parent didn't provide header categories, show small dropdown here */}
       {!hideHeaderCategories && (
         <div className="flex justify-center mb-6 relative">
           <button
-            onClick={() => setShowDropdown(!showDropdown)}
+            onClick={() => setShowDropdown((s) => !s)}
             className="flex items-center gap-1 px-4 py-2 bg-white border border-gray-300 rounded-full shadow-sm hover:bg-gray-100 transition"
           >
             Categories <ChevronDown className="w-4 h-4" />
@@ -137,7 +187,9 @@ export default function DealsGrid({ search, selectedCategory: propSelectedCatego
                     setSelectedCategoryInternal(cat);
                     setShowDropdown(false);
                   }}
-                  className={`block w-full text-left px-4 py-2 rounded-lg text-sm ${selectedCategoryInternal === cat ? "bg-yellow-800 text-white" : "hover:bg-gray-100 text-gray-700"}`}
+                  className={`block w-full text-left px-4 py-2 rounded-lg text-sm ${
+                    selectedCategoryInternal === cat ? "bg-yellow-800 text-white" : "hover:bg-gray-100 text-gray-700"
+                  }`}
                 >
                   {cat}
                 </button>
@@ -147,14 +199,14 @@ export default function DealsGrid({ search, selectedCategory: propSelectedCatego
         </div>
       )}
 
-      {/* Deals grid (untouched layout) */}
+      {/* Deals grid */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
         {deals.map((deal, idx) => {
           const imageSrc = imgFor(deal);
-          const href = linkFor(deal);
           const price = priceFor(deal);
           const oldPrice = oldPriceFor(deal);
 
+          // discount percent
           let discountBadge = null;
           const p = parseFloat(price);
           const op = parseFloat(oldPrice);
@@ -166,17 +218,23 @@ export default function DealsGrid({ search, selectedCategory: propSelectedCatego
           return (
             <div
               key={deal.id ?? idx}
-              className="bg-white rounded-2xl shadow-md hover:shadow-xl transition-transform hover:-translate-y-1 flex flex-col p-3"
+              className="bg-white rounded-2xl shadow-md hover:shadow-xl transition-transform hover:-translate-y-1 flex flex-col p-3 relative"
             >
+              {/* like count badge top-right (unclickable) */}
+              <div className="absolute top-3 right-3 bg-white/95 rounded-full px-2 py-1 flex items-center gap-2 shadow-sm text-sm font-medium text-gray-700 z-20">
+                <ArrowUp className="w-4 h-4 text-yellow-700" />
+                <span>{deal.like_count ?? 0}</span>
+              </div>
+
               <div className="relative">
                 <img
                   src={imageSrc}
                   alt={deal.title || "Deal image"}
                   loading="lazy"
-                  className="w-full h-36 object-contain mb-3"
+                  className="w-full h-36 object-contain mb-3 bg-white"
                 />
                 {discountBadge && (
-                  <div className="absolute left-3 top-3 bg-yellow-800 text-white text-xs font-semibold px-2 py-1 rounded">
+                  <div className="absolute left-3 top-3 bg-yellow-800 text-white text-xs font-semibold px-2 py-1 rounded z-10">
                     {discountBadge}
                   </div>
                 )}
@@ -192,11 +250,10 @@ export default function DealsGrid({ search, selectedCategory: propSelectedCatego
 
               <div className="mt-auto flex items-center justify-between gap-3">
                 <div>
-                  <div className="text-sm font-bold text-gray-900">₹{price}</div>
-                  {oldPrice && (
-                    <div className="text-xs text-gray-500 line-through">₹{oldPrice}</div>
-                  )}
+                  <div className="text-sm font-bold text-gray-900">₹{fmt(price)}</div>
+                  {oldPrice && <div className="text-xs text-gray-500 line-through">₹{fmt(oldPrice)}</div>}
                 </div>
+
                 <Link
                   to={`/deal/${deal.id}`}
                   className="px-3 py-2 bg-yellow-800 text-white rounded"
