@@ -78,10 +78,14 @@ export default function DealsGrid({
         let query = supabase.from("deals").select("*").eq("published", true);
 
         // category filter (server-side)
-        const finalCategory = (selectedCategoryInternal || "All");
-        if (finalCategory && finalCategory !== "All") {
-          query = query.eq("category", finalCategory);
-        }
+        // category filter (server-side)
+const finalCategory = (selectedCategoryInternal || "All");
+
+// ✅ Special handling for "Hot Deals"
+// We don’t query Supabase for this category; we’ll filter it client-side
+if (finalCategory && finalCategory !== "All" && finalCategory !== "Hot Deals") {
+  query = query.eq("category", finalCategory);
+}
 
         // search filter (server-side)
         if (search && search.trim() !== "") {
