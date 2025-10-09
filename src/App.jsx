@@ -189,25 +189,25 @@ export default function App() {
   }, []);
 
   // ---------------- OUTSIDE CLICK ----------------
-    useEffect(() => {
-  if (!showCategories) return;
+  useEffect(() => {
+    if (!showCategories) return;
 
-  function handleClickOutside(e) {
-    if (categoriesRef.current && !categoriesRef.current.contains(e.target)) {
-      setShowCategories(false);
+    function handleClickOutside(e) {
+      if (categoriesRef.current && !categoriesRef.current.contains(e.target)) {
+        setShowCategories(false);
+      }
     }
-  }
 
-  // Add delay to prevent immediate closing
-  const timeoutId = setTimeout(() => {
-    document.addEventListener("click", handleClickOutside);
-  }, 100);
+    // Add delay to prevent immediate closing
+    const timeoutId = setTimeout(() => {
+      document.addEventListener("click", handleClickOutside);
+    }, 100);
 
-  return () => {
-    clearTimeout(timeoutId);
-    document.removeEventListener("click", handleClickOutside);
-  };
-}, [showCategories]);
+    return () => {
+      clearTimeout(timeoutId);
+      document.removeEventListener("click", handleClickOutside);
+    };
+  }, [showCategories]);
 
   // ---------------- MAIN RENDER ----------------
   function renderMain() {
@@ -286,93 +286,93 @@ export default function App() {
               />
             </div>
           </div>
+
           {/* TOP TABS */}
-<div className="bg-gradient-to-b from-[#f8f1e8cc] to-[#f8f1e8cc] sticky top-[72px] z-40 pb-2">
-  <div className="max-w-5xl mx-auto px-3 pt-2">
-    <div className="flex items-center gap-3">
-      <button
-        onClick={() => {
-          setActiveTopTab("Frontpage");
-          setSelectedCategory("");
-        }}
-        className={`whitespace-nowrap px-4 py-2 rounded-full text-sm font-medium transition ${
-          activeTopTab === "Frontpage"
-            ? "bg-yellow-800 text-white"
-            : "bg-white text-gray-700 border hover:bg-gray-100"
-        }`}
-      >
-        Frontpage
-      </button>
-      {/* CATEGORIES DROPDOWN */}
-<div className="relative" ref={categoriesRef}>
-  <button
-    type="button"
-    onClick={() => {
-      setShowCategories((p) => !p);
-      setActiveTopTab("Frontpage");
-    }}
-    className="whitespace-nowrap px-4 py-2 rounded-full text-sm font-medium bg-white text-gray-700 hover:bg-gray-100 border border-gray-200 flex items-center gap-2"
-  >
-    Categories{" "}
-    <ChevronDown
-      className={`h-4 w-4 transition-transform duration-200 ${
-        showCategories ? "rotate-180" : ""
-      }`}
-    />
-  </button>
+          <div className="bg-gradient-to-b from-[#f8f1e8cc] to-[#f8f1e8cc] sticky top-[72px] z-40 pb-2">
+            <div className="max-w-5xl mx-auto px-3 pt-2">
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => {
+                    setActiveTopTab("Frontpage");
+                    setSelectedCategory("");
+                  }}
+                  className={`whitespace-nowrap px-3 py-1.5 rounded-full text-xs font-medium transition ${
+                    activeTopTab === "Frontpage"
+                      ? "bg-yellow-800 text-white"
+                      : "bg-white text-gray-700 border hover:bg-gray-100"
+                  }`}
+                >
+                  Frontpage
+                </button>
 
-  {showCategories && (
-    <div
-      className="absolute left-0 mt-2 w-56 bg-white shadow-xl rounded-xl p-2 border max-h-[340px] overflow-y-auto"
-      style={{ zIndex: 99999 }}
-    >
-      {categories.map((cat) => (
-        <button
-          key={cat}
-          onClick={() => {
-            setSelectedCategory(cat === "All" ? "" : cat);
-            setSearchRaw("");
-            setShowCategories(false);
-          }}
-          className={`block w-full text-left px-3 py-2 rounded hover:bg-gray-100 text-sm ${
-            selectedCategory === cat
-              ? "bg-yellow-100 text-yellow-800"
-              : ""
-          }`}
-        >
-          {cat}
-        </button>
-      ))}
-    </div>
-  )}
-</div>
-      
+                {/* CATEGORIES DROPDOWN */}
+                <div className="relative" ref={categoriesRef}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowCategories((p) => !p);
+                      setActiveTopTab("Frontpage");
+                    }}
+                    className="whitespace-nowrap px-3 py-1.5 rounded-full text-xs font-medium bg-white text-gray-700 hover:bg-gray-100 border border-gray-200 flex items-center gap-1"
+                  >
+                    Categories{" "}
+                    <ChevronDown
+                      className={`h-3 w-3 transition-transform duration-200 ${
+                        showCategories ? "rotate-180" : ""
+                      }`}
+                    />
+                  </button>
 
-      <button
-        onClick={() => setActiveTopTab("Forums")}
-        className={`whitespace-nowrap px-4 py-2 rounded-full text-sm font-medium transition ${
-          activeTopTab === "Forums"
-            ? "bg-yellow-800 text-white"
-            : "bg-white text-gray-700 border hover:bg-gray-100"
-        }`}
-      >
-        Forums
-      </button>
+                  {showCategories && (
+                    <div
+                      className="absolute left-0 mt-2 w-56 bg-white shadow-xl rounded-xl p-2 border max-h-[340px] overflow-y-auto"
+                      style={{ zIndex: 99999 }}
+                    >
+                      {categories.map((cat) => (
+                        <button
+                          key={cat}
+                          onClick={() => {
+                            setSelectedCategory(cat === "All" ? "" : cat);
+                            setSearchRaw("");
+                            setShowCategories(false);
+                          }}
+                          className={`block w-full text-left px-3 py-2 rounded hover:bg-gray-100 text-sm ${
+                            selectedCategory === cat
+                              ? "bg-yellow-100 text-yellow-800"
+                              : ""
+                          }`}
+                        >
+                          {cat}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
 
-      <button
-        onClick={() => setActiveTopTab("Hot Deals")}
-        className={`whitespace-nowrap px-4 py-2 rounded-full text-sm font-medium transition ${
-          activeTopTab === "Hot Deals"
-            ? "bg-yellow-800 text-white"
-            : "bg-white text-gray-700 border hover:bg-gray-100"
-        }`}
-      >
-        Hot Deals
-      </button>
-    </div>
-  </div>
-</div>
-          
+                <button
+                  onClick={() => setActiveTopTab("Forums")}
+                  className={`whitespace-nowrap px-3 py-1.5 rounded-full text-xs font-medium transition ${
+                    activeTopTab === "Forums"
+                      ? "bg-yellow-800 text-white"
+                      : "bg-white text-gray-700 border hover:bg-gray-100"
+                  }`}
+                >
+                  Forums
+                </button>
+
+                <button
+                  onClick={() => setActiveTopTab("Hot Deals")}
+                  className={`whitespace-nowrap px-3 py-1.5 rounded-full text-xs font-medium transition ${
+                    activeTopTab === "Hot Deals"
+                      ? "bg-yellow-800 text-white"
+                      : "bg-white text-gray-700 border hover:bg-gray-100"
+                  }`}
+                >
+                  Hot Deals
+                </button>
+              </div>
+            </div>
+          </div>
         </header>
 
         {/* MAIN CONTENT */}
@@ -425,61 +425,59 @@ export default function App() {
 
         {/* BOTTOM NAV */}
         <nav className="fixed left-0 right-0 bottom-0 z-50 bg-white/95 border-t border-yellow-100 shadow-inner">
-          <div className="max-w-5xl mx-auto px-4">
-            <div className="flex justify-between items-center py-2">
+          <div className="max-w-5xl mx-auto px-2">
+            <div className="flex justify-around items-center py-1.5">
               <button
                 onClick={() => {
                   setActiveBottom("Home");
                   setActiveTopTab("Frontpage");
                 }}
-                className={`flex flex-col items-center text-xs ${
+                className={`flex flex-col items-center text-[10px] ${
                   activeBottom === "Home"
                     ? "text-yellow-800"
                     : "text-gray-600"
                 }`}
               >
-                <IconHome />
+                <IconHome className="h-5 w-5" />
                 <span>Home</span>
               </button>
 
-              <div className="relative -mt-6">
+              <div className="relative -mt-4">
                 <button
                   onClick={() => requireLoginFor("Post")}
-                  className="bg-yellow-800 hover:bg-yellow-900 text-white rounded-full p-3 shadow-lg flex items-center justify-center"
+                  className="bg-yellow-800 hover:bg-yellow-900 text-white rounded-full p-2.5 shadow-lg flex items-center justify-center"
                   aria-label="Post"
                 >
-                  <IconPlus className="h-6 w-6" />
+                  <IconPlus className="h-5 w-5" />
                 </button>
-                <div className="text-center text-xs text-gray-700 mt-1">
+                <div className="text-center text-[10px] text-gray-700 mt-0.5">
                   Post
                 </div>
               </div>
 
               <button
                 onClick={() => requireLoginFor("Coins")}
-                className={`flex flex-col items-center text-xs ${
+                className={`flex flex-col items-center text-[10px] ${
                   activeBottom === "Coins"
                     ? "text-yellow-800"
                     : "text-gray-600"
                 }`}
               >
-                <IconCoin />
+                <IconCoin className="h-5 w-5" />
                 <span>My Coins</span>
               </button>
 
-              <div className="relative">
-                <button
-                  onClick={() => requireLoginFor("You")}
-                  className={`flex flex-col items-center text-xs ${
-                    activeBottom === "You"
-                      ? "text-yellow-800"
-                      : "text-gray-600"
-                  }`}
-                >
-                  <IconUser />
-                  <span>You</span>
-                </button>
-              </div>
+              <button
+                onClick={() => requireLoginFor("You")}
+                className={`flex flex-col items-center text-[10px] ${
+                  activeBottom === "You"
+                    ? "text-yellow-800"
+                    : "text-gray-600"
+                }`}
+              >
+                <IconUser className="h-5 w-5" />
+                <span>You</span>
+              </button>
             </div>
           </div>
         </nav>
@@ -490,4 +488,4 @@ export default function App() {
       </div>
     </Router>
   );
-} 
+}
