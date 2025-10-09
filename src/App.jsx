@@ -291,7 +291,7 @@ export default function App() {
           {/* TOP TABS */}
           <div className="bg-gradient-to-b from-[#f8f1e8cc] to-[#f8f1e8cc] sticky top-[72px] z-40">
             <div className="max-w-5xl mx-auto px-3 py-2">
-              <div className="flex items-center gap-3 overflow-auto">
+              <div className="flex items-center gap-3 overflow-x-auto overflow-y-visible">
                 <button
                   onClick={() => {
                     setActiveTopTab("Frontpage");
@@ -307,34 +307,34 @@ export default function App() {
                 </button>
 
                 {/* CATEGORIES DROPDOWN */}
-                <div className="relative" ref={categoriesRef}>
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setShowCategories((p) => !p);
-                      setActiveTopTab("Frontpage");
-                    }}
-                    className="whitespace-nowrap px-4 py-2 rounded-full text-sm font-medium bg-white text-gray-700 hover:bg-gray-100 border border-gray-200 flex items-center gap-2"
-                  >
-                    Categories{" "}
-                    <ChevronDown
-                      className={`h-4 w-4 transition-transform duration-200 ${
-                        showCategories ? "rotate-180" : ""
-                      }`}
-                    />
-                  </button>
+                <div className="relative z-50" ref={categoriesRef}>
+  <button
+    type="button"
+    onClick={(e) => {
+      e.stopPropagation();
+      setShowCategories((p) => !p);
+      setActiveTopTab("Frontpage");
+    }}
+    className="whitespace-nowrap px-4 py-2 rounded-full text-sm font-medium bg-white text-gray-700 hover:bg-gray-100 border border-gray-200 flex items-center gap-2"
+  >
+    Categories{" "}
+    <ChevronDown
+      className={`h-4 w-4 transition-transform duration-200 ${
+        showCategories ? "rotate-180" : ""
+      }`}
+    />
+  </button>
 
-                  <AnimatePresence>
-                    {showCategories && (
-                      <motion.div
-                        initial={{ opacity: 0, y: -10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -10 }}
-                        transition={{ duration: 0.15 }}
-                        className="absolute left-0 mt-2 w-56 bg-white shadow-xl rounded-xl p-2 z-[9999] border max-h-[340px] overflow-y-auto"
-                        onClick={(e) => e.stopPropagation()}
-                      >
+  <AnimatePresence>
+    {showCategories && (
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -10 }}
+        transition={{ duration: 0.15 }}
+        className="absolute left-0 mt-2 w-56 bg-white shadow-xl rounded-xl p-2 z-[9999] border max-h-[340px] overflow-y-auto"
+        onClick={(e) => e.stopPropagation()}
+      >
                         {categories.map((cat) => (
                           <button
                             key={cat}
