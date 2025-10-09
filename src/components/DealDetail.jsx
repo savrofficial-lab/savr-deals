@@ -538,4 +538,73 @@ export default function DealDetail() {
                                   className="w-8 h-8 rounded-full object-cover"
                                 />
                               ) : (
-                                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white font-bold text-s
+                                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white font-bold text-lg">
+                                  {(r.profiles?.username?.[0] || "A").toUpperCase()}
+                                    </div>
+                                  )}
+                                  <div>
+                                    <p className="font-semibold text-gray-900">
+                                      {r.profiles?.username || "Anonymous"}
+                                    </p>
+                                    <span className="text-xs bg-blue-200 text-blue-900 px-2 py-0.5 rounded-full">
+                                      ⭐ Member
+                                    </span>
+                                  </div>
+                                </div>
+
+                                <div className="mt-2 text-sm text-gray-600 space-y-1 bg-gray-50 rounded-lg p-3">
+                                  <p className="flex justify-between">
+                                    <span>Posts:</span>
+                                    <span className="font-semibold">{r.profiles?.posts_count ?? 0}</span>
+                                  </p>
+                                  <p className="flex justify-between">
+                                    <span>Coins:</span>
+                                    <span className="font-semibold text-yellow-600">
+                                      {r.profiles?.coins ?? 0}
+                                    </span>
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="flex-1">
+                              <div className="flex justify-between items-start">
+                                <div>
+                                  <p className="text-sm font-medium text-gray-800">
+                                    {r.profiles?.username || "Anonymous"}
+                                  </p>
+                                  <p className="text-xs text-gray-400">
+                                    {new Date(r.created_at).toLocaleString("en-IN", {
+                                      day: "numeric",
+                                      month: "short",
+                                      hour: "2-digit",
+                                      minute: "2-digit",
+                                    })}
+                                  </p>
+                                </div>
+
+                                {r.user_id === currentUserId && (
+                                  <button
+                                    onClick={() => handleDeleteReply(r.id, c.id)}
+                                    className="text-xs text-red-500 hover:text-red-700 font-medium"
+                                  >
+                                    Delete
+                                  </button>
+                                )}
+                              </div>
+                              <p className="text-sm text-gray-700 mt-1">{r.text}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
