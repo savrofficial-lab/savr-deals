@@ -2,7 +2,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "../supabaseClient";
-import { ArrowLeft, Share2, Heart, ShoppingCart, ExternalLink } from "lucide-react";
+import { ArrowLeft, Share2, Heart, ShoppingCart } from "lucide-react";
 
 export default function DealDetail() {
   const { id } = useParams();
@@ -11,7 +11,9 @@ export default function DealDetail() {
 
   const [deal, setDeal] = useState(null);
   const [comments, setComments] = useState([]);
+  const [replies, setReplies] = useState({});
   const [commentDraft, setCommentDraft] = useState("");
+  const [replyDrafts, setReplyDrafts] = useState({});
   const [likesCount, setLikesCount] = useState(0);
   const [userLiked, setUserLiked] = useState(false);
   const [currentUserId, setCurrentUserId] = useState(null);
@@ -79,6 +81,31 @@ export default function DealDetail() {
     setComments((data || []).map((c) => normalizeComment(c)));
   }
 
+  // ---------- Fetch replies ----------
+  async function fetchReplies() {
+    const { data, error } = await supabase
+      .from("comment_replies")
+      .select(`
+        id,
+        comment_id,
+        text,
+        created_at,
+        user_id,
+        profiles ( username, avatar_url, coins, posts_count )
+      `)
+      .order("created_at", { ascending: true });
+
+    if (!error && data) {
+      // group replies by comment_id
+      const grouped = data.reduce((acc, r) => {
+        if (!acc[r.comment_id]) acc[r.comment_id] = [];
+        acc[r.comment_id].push(r);
+        return acc;
+      }, {});
+      setReplies(grouped);
+    }
+  }
+
   // ---------- Add comment ----------
   async function handleAddComment(e) {
     e?.preventDefault?.();
@@ -125,6 +152,43 @@ export default function DealDetail() {
     }
   }
 
+  // ---------- Add reply ----------
+  async function handleAddReply(commentId) {
+    const text = (replyDrafts[commentId] || "").trim();
+    if (!text) return alert("Please write something");
+    if (!currentUserId) return alert("Please log in to reply");
+
+    const { data, error } = await supabase
+      .from("comment_replies")
+      .insert({
+        comment_id: commentId,
+        user_id: currentUserId,
+        text,
+      })
+      .select("*, profiles ( username, avatar_url, coins, posts_count )")
+      .single();
+
+    if (!error && data) {
+      setReplies((prev) => ({
+        ...prev,
+        [commentId]: [...(prev[commentId] || []), data],
+      }));
+      setReplyDrafts((prev) => ({ ...prev, [commentId]: "" }));
+    }
+  }
+
+  // ---------- Delete reply ----------
+  async function handleDeleteReply(replyId, commentId) {
+    if (!window.confirm("Delete this reply?")) return;
+    const { error } = await supabase.from("comment_replies").delete().eq("id", replyId);
+    if (!error) {
+      setReplies((prev) => ({
+        ...prev,
+        [commentId]: (prev[commentId] || []).filter((r) => r.id !== replyId),
+      }));
+    }
+  }
+
   // ---------- Likes ----------
   async function fetchLikes() {
     const { data } = await supabase.from("likes").select("user_id").eq("deal_id", id);
@@ -164,10 +228,12 @@ export default function DealDetail() {
     }
   };
 
+  // ---------- Init ----------
   useEffect(() => {
     if (id) {
       fetchDeal();
       fetchComments();
+      fetchReplies();
       fetchLikes();
     }
   }, [id, currentUserId]);
@@ -425,13 +491,51 @@ export default function DealDetail() {
                     </div>
 
                     <p className="text-gray-700 mt-2 leading-relaxed">{c.text}</p>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-            }
+
+                    {/* Reply button */}
+                    <button
+                      className="text-xs text-yellow-700 mt-2 hover:text-yellow-800 font-medium"
+                      onClick={() =>
+                        setReplyDrafts((prev) => ({
+                          ...prev,
+                          [c.id]: prev[c.id] === undefined ? "" : undefined,
+                        }))
+                      }
+                    >
+                      💬 Reply
+                    </button>
+
+                    {/* Reply input box */}
+                    {replyDrafts[c.id] !== undefined && (
+                      <div className="mt-3 flex gap-2">
+                        <input
+                          value={replyDrafts[c.id] || ""}
+                          onChange={(e) =>
+                            setReplyDrafts((prev) => ({ ...prev, [c.id]: e.target.value }))
+                          }
+                          className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                          placeholder="Write a reply..."
+                        />
+                        <button
+                          onClick={() => handleAddReply(c.id)}
+                          className="px-4 py-2 bg-yellow-700 text-white rounded-lg text-sm font-semibold hover:bg-yellow-800"
+                        >
+                          Post
+                        </button>
+                      </div>
+                    )}
+
+                    {/* Replies */}
+                    {replies[c.id]?.length > 0 && (
+                      <div className="mt-4 ml-8 space-y-3">
+                        {replies[c.id].map((r) => (
+                          <div key={r.id} className="bg-gray-50 p-3 rounded-lg flex gap-3 items-start">
+                            {/* Reply avatar */}
+                            <div className="relative group">
+                              {r.profiles?.avatar_url ? (
+                                <img
+                                  src={r.profiles.avatar_url}
+                                  className="w-8 h-8 rounded-full object-cover"
+                                />
+                              ) : (
+                                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white font-bold text-s
