@@ -1,15 +1,24 @@
+// src/components/DealsGrid.jsx
 import React, { useEffect, useState } from "react";
 import { supabase } from "../supabaseClient";
 import { Link } from "react-router-dom";
-import { ChevronDown } from "lucide-react"; // for dropdown icon
+import { ChevronDown } from "lucide-react"; // optional icon; if failing, replace with inline svg
 
-export default function DealsGrid({ search }) {
+export default function DealsGrid({ search, selectedCategory: propSelectedCategory = "", hideHeaderCategories = false }) {
   const [deals, setDeals] = useState([]);
   const [allCategories, setAllCategories] = useState(["All"]);
-  const [selectedCategory, setSelectedCategory] = useState("All");
+  const [selectedCategoryInternal, setSelectedCategoryInternal] = useState(propSelectedCategory || "All");
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState("");
-  const [showDropdown, setShowDropdown] = useState(false); // 👈 popup state
+  const [showDropdown, setShowDropdown] = useState(false); // for local popup if header isn't used
+
+  // when parent passes selectedCategory, reflect it
+  useEffect(() => {
+    if (propSelectedCategory !== undefined && propSelectedCategory !== null) {
+      // propSelectedCategory "" or "All" => show All
+      setSelectedCategoryInternal(propSelectedCategory === "" ? "All" : propSelectedCategory);
+    }
+  }, [propSelectedCategory]);
 
   // Helpers
   const imgFor = (d) => d.image || d.image_url || d.img || d.thumbnail || "/placeholder.png";
@@ -17,7 +26,7 @@ export default function DealsGrid({ search }) {
   const priceFor = (d) => d.price ?? d.discounted_price ?? "";
   const oldPriceFor = (d) => d.oldPrice ?? d.old_price ?? d.mrp ?? "";
 
-  // Load categories from published deals
+  // Load categories from published deals (for local dropdown fallback)
   useEffect(() => {
     let mounted = true;
     (async () => {
@@ -50,29 +59,37 @@ export default function DealsGrid({ search }) {
     };
   }, []);
 
-  // Fetch deals
+  // Fetch deals (reacts to selectedCategoryInternal or incoming search)
   useEffect(() => {
     let mounted = true;
     async function fetchDeals() {
       setLoading(true);
       setErrorMsg("");
+
       try {
+        // base query always enforces published = true
         let query = supabase.from("deals").select("*").eq("published", true);
 
-        if (selectedCategory && selectedCategory !== "All") {
-          query = query.eq("category", selectedCategory);
+        // category filter (server-side)
+        const finalCategory = (selectedCategoryInternal || "All");
+        if (finalCategory && finalCategory !== "All") {
+          query = query.eq("category", finalCategory);
         }
 
+        // search filter (server-side)
         if (search && search.trim() !== "") {
+          // apply ilike for case-insensitive partial match on title
           query = query.ilike("title", `%${search.trim()}%`);
         }
 
+        // execute
         const { data, error } = await query;
+
         if (!mounted) return;
 
         if (error) {
           console.error("Supabase query error:", error);
-          setErrorMsg(error.message || "Could not load deals.");
+          setErrorMsg(error.message || "Could not load deals. Please refresh.");
           setDeals([]);
         } else {
           setDeals(Array.isArray(data) ? data : []);
@@ -91,49 +108,46 @@ export default function DealsGrid({ search }) {
     return () => {
       mounted = false;
     };
-  }, [selectedCategory, search]);
+  }, [selectedCategoryInternal, search]);
 
   // UI states
   if (loading) return <div className="text-center text-gray-500 py-8">Loading deals…</div>;
   if (errorMsg) return <div className="text-center text-red-600 py-8">Error: {errorMsg}</div>;
-  if (!deals || deals.length === 0)
-    return <div className="text-center text-gray-500 py-8">No deals yet.</div>;
+  if (!deals || deals.length === 0) return <div className="text-center text-gray-500 py-8">No deals yet.</div>;
 
   return (
     <div className="relative">
-      {/* 🔽 Category dropdown (top-right small arrow) */}
-      <div className="flex justify-center mb-6 relative">
-        <button
-          onClick={() => setShowDropdown(!showDropdown)}
-          className="flex items-center gap-1 px-4 py-2 bg-white border border-gray-300 rounded-full shadow-sm hover:bg-gray-100 transition"
-        >
-          Categories <ChevronDown className="w-4 h-4" />
-        </button>
+      {/* If parent didn't provide header categories, show small dropdown here */}
+      {!hideHeaderCategories && (
+        <div className="flex justify-center mb-6 relative">
+          <button
+            onClick={() => setShowDropdown(!showDropdown)}
+            className="flex items-center gap-1 px-4 py-2 bg-white border border-gray-300 rounded-full shadow-sm hover:bg-gray-100 transition"
+          >
+            Categories <ChevronDown className="w-4 h-4" />
+          </button>
 
-        {/* Popup */}
-        {showDropdown && (
-          <div className="absolute top-12 bg-white rounded-xl shadow-lg border border-gray-200 p-3 w-56 z-10">
-            {allCategories.map((cat) => (
-              <button
-                key={cat}
-                onClick={() => {
-                  setSelectedCategory(cat);
-                  setShowDropdown(false);
-                }}
-                className={`block w-full text-left px-4 py-2 rounded-lg text-sm ${
-                  selectedCategory === cat
-                    ? "bg-yellow-800 text-white"
-                    : "hover:bg-gray-100 text-gray-700"
-                }`}
-              >
-                {cat}
-              </button>
-            ))}
-          </div>
-        )}
-      </div>
+          {/* Popup */}
+          {showDropdown && (
+            <div className="absolute top-12 bg-white rounded-xl shadow-lg border border-gray-200 p-3 w-56 z-10">
+              {allCategories.map((cat) => (
+                <button
+                  key={cat}
+                  onClick={() => {
+                    setSelectedCategoryInternal(cat);
+                    setShowDropdown(false);
+                  }}
+                  className={`block w-full text-left px-4 py-2 rounded-lg text-sm ${selectedCategoryInternal === cat ? "bg-yellow-800 text-white" : "hover:bg-gray-100 text-gray-700"}`}
+                >
+                  {cat}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
-      {/* Deals grid (untouched) */}
+      {/* Deals grid (untouched layout) */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
         {deals.map((deal, idx) => {
           const imageSrc = imgFor(deal);
