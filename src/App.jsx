@@ -234,10 +234,13 @@ export default function App() {
             </div>
           )}
           {activeTopTab === "Hot Deals" && (
-            <div className="text-center text-gray-500 py-12">
-              Hot Deals coming soon.
-            </div>
-          )}
+  <DealsGrid
+    search={search}
+    selectedCategory={selectedCategory}
+    hideHeaderCategories={true}
+    filterHotDeals={true}
+  />
+)}
         </>
       );
     }
