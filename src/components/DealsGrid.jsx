@@ -94,16 +94,8 @@ if (finalCategory && finalCategory !== "All" && finalCategory !== "Hot Deals") {
 
         // you can add ordering/pagination here as needed
         // 🔥 Hot Deals logic
-if (filterHotDeals) {
-  // Only include deals with at least 55% discount
-  query = query.gte("discount_percent", 55);
-}
-
-// Order: by like_count if hot deals, else by newest first
-const { data: dealsData, error: dealsError } = await query.order(
-  filterHotDeals ? "likes_count" : "id",
-  { ascending: false }
-);
+        // Order newest first (we’ll handle hot filtering later)
+const { data: dealsData, error: dealsError } = await query.order("id", { ascending: false });
 
         if (!mounted) return;
 
