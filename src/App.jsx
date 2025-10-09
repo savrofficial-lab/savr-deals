@@ -189,26 +189,25 @@ export default function App() {
   }, []);
 
   // ---------------- OUTSIDE CLICK ----------------
-  useEffect(() => {
-    function handleClickOutside(e) {
-      if (categoriesRef.current && !categoriesRef.current.contains(e.target)) {
-        setShowCategories(false);
-      }
-    }
+    useEffect(() => {
+  if (!showCategories) return;
 
-    // Delay attaching after opening
-    let listener;
-    if (showCategories) {
-      setTimeout(() => {
-        document.addEventListener("click", handleClickOutside);
-        listener = handleClickOutside;
-      }, 50);
+  function handleClickOutside(e) {
+    if (categoriesRef.current && !categoriesRef.current.contains(e.target)) {
+      setShowCategories(false);
     }
+  }
 
-    return () => {
-      if (listener) document.removeEventListener("click", listener);
-    };
-  }, [showCategories]);
+  // Add delay to prevent immediate closing
+  const timeoutId = setTimeout(() => {
+    document.addEventListener("click", handleClickOutside);
+  }, 100);
+
+  return () => {
+    clearTimeout(timeoutId);
+    document.removeEventListener("click", handleClickOutside);
+  };
+}, [showCategories]);
 
   // ---------------- MAIN RENDER ----------------
   function renderMain() {
@@ -304,58 +303,50 @@ export default function App() {
       >
         Frontpage
       </button>
-
       {/* CATEGORIES DROPDOWN */}
-      <div className="relative" ref={categoriesRef}>
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-            setShowCategories((p) => !p);
-            setActiveTopTab("Frontpage");
-          }}
-          className="whitespace-nowrap px-4 py-2 rounded-full text-sm font-medium bg-white text-gray-700 hover:bg-gray-100 border border-gray-200 flex items-center gap-2"
-        >
-          Categories{" "}
-          <ChevronDown
-            className={`h-4 w-4 transition-transform duration-200 ${
-              showCategories ? "rotate-180" : ""
-            }`}
-          />
-        </button>
+<div className="relative" ref={categoriesRef}>
+  <button
+    type="button"
+    onClick={() => {
+      setShowCategories((p) => !p);
+      setActiveTopTab("Frontpage");
+    }}
+    className="whitespace-nowrap px-4 py-2 rounded-full text-sm font-medium bg-white text-gray-700 hover:bg-gray-100 border border-gray-200 flex items-center gap-2"
+  >
+    Categories{" "}
+    <ChevronDown
+      className={`h-4 w-4 transition-transform duration-200 ${
+        showCategories ? "rotate-180" : ""
+      }`}
+    />
+  </button>
 
-        <AnimatePresence>
-          {showCategories && (
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.15 }}
-              className="absolute left-0 mt-2 w-56 bg-white shadow-xl rounded-xl p-2 border max-h-[340px] overflow-y-auto"
-              style={{ zIndex: 99999 }}
-              onClick={(e) => e.stopPropagation()}
-            >
-              {categories.map((cat) => (
-                <button
-                  key={cat}
-                  onClick={() => {
-                    setSelectedCategory(cat === "All" ? "" : cat);
-                    setSearchRaw("");
-                    setShowCategories(false);
-                  }}
-                  className={`block w-full text-left px-3 py-2 rounded hover:bg-gray-100 text-sm ${
-                    selectedCategory === cat
-                      ? "bg-yellow-100 text-yellow-800"
-                      : ""
-                  }`}
-                >
-                  {cat}
-                </button>
-              ))}
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
+  {showCategories && (
+    <div
+      className="absolute left-0 mt-2 w-56 bg-white shadow-xl rounded-xl p-2 border max-h-[340px] overflow-y-auto"
+      style={{ zIndex: 99999 }}
+    >
+      {categories.map((cat) => (
+        <button
+          key={cat}
+          onClick={() => {
+            setSelectedCategory(cat === "All" ? "" : cat);
+            setSearchRaw("");
+            setShowCategories(false);
+          }}
+          className={`block w-full text-left px-3 py-2 rounded hover:bg-gray-100 text-sm ${
+            selectedCategory === cat
+              ? "bg-yellow-100 text-yellow-800"
+              : ""
+          }`}
+        >
+          {cat}
+        </button>
+      ))}
+    </div>
+  )}
+</div>
+      
 
       <button
         onClick={() => setActiveTopTab("Forums")}
