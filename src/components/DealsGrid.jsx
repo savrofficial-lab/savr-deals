@@ -16,6 +16,7 @@ export default function DealsGrid({
   search = "",
   selectedCategory: propSelectedCategory = "",
   hideHeaderCategories = false,
+  filterHotDeals = false, // 👈 new prop added here
 }) {
   const [deals, setDeals] = useState([]);
   const [allCategories, setAllCategories] = useState(["All"]);
@@ -88,7 +89,17 @@ export default function DealsGrid({
         }
 
         // you can add ordering/pagination here as needed
-        const { data: dealsData, error: dealsError } = await query.order("id", { ascending: false });
+        // 🔥 Hot Deals logic
+if (filterHotDeals) {
+  // Only include deals with at least 55% discount
+  query = query.gte("discount_percent", 55);
+}
+
+// Order: by like_count if hot deals, else by newest first
+const { data: dealsData, error: dealsError } = await query.order(
+  filterHotDeals ? "likes_count" : "id",
+  { ascending: false }
+);
 
         if (!mounted) return;
 
