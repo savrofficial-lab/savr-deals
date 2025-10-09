@@ -2,21 +2,13 @@
 import React, { useEffect, useState } from "react";
 import { supabase } from "../supabaseClient";
 import { Link } from "react-router-dom";
-import { ChevronDown, ArrowUp } from "lucide-react"; // lucide-react is used elsewhere in your app
+import { ChevronDown, ArrowUp } from "lucide-react";
 
-/**
- * DealsGrid
- *
- * Props:
- *  - search: string (optional)          => server-side ilike on title
- *  - selectedCategory: string (optional) => category filter passed from parent ("" or "All" means no filter)
- *  - hideHeaderCategories: boolean      => if true, DON'T render the local categories control (App provides categories)
- */
 export default function DealsGrid({
   search = "",
   selectedCategory: propSelectedCategory = "",
   hideHeaderCategories = false,
-  filterHotDeals = false, // 👈 new prop added here
+  filterHotDeals = false,
 }) {
   const [deals, setDeals] = useState([]);
   const [allCategories, setAllCategories] = useState(["All"]);
@@ -25,7 +17,7 @@ export default function DealsGrid({
   );
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState("");
-  const [showDropdown, setShowDropdown] = useState(false); // local popup
+  const [showDropdown, setShowDropdown] = useState(false);
 
   // Keep internal selection in sync when parent passes a category
   useEffect(() => {
@@ -42,7 +34,7 @@ export default function DealsGrid({
   const priceFor = (d) => d.price ?? d.discounted_price ?? d.amount ?? "";
   const oldPriceFor = (d) => d.oldPrice ?? d.old_price ?? d.mrp ?? "";
 
-  // Load categories (used for the local dropdown fallback)
+  // Load categories
   useEffect(() => {
     let mounted = true;
     (async () => {
@@ -66,7 +58,7 @@ export default function DealsGrid({
     };
   }, []);
 
-  // Fetch deals + like counts whenever selectedCategoryInternal or search changes
+  // Fetch deals + like counts
   useEffect(() => {
     let mounted = true;
 
@@ -77,109 +69,91 @@ export default function DealsGrid({
       try {
         let query = supabase.from("deals").select("*").eq("published", true);
 
-        // category filter (server-side)
-        // category filter (server-side)
-const finalCategory = (selectedCategoryInternal || "All");
+        const finalCategory = (selectedCategoryInternal || "All");
 
-// ✅ Special handling for "Hot Deals"
-// We don’t query Supabase for this category; we’ll filter it client-side
-if (finalCategory && finalCategory !== "All" && finalCategory !== "Hot Deals") {
-  query = query.eq("category", finalCategory);
-}
+        // Special handling for "Hot Deals" - we'll filter it client-side
+        if (finalCategory && finalCategory !== "All" && finalCategory !== "Hot Deals") {
+          query = query.eq("category", finalCategory);
+        }
 
-    async function fetchDeals() {
-  setLoading(true);
-  setErrorMsg("");
+        // search filter (server-side)
+        if (search && search.trim() !== "") {
+          query = query.ilike("title", `%${search.trim()}%`);
+        }
 
-  try {
-    let query = supabase.from("deals").select("*").eq("published", true);
+        // Order newest first
+        const { data: dealsData, error: dealsError } = await query.order("id", { ascending: false });
 
-    const finalCategory = (selectedCategoryInternal || "All");
+        if (!mounted) return;
 
-    // ✅ Special handling for "Hot Deals"
-    // We don't query Supabase for this category; we'll filter it client-side
-    if (finalCategory && finalCategory !== "All" && finalCategory !== "Hot Deals") {
-      query = query.eq("category", finalCategory);
-    }
+        if (dealsError) {
+          console.error("Supabase query error (deals):", dealsError);
+          setErrorMsg(dealsError.message || "Could not load deals.");
+          setDeals([]);
+          setLoading(false);
+          return;
+        }
 
-    // search filter (server-side)
-    if (search && search.trim() !== "") {
-      query = query.ilike("title", `%${search.trim()}%`);
-    }
+        const list = Array.isArray(dealsData) ? dealsData : [];
 
-    // Order newest first
-    const { data: dealsData, error: dealsError } = await query.order("id", { ascending: false });
+        if (list.length === 0) {
+          setDeals([]);
+          setLoading(false);
+          return;
+        }
 
-    if (!mounted) return;
+        // Fetch like counts
+        const ids = list.map((d) => d.id).filter(Boolean);
+        let likeCounts = {};
+        if (ids.length > 0) {
+          const { data: likesData, error: likesError } = await supabase
+            .from("likes")
+            .select("deal_id")
+            .in("deal_id", ids);
 
-    if (dealsError) {
-      console.error("Supabase query error (deals):", dealsError);
-      setErrorMsg(dealsError.message || "Could not load deals.");
-      setDeals([]);
-      setLoading(false);
-      return;
-    }
+          if (likesError) {
+            console.warn("Could not fetch likes counts:", likesError);
+            likeCounts = {};
+          } else {
+            likeCounts = likesData.reduce((acc, l) => {
+              acc[l.deal_id] = (acc[l.deal_id] || 0) + 1;
+              return acc;
+            }, {});
+          }
+        }
 
-    const list = Array.isArray(dealsData) ? dealsData : [];
+        // Merge like counts and calculate discount for ALL deals
+        let merged = list.map((d) => {
+          const price = parseFloat(d.price ?? d.discounted_price ?? 0);
+          const oldPrice = parseFloat(d.oldPrice ?? d.old_price ?? 0);
+          let discountPercent = 0;
+          
+          if (!Number.isNaN(price) && !Number.isNaN(oldPrice) && oldPrice > price) {
+            discountPercent = Math.round(((oldPrice - price) / oldPrice) * 100);
+          }
+          
+          return {
+            ...d,
+            like_count: likeCounts[d.id] || 0,
+            discountPercent: discountPercent
+          };
+        });
 
-    if (list.length === 0) {
-      setDeals([]);
-      setLoading(false);
-      return;
-    }
+        // Apply Hot Deals filter if needed
+        if (selectedCategoryInternal === "Hot Deals" || filterHotDeals) {
+          merged = merged
+            .filter((d) => d.discountPercent >= 55)
+            .sort((a, b) => b.like_count - a.like_count);
+        }
 
-    // Fetch like counts *only for visible deals* (single query)
-    const ids = list.map((d) => d.id).filter(Boolean);
-    let likeCounts = {};
-    if (ids.length > 0) {
-      const { data: likesData, error: likesError } = await supabase
-        .from("likes")
-        .select("deal_id")
-        .in("deal_id", ids);
-
-      if (likesError) {
-        console.warn("Could not fetch likes counts:", likesError);
-        likeCounts = {};
-      } else {
-        likeCounts = likesData.reduce((acc, l) => {
-          acc[l.deal_id] = (acc[l.deal_id] || 0) + 1;
-          return acc;
-        }, {});
+        setDeals(merged);
+      } catch (err) {
+        console.error("Unexpected fetch error:", err);
+        setErrorMsg(String(err));
+        setDeals([]);
+      } finally {
+        if (mounted) setLoading(false);
       }
-    }
-
-    // Merge like counts and calculate discount for ALL deals
-    let merged = list.map((d) => {
-      const price = parseFloat(d.price ?? d.discounted_price ?? 0);
-      const oldPrice = parseFloat(d.oldPrice ?? d.old_price ?? 0);
-      let discountPercent = 0;
-      
-      if (!Number.isNaN(price) && !Number.isNaN(oldPrice) && oldPrice > price) {
-        discountPercent = Math.round(((oldPrice - price) / oldPrice) * 100);
-      }
-      
-      return {
-        ...d,
-        like_count: likeCounts[d.id] || 0,
-        discountPercent: discountPercent
-      };
-    });
-
-    // ✅ Apply Hot Deals filter if needed
-    if (selectedCategoryInternal === "Hot Deals" || filterHotDeals) {
-      merged = merged
-        .filter((d) => d.discountPercent >= 55)
-        .sort((a, b) => b.like_count - a.like_count);
-    }
-
-    setDeals(merged);
-  } catch (err) {
-    console.error("Unexpected fetch error:", err);
-    setErrorMsg(String(err));
-    setDeals([]);
-  } finally {
-    if (mounted) setLoading(false);
-  }
     }
 
     fetchDeals();
@@ -187,7 +161,7 @@ if (finalCategory && finalCategory !== "All" && finalCategory !== "Hot Deals") {
     return () => {
       mounted = false;
     };
-  }, [selectedCategoryInternal, search]);
+  }, [selectedCategoryInternal, search, filterHotDeals]);
 
   // UI states
   if (loading) return <div className="text-center text-gray-500 py-8">Loading deals…</div>;
@@ -257,7 +231,7 @@ if (finalCategory && finalCategory !== "All" && finalCategory !== "Hot Deals") {
               key={deal.id ?? idx}
               className="bg-white rounded-2xl shadow-md hover:shadow-xl transition-transform hover:-translate-y-1 flex flex-col p-3 relative"
             >
-              {/* like count badge top-right (unclickable) */}
+              {/* like count badge top-right */}
               <div className="absolute top-3 right-3 bg-white/95 rounded-full px-2 py-1 flex items-center gap-2 shadow-sm text-sm font-medium text-gray-700 z-20">
                 <ArrowUp className="w-4 h-4 text-yellow-700" />
                 <span>{deal.like_count ?? 0}</span>
