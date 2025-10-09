@@ -2,16 +2,6 @@
 import React, { useEffect, useState, useRef } from "react";
 import { supabase } from "../supabaseClient";
 
-/*
-  MyCoins.jsx
-  - Shows coin balance by:
-      1) trying coins table (balance/pending)
-      2) falling back to summing coins_ledger.amount for the user
-  - Subscribes to realtime changes on coins_ledger (for the user) and profiles (for username/coins)
-  - Shows leaderboard (tries leaderboard view, falls back to profiles)
-  - Safe: does not change DB; only reads and listens.
-*/
-
 export default function MyCoins({ userId: propUserId }) {
   const mountedRef = useRef(true);
   const [uid, setUid] = useState(propUserId || null);
@@ -23,7 +13,7 @@ export default function MyCoins({ userId: propUserId }) {
   const [leaderboard, setLeaderboard] = useState([]);
   const [error, setError] = useState(null);
 
-  // derive current user id if prop not passed
+  // Get current user id
   useEffect(() => {
     mountedRef.current = true;
     if (propUserId) {
@@ -45,17 +35,34 @@ export default function MyCoins({ userId: propUserId }) {
     };
   }, [propUserId]);
 
-  // load balance: prefer coins table, fallback sum of coins_ledger.amount
+  // Load balance - ALWAYS prefer profiles.coins first, then fallback to coins_ledger
   async function loadBalanceForUser(userId) {
     if (!userId) return;
     setLoading(true);
     setError(null);
 
     try {
-      // 1) try coins table
+      // 1) FIRST: Try profiles.coins (this is where triggers update)
+      const { data: profileData, error: profileErr } = await supabase
+        .from("profiles")
+        .select("username, coins")
+        .eq("user_id", userId)
+        .maybeSingle();
+
+      if (!profileErr && profileData) {
+        if (mountedRef.current) {
+          setUsername(profileData.username || "");
+          setBalance(Number(profileData.coins || 0));
+          setPending(0);
+        }
+        setLoading(false);
+        return;
+      }
+
+      // 2) FALLBACK: Try coins table
       const { data: coinData, error: coinErr } = await supabase
         .from("coins")
-        .select("balance,pending")
+        .select("balance, pending")
         .eq("user_id", userId)
         .maybeSingle();
 
@@ -68,7 +75,7 @@ export default function MyCoins({ userId: propUserId }) {
         return;
       }
 
-      // 2) fallback to summing coins_ledger (server may contain rewards)
+      // 3) LAST RESORT: Sum coins_ledger
       const { data: ledgerRows, error: ledgerErr } = await supabase
         .from("coins_ledger")
         .select("amount")
@@ -84,8 +91,8 @@ export default function MyCoins({ userId: propUserId }) {
         return;
       }
 
-      // If both fail:
-      console.warn("Could not fetch coins or ledger:", coinErr ?? ledgerErr);
+      // If all fail
+      console.warn("Could not fetch coins:", profileErr ?? coinErr ?? ledgerErr);
       if (mountedRef.current) {
         setBalance(0);
         setPending(0);
@@ -98,48 +105,27 @@ export default function MyCoins({ userId: propUserId }) {
     }
   }
 
-  // load username (from profiles)
-  async function loadProfile(userId) {
-    if (!userId) return;
-    try {
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("username, coins")
-        .eq("user_id", userId)
-        .maybeSingle();
-
-      if (!error && data) {
-        if (mountedRef.current) {
-          setUsername(data.username || "");
-          // if profiles.coins exists and coins table missing, prefer profiles.coins
-          if ((Number(data.coins) || 0) > 0 && (balance === 0 || balance === null)) {
-            setBalance(Number(data.coins || 0));
-          }
-        }
-      }
-    } catch (err) {
-      console.error("loadProfile error:", err);
-    }
-  }
-
-  // load leaderboard — try view 'leaderboard' first, fallback to profiles
+  // Load leaderboard
   async function loadLeaderboard() {
     try {
-      const { data, error } = await supabase.from("leaderboard").select("*").order("rank", { ascending: true });
+      const { data, error } = await supabase
+        .from("leaderboard")
+        .select("*")
+        .order("rank", { ascending: true });
+
       if (!error && data && data.length) {
         if (mountedRef.current) setLeaderboard(data);
         return;
       }
 
-      // fallback to profiles
+      // Fallback to profiles
       const { data: profs, error: pErr } = await supabase
         .from("profiles")
-        .select("user_id,username,coins")
+        .select("user_id, username, coins")
         .order("coins", { ascending: false })
         .limit(10);
 
       if (!pErr && profs) {
-        // create rank from order
         const ranked = profs.map((p, i) => ({
           user_id: p.user_id,
           username: p.username,
@@ -153,16 +139,14 @@ export default function MyCoins({ userId: propUserId }) {
     }
   }
 
-  // subscribe to realtime updates: coins_ledger (user) and profiles (user or global leaderboard)
+  // Real-time subscriptions
   useEffect(() => {
     if (!uid) return;
     let subRefs = [];
 
-    // helper to remove subscriptions later
     const cleanup = () => {
       try {
         subRefs.forEach((s) => {
-          // supabase v2: removeChannel, v1: removeSubscription
           try {
             supabase.removeChannel(s);
           } catch (e) {
@@ -177,110 +161,82 @@ export default function MyCoins({ userId: propUserId }) {
       subRefs = [];
     };
 
-    // create channel style subscription if available
     try {
-      // coins_ledger changes for this user
+      // Watch coins_ledger for this user
       const ch1 = supabase
         .channel(`coins_ledger_user_${uid}`)
         .on(
           "postgres_changes",
-          { event: "*", schema: "public", table: "coins_ledger", filter: `user_id=eq.${uid}` },
+          {
+            event: "*",
+            schema: "public",
+            table: "coins_ledger",
+            filter: `user_id=eq.${uid}`,
+          },
           (payload) => {
-            // refresh balance whenever ledger changed for this user
+            console.log("💰 Coins ledger changed:", payload);
             loadBalanceForUser(uid);
           }
         )
-        // also watch profiles updates for username/coins change
+        .subscribe();
+
+      // Watch profiles updates for this user
+      const ch2 = supabase
+        .channel(`profiles_user_${uid}`)
         .on(
           "postgres_changes",
-          { event: "UPDATE", schema: "public", table: "profiles", filter: `user_id=eq.${uid}` },
+          {
+            event: "UPDATE",
+            schema: "public",
+            table: "profiles",
+            filter: `user_id=eq.${uid}`,
+          },
           (payload) => {
-            // payload.new may have updated coins or username
-            if (payload?.new) {
-              if (mountedRef.current) {
-                setUsername(payload.new.username ?? username);
-                if (payload.new.coins !== undefined && payload.new.coins !== null) {
-                  setBalance(Number(payload.new.coins || 0));
-                }
-              }
+            console.log("👤 Profile updated:", payload);
+            if (payload?.new && mountedRef.current) {
+              setUsername(payload.new.username || username);
+              setBalance(Number(payload.new.coins || 0));
             }
-            // refresh leaderboard too (if global)
             loadLeaderboard();
           }
         )
         .subscribe();
 
-      subRefs.push(ch1);
-    } catch (err) {
-      console.warn("channel subscribe failed, falling back to .from() style:", err);
-
-      try {
-        const s1 = supabase
-          .from(`coins_ledger:user_id=eq.${uid}`)
-          .on("*", (payload) => {
-            loadBalanceForUser(uid);
-          })
-          .subscribe();
-        const s2 = supabase
-          .from(`profiles:user_id=eq.${uid}`)
-          .on("UPDATE", (payload) => {
-            if (payload?.new) {
-              if (mountedRef.current) {
-                setUsername(payload.new.username ?? username);
-                if (payload.new.coins !== undefined && payload.new.coins !== null) {
-                  setBalance(Number(payload.new.coins || 0));
-                }
-              }
-            }
-            loadLeaderboard();
-          })
-          .subscribe();
-
-        subRefs.push(s1, s2);
-      } catch (err2) {
-        console.warn("fallback .from() subscribe also failed:", err2);
-      }
-    }
-
-    // also subscribe to profiles updates globally to keep leaderboard fresh
-    try {
-      const chL = supabase
+      // Watch all profiles for leaderboard updates
+      const ch3 = supabase
         .channel(`profiles_leaderboard`)
         .on(
           "postgres_changes",
           { event: "*", schema: "public", table: "profiles" },
-          () => loadLeaderboard()
+          () => {
+            console.log("📊 Leaderboard update");
+            loadLeaderboard();
+          }
         )
         .subscribe();
-      subRefs.push(chL);
+
+      subRefs.push(ch1, ch2, ch3);
     } catch (err) {
-      try {
-        const sL = supabase.from("profiles").on("*", () => loadLeaderboard()).subscribe();
-        subRefs.push(sL);
-      } catch (e) {}
+      console.warn("Subscription failed:", err);
     }
 
-    // cleanup on unmount or uid change
     return () => {
       cleanup();
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [uid]);
 
-  // initial loads when uid available
+  // Initial loads
   useEffect(() => {
     if (!uid) return;
-    loadProfile(uid);
     loadBalanceForUser(uid);
     loadLeaderboard();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [uid]);
 
-  // manual refresh
+  // Manual refresh
   const refresh = async () => {
     if (!uid) return;
+    console.log("🔄 Manual refresh triggered");
     await loadBalanceForUser(uid);
-    await loadProfile(uid);
     await loadLeaderboard();
   };
 
@@ -298,27 +254,44 @@ export default function MyCoins({ userId: propUserId }) {
         <div className="bg-white rounded-2xl shadow p-6 text-center">
           <div className="text-sm text-gray-500">Available Coins</div>
           <div className="text-4xl font-bold text-yellow-600 mt-2">{balance}</div>
-          <div className="text-sm text-gray-400 mt-1">{pending} pending</div>
+          {pending > 0 && (
+            <div className="text-sm text-gray-400 mt-1">{pending} pending</div>
+          )}
 
           <div className="mt-4 flex justify-center gap-3">
-            <button onClick={refresh} className="px-4 py-2 bg-gray-100 rounded">Refresh</button>
-            <button className="px-4 py-2 bg-yellow-700 text-white rounded">Redeem (soon)</button>
+            <button
+              onClick={refresh}
+              className="px-4 py-2 bg-gray-100 rounded hover:bg-gray-200 transition"
+            >
+              🔄 Refresh
+            </button>
+            <button className="px-4 py-2 bg-yellow-700 text-white rounded hover:bg-yellow-800 transition">
+              🎁 Redeem (soon)
+            </button>
           </div>
 
+          {loading && <div className="text-gray-500 mt-3">Loading...</div>}
           {error && <div className="text-red-600 mt-3">{error}</div>}
         </div>
 
         <div className="mt-6 bg-white rounded-2xl shadow p-4">
-          <h3 className="font-semibold mb-2">Top Hunters</h3>
+          <h3 className="font-semibold mb-2">🏆 Top Hunters</h3>
           {leaderboard && leaderboard.length ? (
             <ul className="divide-y">
               {leaderboard.map((u, idx) => (
-                <li key={u.user_id ?? u.username ?? idx} className="flex justify-between py-2">
+                <li
+                  key={u.user_id ?? u.username ?? idx}
+                  className="flex justify-between py-2"
+                >
                   <div className="flex items-center gap-3">
-                    <span className="font-semibold text-yellow-700">#{u.rank ?? idx + 1}</span>
+                    <span className="font-semibold text-yellow-700">
+                      #{u.rank ?? idx + 1}
+                    </span>
                     <span>{u.username ?? u.user_id}</span>
                   </div>
-                  <div className="font-semibold text-yellow-600">{u.coins ?? 0} 🪙</div>
+                  <div className="font-semibold text-yellow-600">
+                    {u.coins ?? 0} 🪙
+                  </div>
                 </li>
               ))}
             </ul>
