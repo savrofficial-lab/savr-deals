@@ -566,7 +566,7 @@ export default function DealDetail() {
                                   </p>
                                 </div>
                               </div>
-                            </div>
+                          
 
                             <div className="flex-1">
                               <div className="flex justify-between items-start">
