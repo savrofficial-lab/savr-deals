@@ -87,87 +87,99 @@ if (finalCategory && finalCategory !== "All" && finalCategory !== "Hot Deals") {
   query = query.eq("category", finalCategory);
 }
 
-        // search filter (server-side)
-        if (search && search.trim() !== "") {
-          query = query.ilike("title", `%${search.trim()}%`);
-        }
+    async function fetchDeals() {
+  setLoading(true);
+  setErrorMsg("");
 
-        // you can add ordering/pagination here as needed
-        // 🔥 Hot Deals logic
-        // Order newest first (we’ll handle hot filtering later)
-const { data: dealsData, error: dealsError } = await query.order("id", { ascending: false });
+  try {
+    let query = supabase.from("deals").select("*").eq("published", true);
 
-        if (!mounted) return;
+    const finalCategory = (selectedCategoryInternal || "All");
 
-        if (dealsError) {
-          console.error("Supabase query error (deals):", dealsError);
-          setErrorMsg(dealsError.message || "Could not load deals.");
-          setDeals([]);
-          setLoading(false);
-          return;
-        }
+    // ✅ Special handling for "Hot Deals"
+    // We don't query Supabase for this category; we'll filter it client-side
+    if (finalCategory && finalCategory !== "All" && finalCategory !== "Hot Deals") {
+      query = query.eq("category", finalCategory);
+    }
 
-        const list = Array.isArray(dealsData) ? dealsData : [];
+    // search filter (server-side)
+    if (search && search.trim() !== "") {
+      query = query.ilike("title", `%${search.trim()}%`);
+    }
 
-        if (list.length === 0) {
-          setDeals([]);
-          setLoading(false);
-          return;
-        }
+    // Order newest first
+    const { data: dealsData, error: dealsError } = await query.order("id", { ascending: false });
 
-        // Fetch like counts *only for visible deals* (single query)
-        const ids = list.map((d) => d.id).filter(Boolean);
-        let likeCounts = {};
-        if (ids.length > 0) {
-          const { data: likesData, error: likesError } = await supabase
-            .from("likes")
-            .select("deal_id")
-            .in("deal_id", ids);
+    if (!mounted) return;
 
-          if (likesError) {
-            console.warn("Could not fetch likes counts:", likesError);
-            // fallback: all zero
-            likeCounts = {};
-          } else {
-            likeCounts = likesData.reduce((acc, l) => {
-              acc[l.deal_id] = (acc[l.deal_id] || 0) + 1;
-              return acc;
-            }, {});
-          }
-        }
+    if (dealsError) {
+      console.error("Supabase query error (deals):", dealsError);
+      setErrorMsg(dealsError.message || "Could not load deals.");
+      setDeals([]);
+      setLoading(false);
+      return;
+    }
 
-        // Merge like counts
-        // Merge like counts
-let merged = list.map((d) => ({
-  ...d,
-  like_count: likeCounts[d.id] || 0,
-}));
+    const list = Array.isArray(dealsData) ? dealsData : [];
 
-// ✅ Step 3: Apply Hot Deals filter (discount ≥ 55%) if category is "Hot Deals"
-if (selectedCategoryInternal === "Hot Deals") {
-  merged = merged
-    .map((d) => {
+    if (list.length === 0) {
+      setDeals([]);
+      setLoading(false);
+      return;
+    }
+
+    // Fetch like counts *only for visible deals* (single query)
+    const ids = list.map((d) => d.id).filter(Boolean);
+    let likeCounts = {};
+    if (ids.length > 0) {
+      const { data: likesData, error: likesError } = await supabase
+        .from("likes")
+        .select("deal_id")
+        .in("deal_id", ids);
+
+      if (likesError) {
+        console.warn("Could not fetch likes counts:", likesError);
+        likeCounts = {};
+      } else {
+        likeCounts = likesData.reduce((acc, l) => {
+          acc[l.deal_id] = (acc[l.deal_id] || 0) + 1;
+          return acc;
+        }, {});
+      }
+    }
+
+    // Merge like counts and calculate discount for ALL deals
+    let merged = list.map((d) => {
       const price = parseFloat(d.price ?? d.discounted_price ?? 0);
       const oldPrice = parseFloat(d.oldPrice ?? d.old_price ?? 0);
       let discountPercent = 0;
+      
       if (!Number.isNaN(price) && !Number.isNaN(oldPrice) && oldPrice > price) {
         discountPercent = Math.round(((oldPrice - price) / oldPrice) * 100);
       }
-      return { ...d, discountPercent };
-    })
-    .filter((d) => d.discountPercent >= 55)
-    .sort((a, b) => b.like_count - a.like_count);
-}
+      
+      return {
+        ...d,
+        like_count: likeCounts[d.id] || 0,
+        discountPercent: discountPercent
+      };
+    });
 
-setDeals(merged);
-        
-      } catch (err) {
-        console.error("Unexpected fetch error:", err);
-        setErrorMsg(String(err));
-        setDeals([]);
-      } finally {
-        if (mounted) setLoading(false);
-      }
+    // ✅ Apply Hot Deals filter if needed
+    if (selectedCategoryInternal === "Hot Deals" || filterHotDeals) {
+      merged = merged
+        .filter((d) => d.discountPercent >= 55)
+        .sort((a, b) => b.like_count - a.like_count);
+    }
+
+    setDeals(merged);
+  } catch (err) {
+    console.error("Unexpected fetch error:", err);
+    setErrorMsg(String(err));
+    setDeals([]);
+  } finally {
+    if (mounted) setLoading(false);
+  }
     }
 
     fetchDeals();
