@@ -141,10 +141,29 @@ const { data: dealsData, error: dealsError } = await query.order(
         }
 
         // Merge like counts
-        const merged = list.map((d) => ({
-          ...d,
-          like_count: likeCounts[d.id] || 0,
-        }));
+        // Merge like counts
+let merged = list.map((d) => ({
+  ...d,
+  like_count: likeCounts[d.id] || 0,
+}));
+
+// ✅ Step 3: Apply Hot Deals filter (discount ≥ 55%) if category is "Hot Deals"
+if (selectedCategoryInternal === "Hot Deals") {
+  merged = merged
+    .map((d) => {
+      const price = parseFloat(d.price ?? d.discounted_price ?? 0);
+      const oldPrice = parseFloat(d.oldPrice ?? d.old_price ?? 0);
+      let discountPercent = 0;
+      if (!Number.isNaN(price) && !Number.isNaN(oldPrice) && oldPrice > price) {
+        discountPercent = Math.round(((oldPrice - price) / oldPrice) * 100);
+      }
+      return { ...d, discountPercent };
+    })
+    .filter((d) => d.discountPercent >= 55)
+    .sort((a, b) => b.like_count - a.like_count);
+}
+
+setDeals(merged);
 
         setDeals(merged);
       } catch (err) {
