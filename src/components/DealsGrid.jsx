@@ -160,8 +160,7 @@ if (selectedCategoryInternal === "Hot Deals") {
 }
 
 setDeals(merged);
-
-        setDeals(merged);
+        
       } catch (err) {
         console.error("Unexpected fetch error:", err);
         setErrorMsg(String(err));
