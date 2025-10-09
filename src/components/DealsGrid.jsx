@@ -18,7 +18,6 @@ export default function DealsGrid({
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState("");
   const [showDropdown, setShowDropdown] = useState(false);
-  const [debugInfo, setDebugInfo] = useState(""); // 🔍 Debug info to display
 
   // Keep internal selection in sync when parent passes a category
   useEffect(() => {
@@ -138,8 +137,6 @@ export default function DealsGrid({
             discountPercent: discountPercent
           };
         });
-
-        const beforeFilterCount = merged.length;
         
         // Apply Hot Deals filter if needed
         const isHotDeals = selectedCategoryInternal === "Hot Deals" || filterHotDeals;
@@ -149,9 +146,6 @@ export default function DealsGrid({
             .filter((d) => d.discountPercent >= 55)
             .sort((a, b) => b.like_count - a.like_count);
         }
-
-        // 🔍 Set debug info
-        setDebugInfo(`Category: ${finalCategory} | Is Hot Deals: ${isHotDeals} | Before: ${beforeFilterCount} deals | After: ${merged.length} deals`);
 
         setDeals(merged);
       } catch (err) {
@@ -185,11 +179,6 @@ export default function DealsGrid({
 
   return (
     <div className="relative">
-      {/* 🔍 DEBUG INFO - Remove this after testing */}
-      <div className="bg-yellow-100 border border-yellow-400 text-yellow-800 px-4 py-2 rounded mb-4 text-xs">
-        DEBUG: {debugInfo}
-      </div>
-
       {/* If parent didn't provide header categories, show small dropdown here */}
       {!hideHeaderCategories && (
         <div className="flex justify-center mb-6 relative">
