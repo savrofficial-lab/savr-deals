@@ -287,100 +287,101 @@ export default function App() {
               />
             </div>
           </div>
-
           {/* TOP TABS */}
-          <div className="bg-gradient-to-b from-[#f8f1e8cc] to-[#f8f1e8cc] sticky top-[72px] z-40">
-            <div className="max-w-5xl mx-auto px-3 py-2">
-              <div className="flex items-center gap-3 overflow-x-auto overflow-y-visible">
-                <button
-                  onClick={() => {
-                    setActiveTopTab("Frontpage");
-                    setSelectedCategory("");
-                  }}
-                  className={`whitespace-nowrap px-4 py-2 rounded-full text-sm font-medium transition ${
-                    activeTopTab === "Frontpage"
-                      ? "bg-yellow-800 text-white"
-                      : "bg-white text-gray-700 border hover:bg-gray-100"
-                  }`}
-                >
-                  Frontpage
-                </button>
-
-                {/* CATEGORIES DROPDOWN */}
-                <div className="relative z-50" ref={categoriesRef}>
-  <button
-    type="button"
-    onClick={(e) => {
-      e.stopPropagation();
-      setShowCategories((p) => !p);
-      setActiveTopTab("Frontpage");
-    }}
-    className="whitespace-nowrap px-4 py-2 rounded-full text-sm font-medium bg-white text-gray-700 hover:bg-gray-100 border border-gray-200 flex items-center gap-2"
-  >
-    Categories{" "}
-    <ChevronDown
-      className={`h-4 w-4 transition-transform duration-200 ${
-        showCategories ? "rotate-180" : ""
-      }`}
-    />
-  </button>
-
-  <AnimatePresence>
-    {showCategories && (
-      <motion.div
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: -10 }}
-        transition={{ duration: 0.15 }}
-        className="absolute left-0 mt-2 w-56 bg-white shadow-xl rounded-xl p-2 z-[9999] border max-h-[340px] overflow-y-auto"
-        onClick={(e) => e.stopPropagation()}
+<div className="bg-gradient-to-b from-[#f8f1e8cc] to-[#f8f1e8cc] sticky top-[72px] z-40 pb-2">
+  <div className="max-w-5xl mx-auto px-3 pt-2">
+    <div className="flex items-center gap-3">
+      <button
+        onClick={() => {
+          setActiveTopTab("Frontpage");
+          setSelectedCategory("");
+        }}
+        className={`whitespace-nowrap px-4 py-2 rounded-full text-sm font-medium transition ${
+          activeTopTab === "Frontpage"
+            ? "bg-yellow-800 text-white"
+            : "bg-white text-gray-700 border hover:bg-gray-100"
+        }`}
       >
-                        {categories.map((cat) => (
-                          <button
-                            key={cat}
-                            onClick={() => {
-                              setSelectedCategory(cat === "All" ? "" : cat);
-                              setSearchRaw("");
-                              setShowCategories(false);
-                            }}
-                            className={`block w-full text-left px-3 py-2 rounded hover:bg-gray-100 text-sm ${
-                              selectedCategory === cat
-                                ? "bg-yellow-100 text-yellow-800"
-                                : ""
-                            }`}
-                          >
-                            {cat}
-                          </button>
-                        ))}
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
+        Frontpage
+      </button>
 
+      {/* CATEGORIES DROPDOWN */}
+      <div className="relative" ref={categoriesRef}>
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            setShowCategories((p) => !p);
+            setActiveTopTab("Frontpage");
+          }}
+          className="whitespace-nowrap px-4 py-2 rounded-full text-sm font-medium bg-white text-gray-700 hover:bg-gray-100 border border-gray-200 flex items-center gap-2"
+        >
+          Categories{" "}
+          <ChevronDown
+            className={`h-4 w-4 transition-transform duration-200 ${
+              showCategories ? "rotate-180" : ""
+            }`}
+          />
+        </button>
+
+        <AnimatePresence>
+          {showCategories && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.15 }}
+              className="absolute left-0 mt-2 w-56 bg-white shadow-xl rounded-xl p-2 border max-h-[340px] overflow-y-auto"
+              style={{ zIndex: 99999 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              {categories.map((cat) => (
                 <button
-                  onClick={() => setActiveTopTab("Forums")}
-                  className={`whitespace-nowrap px-4 py-2 rounded-full text-sm font-medium transition ${
-                    activeTopTab === "Forums"
-                      ? "bg-yellow-800 text-white"
-                      : "bg-white text-gray-700 border hover:bg-gray-100"
+                  key={cat}
+                  onClick={() => {
+                    setSelectedCategory(cat === "All" ? "" : cat);
+                    setSearchRaw("");
+                    setShowCategories(false);
+                  }}
+                  className={`block w-full text-left px-3 py-2 rounded hover:bg-gray-100 text-sm ${
+                    selectedCategory === cat
+                      ? "bg-yellow-100 text-yellow-800"
+                      : ""
                   }`}
                 >
-                  Forums
+                  {cat}
                 </button>
+              ))}
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
 
-                <button
-                  onClick={() => setActiveTopTab("Hot Deals")}
-                  className={`whitespace-nowrap px-4 py-2 rounded-full text-sm font-medium transition ${
-                    activeTopTab === "Hot Deals"
-                      ? "bg-yellow-800 text-white"
-                      : "bg-white text-gray-700 border hover:bg-gray-100"
-                  }`}
-                >
-                  Hot Deals
-                </button>
-              </div>
-            </div>
-          </div>
+      <button
+        onClick={() => setActiveTopTab("Forums")}
+        className={`whitespace-nowrap px-4 py-2 rounded-full text-sm font-medium transition ${
+          activeTopTab === "Forums"
+            ? "bg-yellow-800 text-white"
+            : "bg-white text-gray-700 border hover:bg-gray-100"
+        }`}
+      >
+        Forums
+      </button>
+
+      <button
+        onClick={() => setActiveTopTab("Hot Deals")}
+        className={`whitespace-nowrap px-4 py-2 rounded-full text-sm font-medium transition ${
+          activeTopTab === "Hot Deals"
+            ? "bg-yellow-800 text-white"
+            : "bg-white text-gray-700 border hover:bg-gray-100"
+        }`}
+      >
+        Hot Deals
+      </button>
+    </div>
+  </div>
+</div>
+          
         </header>
 
         {/* MAIN CONTENT */}
