@@ -539,8 +539,23 @@ export default function DealDetail() {
                                   className="w-8 h-8 rounded-full object-cover"
                                 />
                               ) : (
-                                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white font-bold text-lg">
-                                 {(r.profiles?.username?.[0] || "A").toUpperCase()}
+                                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white font-bold text-sm">
+                                  {(r.profiles?.username?.[0] || "A").toUpperCase()}
+                                </div>
+                              )}
+
+                              {/* Hover popup for replies */}
+                              <div className="absolute hidden group-hover:flex flex-col gap-2 top-10 left-0 bg-white shadow-2xl rounded-2xl p-4 w-64 z-10 border-2 border-blue-100">
+                                <div className="flex items-center gap-3">
+                                  {r.profiles?.avatar_url ? (
+                                    <img
+                                      src={r.profiles.avatar_url}
+                                      alt={r.profiles?.username}
+                                      className="w-12 h-12 rounded-full object-cover"
+                                    />
+                                  ) : (
+                                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white font-bold text-lg">
+                                      {(r.profiles?.username?.[0] || "A").toUpperCase()}
                                     </div>
                                   )}
                                   <div>
@@ -566,7 +581,7 @@ export default function DealDetail() {
                                   </p>
                                 </div>
                               </div>
-                          
+                            </div>
 
                             <div className="flex-1">
                               <div className="flex justify-between items-start">
@@ -608,4 +623,4 @@ export default function DealDetail() {
       </div>
     </div>
   );
-} 
+}
