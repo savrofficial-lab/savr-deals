@@ -1,12 +1,13 @@
 // src/App.jsx
 import React, { useEffect, useRef, useState } from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
+import { supabase } from "./supabaseClient";
+
 import DealsGrid from "./components/DealsGrid";
 import MyCoins from "./components/MyCoins";
 import LoginModal from "./components/LoginModal";
 import Profile from "./components/Profile";
 import PostDeal from "./components/PostDeal";
-import { supabase } from "./supabaseClient";
 import YouTab from "./components/YouTab";
 import DealDetail from "./components/DealDetail";
 
@@ -91,7 +92,7 @@ export default function App() {
     "Cars, Bikes & Industrial",
   ];
   const [categories, setCategories] = useState(DEFAULT_CATEGORIES);
-  const [selectedCategory, setSelectedCategory] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState(""); // "" means All
   const [showCategories, setShowCategories] = useState(false);
   const categoriesRef = useRef(null);
 
@@ -141,17 +142,13 @@ export default function App() {
     (async () => {
       try {
         const { data, error } = await supabase.from("deals").select("category").eq("published", true);
-        if (error) {
-          console.warn("Could not load categories:", error);
-          return;
+        if (!error && data && mounted) {
+          const catsFromDb = Array.from(
+            new Set((data || []).map((r) => (r.category || "").toString().trim()).filter(Boolean))
+          );
+          const merged = Array.from(new Set([...DEFAULT_CATEGORIES.filter(Boolean), ...catsFromDb]));
+          setCategories(merged);
         }
-        if (!mounted) return;
-        const catsFromDb = Array.from(
-          new Set((data || []).map((r) => (r.category || "").toString().trim()).filter(Boolean))
-        );
-        // merge default + db categories, preserve order
-        const merged = Array.from(new Set([...DEFAULT_CATEGORIES.filter(Boolean), ...catsFromDb]));
-        setCategories(merged);
       } catch (err) {
         console.error("Unexpected categories error:", err);
       }
@@ -161,9 +158,18 @@ export default function App() {
     };
   }, []);
 
-  // NOTE: removed outside-click handler as requested (dropdown will not auto-close on outside clicks)
+  // ---------------- Outside click to close categories dropdown ----------------
+  useEffect(() => {
+    function handleClickOutside(e) {
+      if (categoriesRef.current && !categoriesRef.current.contains(e.target)) {
+        setShowCategories(false);
+      }
+    }
+    document.addEventListener("click", handleClickOutside);
+    return () => document.removeEventListener("click", handleClickOutside);
+  }, []);
 
-  // ---------------- Main render logic (keeps your previous structure) ----------------
+  // ---------------- Main render logic ----------------
   function renderMain() {
     if (activeBottom === "Home") {
       return (
@@ -207,7 +213,7 @@ export default function App() {
         {/* Header */}
         <header className="bg-gradient-to-b from-[#ffffffcc] to-[#f8f1e8cc] backdrop-blur-md sticky top-0 z-50 shadow-md">
           <div className="max-w-5xl mx-auto px-3 py-2 flex items-center gap-4">
-            <a href="/" className="flex-shrink-0">
+            <a href="/" className="flex-shrink-0" onClick={() => { setActiveTopTab("Frontpage"); setSelectedCategory(""); }}>
               <img src="/savrdeals-logo.png" alt="Savrdeals" className="h-14 w-auto object-contain" />
             </a>
             <div className="relative flex-1">
@@ -235,9 +241,7 @@ export default function App() {
                       setActiveTopTab("Frontpage");
                       setSelectedCategory("");
                     }}
-                    className={`whitespace-nowrap px-4 py-2 rounded-full text-sm font-medium transition ${
-                      activeTopTab === "Frontpage" ? "bg-yellow-800 text-white" : "bg-white text-gray-700 border hover:bg-gray-100"
-                    }`}
+                    className={`whitespace-nowrap px-4 py-2 rounded-full text-sm font-medium transition ${activeTopTab === "Frontpage" ? "bg-yellow-800 text-white" : "bg-white text-gray-700 border hover:bg-gray-100"}`}
                   >
                     Frontpage
                   </button>
@@ -249,7 +253,7 @@ export default function App() {
                       onClick={(e) => {
                         e.stopPropagation();
                         setShowCategories((p) => !p);
-                        // keep top tab as Frontpage so deals grid is shown; we'll just set selectedCategory
+                        // keep top tab as Frontpage so deals grid is shown; we'll just set selectedCategory on click
                         setActiveTopTab("Frontpage");
                       }}
                       className={`whitespace-nowrap px-4 py-2 rounded-full text-sm font-medium bg-white text-gray-700 hover:bg-gray-100 border border-gray-200 flex items-center gap-2`}
@@ -296,12 +300,10 @@ export default function App() {
                                 setSelectedCategory(cat);
                                 setSearchRaw("");
                                 setShowCategories(false);
-                                // keep top tab as Frontpage so grid shows filtered deals
+                                // ensure frontpage visible
                                 setActiveTopTab("Frontpage");
                               }}
-                              className={`block w-full text-left px-3 py-2 rounded hover:bg-gray-100 text-sm ${
-                                selectedCategory === cat ? "bg-yellow-100 text-yellow-800" : ""
-                              }`}
+                              className={`block w-full text-left px-3 py-2 rounded hover:bg-gray-100 text-sm ${selectedCategory === cat ? "bg-yellow-100 text-yellow-800" : ""}`}
                             >
                               {cat}
                             </button>
@@ -316,9 +318,7 @@ export default function App() {
                       setActiveTopTab("Forums");
                       setSelectedCategory("");
                     }}
-                    className={`whitespace-nowrap px-4 py-2 rounded-full text-sm font-medium transition ${
-                      activeTopTab === "Forums" ? "bg-yellow-800 text-white" : "bg-white text-gray-700 border hover:bg-gray-100"
-                    }`}
+                    className={`whitespace-nowrap px-4 py-2 rounded-full text-sm font-medium transition ${activeTopTab === "Forums" ? "bg-yellow-800 text-white" : "bg-white text-gray-700 border hover:bg-gray-100"}`}
                   >
                     Forums
                   </button>
@@ -329,9 +329,7 @@ export default function App() {
                       setActiveTopTab("Hot Deals");
                       setSelectedCategory("");
                     }}
-                    className={`whitespace-nowrap px-4 py-2 rounded-full text-sm font-medium transition ${
-                      activeTopTab === "Hot Deals" ? "bg-yellow-800 text-white" : "bg-white text-gray-700 border hover:bg-gray-100"
-                    }`}
+                    className={`whitespace-nowrap px-4 py-2 rounded-full text-sm font-medium transition ${activeTopTab === "Hot Deals" ? "bg-yellow-800 text-white" : "bg-white text-gray-700 border hover:bg-gray-100"}`}
                   >
                     Hot Deals
                   </button>
@@ -346,7 +344,6 @@ export default function App() {
           <Routes>
             <Route path="/" element={renderMain()} />
             <Route path="/deal/:id" element={<DealDetail />} />
-            {/* you can add more routes (profile, forum, etc.) */}
           </Routes>
 
           {/* Footer stays same */}
@@ -445,4 +442,4 @@ export default function App() {
       </div>
     </Router>
   );
-}
+              }
