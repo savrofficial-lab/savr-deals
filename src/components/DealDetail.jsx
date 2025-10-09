@@ -535,11 +535,12 @@ export default function DealDetail() {
                               {r.profiles?.avatar_url ? (
                                 <img
                                   src={r.profiles.avatar_url}
+                                  alt={r.profiles?.username}
                                   className="w-8 h-8 rounded-full object-cover"
                                 />
                               ) : (
                                 <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white font-bold text-lg">
-                                  {(r.profiles?.username?.[0] || "A").toUpperCase()}
+                                 {(r.profiles?.username?.[0] || "A").toUpperCase()}
                                     </div>
                                   )}
                                   <div>
@@ -607,4 +608,4 @@ export default function DealDetail() {
       </div>
     </div>
   );
-}
+} 
