@@ -213,45 +213,52 @@ export default function App() {
 
   // ---------------- MAIN RENDER ----------------
   function renderMain() {
-    if (activeBottom === "Home") {
-      return (
-        <>
-          <div className="mb-3">
-            <h2 className="text-lg font-semibold text-gray-800">
-              {activeTopTab}
-            </h2>
-          </div>
+  if (activeBottom === "Home") {
+    return (
+      <>
+        <div className="mb-3">
+          <h2 className="text-lg font-semibold text-gray-800">
+            {activeTopTab}
+          </h2>
+        </div>
 
-          {activeTopTab === "Forums" && <ForumPage user={user} />}
+        {activeTopTab === "Forums" && <ForumPage user={user} />}
 
-          
-          {activeTopTab === "Hot Deals" && (
-  <DealsGrid
-    search={search}
-    selectedCategory={selectedCategory}
-    hideHeaderCategories={true}
-    filterHotDeals={true}
-  />
-)}
-        </>
-      );
-    }
+        {activeTopTab === "Frontpage" && (
+          <DealsGrid
+            search={search}
+            selectedCategory={selectedCategory}
+            hideHeaderCategories={true}
+          />
+        )}
 
-    if (activeBottom === "Post") {
-      return (
-        <PostDeal userId={user?.id} onPosted={() => setActiveBottom("Home")} />
-      );
-    }
+        {activeTopTab === "Hot Deals" && (
+          <DealsGrid
+            search={search}
+            selectedCategory={selectedCategory}
+            hideHeaderCategories={true}
+            filterHotDeals={true}
+          />
+        )}
+      </>
+    );
+  }
 
-    if (activeBottom === "Coins") {
-      return <MyCoins userId={user?.id} />;
-    }
+  if (activeBottom === "Post") {
+    return (
+      <PostDeal userId={user?.id} onPosted={() => setActiveBottom("Home")} />
+    );
+  }
 
-    if (activeBottom === "You") {
-      return <YouTab />;
-    }
+  if (activeBottom === "Coins") {
+    return <MyCoins userId={user?.id} />;
+  }
 
-    return null;
+  if (activeBottom === "You") {
+    return <YouTab />;
+  }
+
+  return null;
   }
 
   // ---------------- JSX ----------------
