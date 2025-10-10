@@ -224,11 +224,7 @@ export default function App() {
 
           {activeTopTab === "Forums" && <ForumPage user={user} />}
 
-          {activeTopTab === "Forums" && (
-            <div className="text-center text-gray-500 py-12">
-              Forums coming soon.
-            </div>
-          )}
+          
           {activeTopTab === "Hot Deals" && (
   <DealsGrid
     search={search}
