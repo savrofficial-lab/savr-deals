@@ -24,21 +24,31 @@ export default function ThreadDetail() {
   }
 
   async function fetchThread() {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("forum_threads_with_likes")
       .select("*, profiles(username, avatar_url)")
       .eq("id", id)
       .single();
-    setThread(data);
+    
+    if (error) {
+      console.error("Error fetching thread:", error);
+    } else {
+      setThread(data);
+    }
   }
 
   async function fetchReplies() {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("forum_replies")
       .select("*, profiles(username, avatar_url)")
       .eq("thread_id", id)
       .order("created_at", { ascending: true });
-    setReplies(data || []);
+    
+    if (error) {
+      console.error("Error fetching replies:", error);
+    } else {
+      setReplies(data || []);
+    }
   }
 
   async function handleAddReply(e) {
@@ -46,35 +56,49 @@ export default function ThreadDetail() {
     if (!replyText.trim()) return;
     if (!currentUserId) return alert("Please log in to reply.");
 
-    await supabase.from("forum_replies").insert({
+    // FIXED: use reply_by instead of user_id
+    const { error } = await supabase.from("forum_replies").insert({
       thread_id: id,
-      user_id: currentUserId,
+      reply_by: currentUserId,
       content: replyText.trim(),
     });
 
-    setReplyText("");
-    fetchReplies();
+    if (error) {
+      console.error("Error adding reply:", error);
+      alert("Failed to add reply. Please try again.");
+    } else {
+      setReplyText("");
+      fetchReplies();
+    }
   }
 
   async function handleLike() {
     if (!currentUserId) return alert("Please log in to like.");
+    
+    // FIXED: use liked_by instead of user_id
     const { data: existing } = await supabase
       .from("forum_likes")
       .select("*")
       .eq("thread_id", id)
-      .eq("user_id", currentUserId)
+      .eq("liked_by", currentUserId)
       .maybeSingle();
 
     if (existing) {
-      await supabase
+      // Unlike
+      const { error } = await supabase
         .from("forum_likes")
         .delete()
         .eq("thread_id", id)
-        .eq("user_id", currentUserId);
+        .eq("liked_by", currentUserId);
+      
+      if (error) console.error("Error unliking:", error);
     } else {
-      await supabase
+      // Like - FIXED: use liked_by instead of user_id
+      const { error } = await supabase
         .from("forum_likes")
-        .insert({ thread_id: id, user_id: currentUserId });
+        .insert({ thread_id: id, liked_by: currentUserId });
+      
+      if (error) console.error("Error liking:", error);
     }
     fetchThread();
   }
@@ -150,4 +174,4 @@ export default function ThreadDetail() {
       </div>
     </div>
   );
-        }
+}
