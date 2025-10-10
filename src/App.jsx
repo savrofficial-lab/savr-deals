@@ -357,7 +357,8 @@ export default function App() {
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     type="button"
-                    onClick={() => {
+                    onClick={(e) => {
+                      e.stopPropagation();
                       setShowCategories((p) => !p);
                       setActiveTopTab("Frontpage");
                     }}
@@ -371,40 +372,39 @@ export default function App() {
                     />
                   </motion.button>
 
-                  <AnimatePresence>
-                    {showCategories && (
-                      <motion.div
-                        initial={{ opacity: 0, y: -10, scale: 0.95 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: -10, scale: 0.95 }}
-                        transition={{ duration: 0.2 }}
-                        className="absolute left-0 mt-2 w-64 bg-white/95 backdrop-blur-xl shadow-2xl rounded-2xl p-3 border-2 border-amber-100 max-h-[380px] overflow-y-auto"
-                        style={{ zIndex: 99999 }}
-                      >
-                        {categories.map((cat, idx) => (
-                          <motion.button
-                            key={cat}
-                            initial={{ opacity: 0, x: -10 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: idx * 0.02 }}
-                            whileHover={{ x: 4 }}
-                            onClick={() => {
-                              setSelectedCategory(cat === "All" ? "" : cat);
-                              setSearchRaw("");
-                              setShowCategories(false);
-                            }}
-                            className={`block w-full text-left px-4 py-2.5 rounded-xl hover:bg-gradient-to-r hover:from-amber-50 hover:to-yellow-50 text-sm font-medium transition-all mb-1 ${
-                              selectedCategory === cat
-                                ? "bg-gradient-to-r from-amber-100 to-yellow-100 text-amber-900 shadow-sm"
-                                : "text-gray-700"
+                  {showCategories && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      transition={{ duration: 0.2 }}
+                      className="absolute left-0 mt-2 w-64 bg-white/95 backdrop-blur-xl shadow-2xl rounded-2xl p-3 border-2 border-amber-100 max-h-[380px] overflow-y-auto"
+                      style={{ zIndex: 99999 }}
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      {categories.map((cat, idx) => (
+                        <motion.button
+                          key={cat}
+                          initial={{ opacity: 0, x: -10 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: idx * 0.02 }}
+                          whileHover={{ x: 4 }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedCategory(cat === "All" ? "" : cat);
+                            setSearchRaw("");
+                            setShowCategories(false);
+                          }}
+                          className={`block w-full text-left px-4 py-2.5 rounded-xl hover:bg-gradient-to-r hover:from-amber-50 hover:to-yellow-50 text-sm font-medium transition-all mb-1 ${
+                            selectedCategory === cat
+                              ? "bg-gradient-to-r from-amber-100 to-yellow-100 text-amber-900 shadow-sm"
+                              : "text-gray-700"
                             }`}
-                          >
-                            {cat}
-                          </motion.button>
-                        ))}
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
+                        >
+                          {cat}
+                        </motion.button>
+                      ))}
+                    </motion.div>
+                  )}
                 </div>
 
                 <motion.button
@@ -525,7 +525,7 @@ export default function App() {
                 <span className="mt-1">Home</span>
               </motion.button>
 
-               <div className="relative -mt-6">
+              <div className="relative -mt-6">
                 <motion.button
                   whileHover={{ scale: 1.1, rotate: 90 }}
                   whileTap={{ scale: 0.9 }}
