@@ -1,6 +1,7 @@
 // src/components/MyCoins.jsx
 import React, { useEffect, useState, useRef } from "react";
 import { supabase } from "../supabaseClient";
+import { Trophy, RefreshCw, Gift, Crown, Award, TrendingUp } from "lucide-react";
 
 export default function MyCoins({ userId: propUserId }) {
   const mountedRef = useRef(true);
@@ -240,66 +241,217 @@ export default function MyCoins({ userId: propUserId }) {
     await loadLeaderboard();
   };
 
+  const getRankIcon = (rank) => {
+    if (rank === 1) return <Crown className="w-5 h-5 text-yellow-400" />;
+    if (rank === 2) return <Award className="w-5 h-5 text-gray-400" />;
+    if (rank === 3) return <Award className="w-5 h-5 text-amber-600" />;
+    return <TrendingUp className="w-4 h-4 text-blue-400" />;
+  };
+
+  const getRankGradient = (rank) => {
+    if (rank === 1) return "from-yellow-400 via-yellow-500 to-amber-600";
+    if (rank === 2) return "from-gray-300 via-gray-400 to-gray-500";
+    if (rank === 3) return "from-amber-500 via-amber-600 to-amber-700";
+    return "from-blue-400 via-blue-500 to-blue-600";
+  };
+
   if (!uid) {
     return (
-      <div className="py-8 text-center text-gray-500">
-        You must be signed in to view your coins. Tap the <strong>You</strong> tab and sign in.
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center p-6">
+        <div className="bg-white/10 backdrop-blur-xl rounded-3xl p-8 border border-white/20 shadow-2xl max-w-md">
+          <div className="text-center">
+            <Trophy className="w-16 h-16 text-yellow-400 mx-auto mb-4" />
+            <h3 className="text-2xl font-bold text-white mb-2">Sign In Required</h3>
+            <p className="text-gray-300">
+              You must be signed in to view your coins. Tap the <span className="font-semibold text-yellow-400">You</span> tab and sign in.
+            </p>
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="py-6">
-      <div className="max-w-xl mx-auto">
-        <div className="bg-white rounded-2xl shadow p-6 text-center">
-          <div className="text-sm text-gray-500">Available Coins</div>
-          <div className="text-4xl font-bold text-yellow-600 mt-2">{balance}</div>
-          {pending > 0 && (
-            <div className="text-sm text-gray-400 mt-1">{pending} pending</div>
-          )}
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 pb-24">
+      <style>{`
+        @keyframes float {
+          0%, 100% { transform: translateY(0px); }
+          50% { transform: translateY(-20px); }
+        }
+        @keyframes pulse-glow {
+          0%, 100% { box-shadow: 0 0 20px rgba(251, 191, 36, 0.5); }
+          50% { box-shadow: 0 0 40px rgba(251, 191, 36, 0.8); }
+        }
+        @keyframes shimmer {
+          0% { background-position: -1000px 0; }
+          100% { background-position: 1000px 0; }
+        }
+        .float-animation {
+          animation: float 3s ease-in-out infinite;
+        }
+        .pulse-glow {
+          animation: pulse-glow 2s ease-in-out infinite;
+        }
+        .shimmer {
+          background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+          background-size: 1000px 100%;
+          animation: shimmer 3s infinite;
+        }
+      `}</style>
 
-          <div className="mt-4 flex justify-center gap-3">
-            <button
-              onClick={refresh}
-              className="px-4 py-2 bg-gray-100 rounded hover:bg-gray-200 transition"
-            >
-              🔄 Refresh
-            </button>
-            <button className="px-4 py-2 bg-yellow-700 text-white rounded hover:bg-yellow-800 transition">
-              🎁 Redeem (soon)
-            </button>
+      <div className="max-w-2xl mx-auto px-4 pt-8">
+        {/* Coin Balance Card */}
+        <div className="relative mb-8">
+          <div className="absolute inset-0 bg-gradient-to-r from-yellow-400 via-amber-500 to-orange-600 rounded-3xl blur-xl opacity-50"></div>
+          <div className="relative bg-gradient-to-br from-yellow-400 via-amber-500 to-orange-600 rounded-3xl p-8 shadow-2xl overflow-hidden">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -mr-32 -mt-32"></div>
+            <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/10 rounded-full blur-3xl -ml-24 -mb-24"></div>
+            
+            <div className="relative z-10 text-center">
+              <div className="inline-flex items-center justify-center w-20 h-20 bg-white/20 backdrop-blur-sm rounded-full mb-4 float-animation">
+                <span className="text-4xl">🪙</span>
+              </div>
+              
+              <div className="text-white/90 text-sm font-medium uppercase tracking-wider mb-2">
+                Available Coins
+              </div>
+              
+              <div className="text-7xl font-black text-white mb-2 tracking-tight">
+                {balance}
+              </div>
+              
+              {pending > 0 && (
+                <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full">
+                  <div className="w-2 h-2 bg-yellow-300 rounded-full animate-pulse"></div>
+                  <span className="text-white text-sm font-medium">{pending} pending</span>
+                </div>
+              )}
+
+              {/* Action Buttons */}
+              <div className="mt-6 flex justify-center gap-3">
+                <button
+                  onClick={refresh}
+                  disabled={loading}
+                  className="group relative px-6 py-3 bg-white/20 backdrop-blur-sm rounded-xl hover:bg-white/30 transition-all duration-300 border border-white/30 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <RefreshCw className={`w-5 h-5 text-white inline mr-2 ${loading ? 'animate-spin' : 'group-hover:rotate-180 transition-transform duration-500'}`} />
+                  <span className="text-white font-semibold">Refresh</span>
+                </button>
+                
+                <button className="group relative px-6 py-3 bg-white/90 backdrop-blur-sm rounded-xl hover:bg-white transition-all duration-300 border border-white/50 hover:scale-105 overflow-hidden">
+                  <div className="absolute inset-0 shimmer"></div>
+                  <Gift className="w-5 h-5 text-amber-600 inline mr-2" />
+                  <span className="relative text-amber-600 font-semibold">Redeem Soon</span>
+                </button>
+              </div>
+
+              {loading && (
+                <div className="mt-4 text-white/80 text-sm flex items-center justify-center gap-2">
+                  <div className="w-2 h-2 bg-white rounded-full animate-bounce"></div>
+                  <div className="w-2 h-2 bg-white rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
+                  <div className="w-2 h-2 bg-white rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+                </div>
+              )}
+              
+              {error && (
+                <div className="mt-4 bg-red-500/20 backdrop-blur-sm border border-red-400/50 rounded-xl px-4 py-2">
+                  <p className="text-red-100 text-sm">{error}</p>
+                </div>
+              )}
+            </div>
           </div>
-
-          {loading && <div className="text-gray-500 mt-3">Loading...</div>}
-          {error && <div className="text-red-600 mt-3">{error}</div>}
         </div>
 
-        <div className="mt-6 bg-white rounded-2xl shadow p-4">
-          <h3 className="font-semibold mb-2">🏆 Top Hunters</h3>
-          {leaderboard && leaderboard.length ? (
-            <ul className="divide-y">
-              {leaderboard.map((u, idx) => (
-                <li
-                  key={u.user_id ?? u.username ?? idx}
-                  className="flex justify-between py-2"
-                >
-                  <div className="flex items-center gap-3">
-                    <span className="font-semibold text-yellow-700">
-                      #{u.rank ?? idx + 1}
-                    </span>
-                    <span>{u.username ?? u.user_id}</span>
+        {/* Leaderboard Card */}
+        <div className="relative">
+          <div className="absolute inset-0 bg-gradient-to-r from-purple-600 via-blue-600 to-cyan-600 rounded-3xl blur-xl opacity-30"></div>
+          <div className="relative bg-white/10 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 overflow-hidden">
+            {/* Header */}
+            <div className="bg-gradient-to-r from-purple-600 via-blue-600 to-cyan-600 p-6">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
+                    <Trophy className="w-6 h-6 text-yellow-300" />
                   </div>
-                  <div className="font-semibold text-yellow-600">
-                    {u.coins ?? 0} 🪙
+                  <div>
+                    <h3 className="text-2xl font-bold text-white">Top Hunters</h3>
+                    <p className="text-white/70 text-sm">Global Leaderboard</p>
                   </div>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="text-gray-500">No leaderboard data yet.</p>
-          )}
+                </div>
+              </div>
+            </div>
+
+            {/* Leaderboard List */}
+            <div className="p-4">
+              {leaderboard && leaderboard.length ? (
+                <div className="space-y-3">
+                  {leaderboard.map((u, idx) => (
+                    <div
+                      key={u.user_id ?? u.username ?? idx}
+                      className={`group relative bg-white/5 backdrop-blur-sm rounded-2xl p-4 border border-white/10 hover:bg-white/10 hover:border-white/20 transition-all duration-300 ${
+                        u.rank <= 3 ? 'hover:scale-[1.02]' : ''
+                      }`}
+                    >
+                      {u.rank <= 3 && (
+                        <div className={`absolute inset-0 bg-gradient-to-r ${getRankGradient(u.rank)} opacity-0 group-hover:opacity-10 rounded-2xl transition-opacity duration-300`}></div>
+                      )}
+                      
+                      <div className="relative flex items-center justify-between">
+                        <div className="flex items-center gap-4 flex-1">
+                          {/* Rank Badge */}
+                          <div className={`flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center font-bold text-lg ${
+                            u.rank === 1 ? 'bg-gradient-to-br from-yellow-400 to-amber-600 text-white' :
+                            u.rank === 2 ? 'bg-gradient-to-br from-gray-300 to-gray-500 text-white' :
+                            u.rank === 3 ? 'bg-gradient-to-br from-amber-500 to-amber-700 text-white' :
+                            'bg-white/10 text-white/70'
+                          }`}>
+                            {u.rank <= 3 ? getRankIcon(u.rank) : `#${u.rank ?? idx + 1}`}
+                          </div>
+
+                          {/* Username */}
+                          <div className="flex-1 min-w-0">
+                            <div className={`font-semibold truncate ${
+                              u.rank === 1 ? 'text-yellow-400 text-lg' :
+                              u.rank === 2 ? 'text-gray-300 text-lg' :
+                              u.rank === 3 ? 'text-amber-500 text-lg' :
+                              'text-white'
+                            }`}>
+                              {u.username ?? u.user_id}
+                            </div>
+                            {u.rank <= 3 && (
+                              <div className="text-white/50 text-xs mt-1">
+                                {u.rank === 1 ? '👑 Champion' : u.rank === 2 ? '🥈 Runner Up' : '🥉 Third Place'}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Coins */}
+                        <div className="flex items-center gap-2 bg-gradient-to-r from-yellow-400/20 to-amber-600/20 backdrop-blur-sm px-4 py-2 rounded-xl border border-yellow-400/30">
+                          <span className={`font-bold text-lg ${
+                            u.rank === 1 ? 'text-yellow-400' : 'text-yellow-300'
+                          }`}>
+                            {u.coins ?? 0}
+                          </span>
+                          <span className="text-xl">🪙</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-12">
+                  <div className="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Trophy className="w-8 h-8 text-white/30" />
+                  </div>
+                  <p className="text-white/50">No leaderboard data yet.</p>
+                  <p className="text-white/30 text-sm mt-2">Be the first to earn coins!</p>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       </div>
     </div>
   );
-}
+                  }
