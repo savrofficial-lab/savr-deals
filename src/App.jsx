@@ -357,10 +357,8 @@ export default function App() {
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
+                    onClick={() => {
                       setShowCategories((p) => !p);
-                      setActiveTopTab("Frontpage");
                     }}
                     className="whitespace-nowrap px-5 py-2.5 rounded-xl text-sm font-semibold bg-white/90 text-gray-700 hover:bg-amber-50 border-2 border-amber-100 hover:border-amber-200 flex items-center gap-2 shadow-sm transition-all"
                   >
@@ -373,37 +371,29 @@ export default function App() {
                   </motion.button>
 
                   {showCategories && (
-                    <motion.div
-                      initial={{ opacity: 0, y: -10, scale: 0.95 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      transition={{ duration: 0.2 }}
+                    <div
                       className="absolute left-0 mt-2 w-64 bg-white/95 backdrop-blur-xl shadow-2xl rounded-2xl p-3 border-2 border-amber-100 max-h-[380px] overflow-y-auto"
                       style={{ zIndex: 99999 }}
-                      onClick={(e) => e.stopPropagation()}
                     >
-                      {categories.map((cat, idx) => (
-                        <motion.button
+                      {categories.map((cat) => (
+                        <button
                           key={cat}
-                          initial={{ opacity: 0, x: -10 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={{ delay: idx * 0.02 }}
-                          whileHover={{ x: 4 }}
-                          onClick={(e) => {
-                            e.stopPropagation();
+                          onClick={() => {
                             setSelectedCategory(cat === "All" ? "" : cat);
                             setSearchRaw("");
                             setShowCategories(false);
+                            setActiveTopTab("Frontpage");
                           }}
                           className={`block w-full text-left px-4 py-2.5 rounded-xl hover:bg-gradient-to-r hover:from-amber-50 hover:to-yellow-50 text-sm font-medium transition-all mb-1 ${
-                            selectedCategory === cat
+                            selectedCategory === cat || (cat === "All" && !selectedCategory)
                               ? "bg-gradient-to-r from-amber-100 to-yellow-100 text-amber-900 shadow-sm"
                               : "text-gray-700"
-                            }`}
+                          }`}
                         >
                           {cat}
-                        </motion.button>
+                        </button>
                       ))}
-                    </motion.div>
+                    </div>
                   )}
                 </div>
 
