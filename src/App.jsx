@@ -11,6 +11,8 @@ import YouTab from "./components/YouTab";
 import DealDetail from "./components/DealDetail";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDown } from "lucide-react";
+import ForumPage from "./components/ForumPage";
+import ThreadDetail from "./components/ThreadDetail";
 
 /* ---------------------------------------------------------------------------
    Small inline icons (kept from your original)
@@ -220,13 +222,7 @@ export default function App() {
             </h2>
           </div>
 
-          {activeTopTab === "Frontpage" && (
-            <DealsGrid
-              search={search}
-              selectedCategory={selectedCategory}
-              hideHeaderCategories={true}
-            />
-          )}
+          {activeTopTab === "Forums" && <ForumPage user={user} />}
 
           {activeTopTab === "Forums" && (
             <div className="text-center text-gray-500 py-12">
@@ -380,11 +376,17 @@ export default function App() {
 
         {/* MAIN CONTENT */}
         <main className="flex-1 max-w-5xl mx-auto px-3 py-6 w-full">
-          <Routes>
-            <Route path="/" element={renderMain()} />
-            <Route path="/deal/:id" element={<DealDetail />} />
-          </Routes>
-        </main>
+  <Routes>
+    {/* landing / app main */}
+    <Route path="/" element={renderMain()} />
+
+    {/* deal detail page */}
+    <Route path="/deal/:id" element={<DealDetail />} />
+
+    {/* forum thread detail (NEW) */}
+    <Route path="/thread/:id" element={<ThreadDetail />} />
+  </Routes>
+</main>
 
         {/* FOOTER */}
         <div className="mt-8 pb-6">
