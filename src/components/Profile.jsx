@@ -143,45 +143,44 @@ export default function Profile({ userId }) {
             <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZGVmcz48cGF0dGVybiBpZD0iZ3JpZCIgd2lkdGg9IjQwIiBoZWlnaHQ9IjQwIiBwYXR0ZXJuVW5pdHM9InVzZXJTcGFjZU9uVXNlIj48cGF0aCBkPSJNIDQwIDAgTCAwIDAgMCA0MCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJ3aGl0ZSIgc3Ryb2tlLW9wYWNpdHk9IjAuMSIgc3Ryb2tlLXdpZHRoPSIxIi8+PC9wYXR0ZXJuPjwvZGVmcz48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSJ1cmwoI2dyaWQpIi8+PC9zdmc+')] opacity-30"></div>
           </div>
 
-          <div className="px-6 pb-6">
-            {/* Avatar and actions */}
-            <div className="flex items-start gap-4 -mt-12">
+          <div className="px-4 sm:px-6 pb-6">
+            {/* Avatar and Info - Mobile Optimized */}
+            <div className="flex flex-col items-center -mt-12 mb-4">
               <AvatarPreview src={profile.avatar_url} name={profile.full_name} />
               
-              <div className="flex-1 mt-16">
-                <div className="flex items-center justify-between mb-2">
-                  <div>
-                    <h2 className="text-2xl font-bold text-gray-800">
-                      {profile.full_name || "No name yet"}
-                    </h2>
-                    <p className="text-amber-600 font-medium">
-                      @{profile.username || "username"}
-                    </p>
-                  </div>
-                  
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => setEditing(!editing)}
-                      className="px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl font-medium shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 flex items-center gap-2"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                      </svg>
-                      {editing ? "Cancel" : "Edit"}
-                    </button>
-                    <button
-                      onClick={handleLogout}
-                      className="px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-xl font-medium shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
-                    >
-                      Logout
-                    </button>
-                  </div>
-                </div>
-                
-                <p className="text-gray-600 text-sm leading-relaxed">
+              <div className="text-center mt-3 w-full">
+                <h2 className="text-2xl font-bold text-gray-800">
+                  {profile.full_name || "No name yet"}
+                </h2>
+                <p className="text-amber-600 font-medium">
+                  @{profile.username || "username"}
+                </p>
+                <p className="text-gray-600 text-sm leading-relaxed mt-2 px-4">
                   {profile.bio || "No bio yet."}
                 </p>
               </div>
+            </div>
+
+            {/* Action Buttons - Mobile Optimized */}
+            <div className="flex flex-col sm:flex-row gap-3 w-full">
+              <button
+                onClick={() => setEditing(!editing)}
+                className="w-full px-4 py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl font-medium shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 flex items-center justify-center gap-2"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                </svg>
+                {editing ? "Cancel" : "Edit"}
+              </button>
+              <button
+                onClick={handleLogout}
+                className="w-full px-4 py-3 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-xl font-medium shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 flex items-center justify-center gap-2"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                </svg>
+                Logout
+              </button>
             </div>
 
             {/* Edit Form */}
@@ -243,16 +242,16 @@ export default function Profile({ userId }) {
                   </div>
                 </div>
 
-                <div className="flex gap-3 pt-2">
+                <div className="flex flex-col sm:flex-row gap-3 pt-2">
                   <button
                     onClick={saveProfile}
-                    className="flex-1 px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:scale-[1.02] transition-all duration-200"
+                    className="w-full px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:scale-[1.02] transition-all duration-200"
                   >
                     Save Changes
                   </button>
                   <button
                     onClick={() => setEditing(false)}
-                    className="px-6 py-3 border-2 border-gray-200 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-all duration-200"
+                    className="w-full px-6 py-3 border-2 border-gray-200 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-all duration-200"
                   >
                     Cancel
                   </button>
@@ -273,7 +272,7 @@ export default function Profile({ userId }) {
             </h3>
           </div>
           
-          <div className="p-6">
+          <div className="p-4 sm:p-6">
             {userId && <UserDealsTable userId={userId} />}
           </div>
         </div>
