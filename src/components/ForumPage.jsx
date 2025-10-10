@@ -27,33 +27,43 @@ export default function ForumPage() {
     const { data, error } = await supabase
       .from("forum_threads_with_likes")
       .select("*, profiles(username, avatar_url)")
-      .order("likes_count", { ascending: false });
+      .order("created_at", { ascending: false });
 
-    if (!error) setThreads(data);
+    if (error) {
+      console.error("Error fetching threads:", error);
+    } else {
+      setThreads(data);
+    }
     setLoading(false);
   }
 
   async function handleLike(threadId) {
     if (!currentUserId) return alert("Please log in to like threads.");
 
-    // Check if already liked
+    // Check if already liked - FIXED: use liked_by instead of user_id
     const { data: existing } = await supabase
       .from("forum_likes")
       .select("*")
       .eq("thread_id", threadId)
-      .eq("user_id", currentUserId)
+      .eq("liked_by", currentUserId)
       .maybeSingle();
 
     if (existing) {
-      await supabase
+      // Unlike
+      const { error } = await supabase
         .from("forum_likes")
         .delete()
         .eq("thread_id", threadId)
-        .eq("user_id", currentUserId);
+        .eq("liked_by", currentUserId);
+      
+      if (error) console.error("Error unliking:", error);
     } else {
-      await supabase
+      // Like - FIXED: use liked_by instead of user_id
+      const { error } = await supabase
         .from("forum_likes")
-        .insert({ thread_id: threadId, user_id: currentUserId });
+        .insert({ thread_id: threadId, liked_by: currentUserId });
+      
+      if (error) console.error("Error liking:", error);
     }
     fetchThreads();
   }
@@ -141,4 +151,4 @@ export default function ForumPage() {
       {showModal && <NewThreadModal onClose={() => setShowModal(false)} onPost={fetchThreads} />}
     </div>
   );
-              }
+}
