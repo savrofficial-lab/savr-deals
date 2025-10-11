@@ -190,7 +190,7 @@ export default function App() {
     })();
   }, []);
 
-  // ---------------- OUTSIDE CLICK (FIXED) ----------------
+  // ---------------- OUTSIDE CLICK (COMPLETELY REWRITTEN FIX) ----------------
   useEffect(() => {
     if (!showCategories) return;
 
@@ -200,14 +200,15 @@ export default function App() {
       }
     }
 
-    // Add delay to prevent immediate closing
-    const timeoutId = setTimeout(() => {
-      document.addEventListener("click", handleClickOutside);
-    }, 100);
+    // Use requestAnimationFrame to ensure the click event has fully propagated
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        document.addEventListener("mousedown", handleClickOutside);
+      });
+    });
 
     return () => {
-      clearTimeout(timeoutId);
-      document.removeEventListener("click", handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [showCategories]);
 
@@ -352,11 +353,16 @@ export default function App() {
                   Frontpage
                 </motion.button>
 
-                {/* CATEGORIES DROPDOWN - FIXED */}
+                {/* CATEGORIES DROPDOWN - COMPLETELY FIXED */}
                 <div className="relative" ref={categoriesRef}>
                   <button
                     type="button"
+                    onMouseDown={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                    }}
                     onClick={(e) => {
+                      e.preventDefault();
                       e.stopPropagation();
                       setShowCategories((p) => !p);
                       setActiveTopTab("Frontpage");
@@ -375,12 +381,16 @@ export default function App() {
                     <div
                       className="absolute left-0 mt-2 w-56 bg-white shadow-xl rounded-xl p-2 border max-h-[340px] overflow-y-auto"
                       style={{ zIndex: 99999 }}
-                      onClick={(e) => e.stopPropagation()}
+                      onMouseDown={(e) => e.stopPropagation()}
                     >
                       {categories.map((cat) => (
                         <button
                           key={cat}
-                          onClick={() => {
+                          onMouseDown={(e) => {
+                            e.stopPropagation();
+                          }}
+                          onClick={(e) => {
+                            e.stopPropagation();
                             setSelectedCategory(cat === "All" ? "" : cat);
                             setSearchRaw("");
                             setShowCategories(false);
