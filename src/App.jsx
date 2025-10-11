@@ -189,10 +189,8 @@ export default function App() {
       }
     })();
   }, []);
-  
 
-
-  // ---------------- OUTSIDE CLICK (ORIGINAL CODE) ----------------
+  // ---------------- OUTSIDE CLICK (FIXED) ----------------
   useEffect(() => {
     if (!showCategories) return;
 
@@ -236,17 +234,17 @@ export default function App() {
           {activeTopTab === "Frontpage" && (
             <DealsGrid
               search={search}
-            selectedCategory={selectedCategory}
-            hideHeaderCategories={true}
-          />
-        )}
+              selectedCategory={selectedCategory}
+              hideHeaderCategories={true}
+            />
+          )}
 
-        {activeTopTab === "Hot Deals" && (
-          <DealsGrid
-            search={search}
-            selectedCategory={selectedCategory}
-            hideHeaderCategories={true}
-            filterHotDeals={true}
+          {activeTopTab === "Hot Deals" && (
+            <DealsGrid
+              search={search}
+              selectedCategory={selectedCategory}
+              hideHeaderCategories={true}
+              filterHotDeals={true}
             />
           )}
         </motion.div>
@@ -354,19 +352,20 @@ export default function App() {
                   Frontpage
                 </motion.button>
 
-                {/* CATEGORIES DROPDOWN - ORIGINAL WORKING CODE */}
+                {/* CATEGORIES DROPDOWN - FIXED */}
                 <div className="relative" ref={categoriesRef}>
                   <button
                     type="button"
-                    onClick={() => {
+                    onClick={(e) => {
+                      e.stopPropagation();
                       setShowCategories((p) => !p);
                       setActiveTopTab("Frontpage");
                     }}
-                    className="whitespace-nowrap px-3 py-1.5 rounded-full text-xs font-medium bg-white text-gray-700 hover:bg-gray-100 border border-gray-200 flex items-center gap-1"
+                    className="whitespace-nowrap px-5 py-2.5 rounded-xl text-sm font-semibold bg-white/90 text-gray-700 hover:bg-amber-50 border-2 border-amber-100 hover:border-amber-200 flex items-center gap-2 shadow-sm transition-all"
                   >
                     Categories{" "}
                     <ChevronDown
-                      className={`h-3 w-3 transition-transform duration-200 ${
+                      className={`h-4 w-4 transition-transform duration-200 ${
                         showCategories ? "rotate-180" : ""
                       }`}
                     />
@@ -376,6 +375,7 @@ export default function App() {
                     <div
                       className="absolute left-0 mt-2 w-56 bg-white shadow-xl rounded-xl p-2 border max-h-[340px] overflow-y-auto"
                       style={{ zIndex: 99999 }}
+                      onClick={(e) => e.stopPropagation()}
                     >
                       {categories.map((cat) => (
                         <button
@@ -530,7 +530,8 @@ export default function App() {
                   Post
                 </div>
               </div>
-               <motion.button
+
+              <motion.button
                 whileTap={{ scale: 0.9 }}
                 onClick={() => requireLoginFor("Coins")}
                 className={`flex flex-col items-center text-xs font-medium transition-all ${
@@ -617,5 +618,3 @@ export default function App() {
     </Router>
   );
 }
-
-              
