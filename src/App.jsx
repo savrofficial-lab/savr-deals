@@ -189,6 +189,8 @@ export default function App() {
       }
     })();
   }, []);
+  
+
 
   // ---------------- OUTSIDE CLICK (ORIGINAL CODE) ----------------
   useEffect(() => {
@@ -234,17 +236,17 @@ export default function App() {
           {activeTopTab === "Frontpage" && (
             <DealsGrid
               search={search}
-              selectedCategory={selectedCategory}
-              hideHeaderCategories={true}
-            />
-          )}
+            selectedCategory={selectedCategory}
+            hideHeaderCategories={true}
+          />
+        )}
 
-          {activeTopTab === "Hot Deals" && (
-            <DealsGrid
-              search={search}
-              selectedCategory={selectedCategory}
-              hideHeaderCategories={true}
-              filterHotDeals={true}
+        {activeTopTab === "Hot Deals" && (
+          <DealsGrid
+            search={search}
+            selectedCategory={selectedCategory}
+            hideHeaderCategories={true}
+            filterHotDeals={true}
             />
           )}
         </motion.div>
@@ -360,11 +362,11 @@ export default function App() {
                       setShowCategories((p) => !p);
                       setActiveTopTab("Frontpage");
                     }}
-                    className="whitespace-nowrap px-5 py-2.5 rounded-xl text-sm font-semibold bg-white/90 text-gray-700 hover:bg-amber-50 border-2 border-amber-100 hover:border-amber-200 flex items-center gap-2 shadow-sm transition-all"
+                    className="whitespace-nowrap px-3 py-1.5 rounded-full text-xs font-medium bg-white text-gray-700 hover:bg-gray-100 border border-gray-200 flex items-center gap-1"
                   >
                     Categories{" "}
                     <ChevronDown
-                      className={`h-4 w-4 transition-transform duration-200 ${
+                      className={`h-3 w-3 transition-transform duration-200 ${
                         showCategories ? "rotate-180" : ""
                       }`}
                     />
