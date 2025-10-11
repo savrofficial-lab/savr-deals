@@ -27,7 +27,7 @@ export default function PostDeal({ onPosted }) {
       // 2️⃣ Upload to Supabase Storage
       const fileName = `${Date.now()}_${file.name}`;
       const { data, error } = await supabase.storage
-        .from("deal-images")
+        .from("deal-image")
         .upload(fileName, compressedFile, {
           cacheControl: "3600",
           upsert: false,
@@ -37,7 +37,7 @@ export default function PostDeal({ onPosted }) {
 
       // 3️⃣ Get the public URL
       const { data: publicUrlData } = supabase.storage
-        .from("deal-images")
+        .from("deal-image")
         .getPublicUrl(fileName);
 
       return publicUrlData.publicUrl;
