@@ -11,8 +11,8 @@ Edit the file `public/deals.json` in this repository. Each item is an object wit
 - source (string)
 - badge (string, optional)
 
-After you save changes, Netlify will auto-redeploy and your site will update.
+After you save changes, Vercel will auto-redeploy and your site will update.
 
 ## Deployment
-Netlify builds with `npm run build` and publishes the `dist` folder.
+Vercel builds with `npm run build` and publishes the `dist` folder.
 
