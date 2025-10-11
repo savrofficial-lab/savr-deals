@@ -352,13 +352,16 @@ export default function App() {
                   Frontpage
                 </motion.button>
 
-                {/* CATEGORIES DROPDOWN - EXACT COPY FROM OLD WORKING CODE */}
+                {/* CATEGORIES DROPDOWN - WITH CALLBACK TO PREVENT IMMEDIATE CLOSE */}
                 <div className="relative" ref={categoriesRef}>
                   <button
                     type="button"
-                    onClick={() => {
-                      setShowCategories((p) => !p);
-                      setActiveTopTab("Frontpage");
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setTimeout(() => {
+                        setShowCategories((p) => !p);
+                        setActiveTopTab("Frontpage");
+                      }, 0);
                     }}
                     className="whitespace-nowrap px-5 py-2.5 rounded-xl text-sm font-semibold bg-white/90 text-gray-700 hover:bg-amber-50 border-2 border-amber-100 hover:border-amber-200 flex items-center gap-2 shadow-sm transition-all"
                   >
