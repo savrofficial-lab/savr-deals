@@ -190,7 +190,7 @@ export default function App() {
     })();
   }, []);
 
-  // ---------------- OUTSIDE CLICK (COMPLETELY REWRITTEN FIX) ----------------
+  // ---------------- OUTSIDE CLICK ----------------
   useEffect(() => {
     if (!showCategories) return;
 
@@ -200,15 +200,14 @@ export default function App() {
       }
     }
 
-    // Use requestAnimationFrame to ensure the click event has fully propagated
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        document.addEventListener("mousedown", handleClickOutside);
-      });
-    });
+    // Add delay to prevent immediate closing
+    const timeoutId = setTimeout(() => {
+      document.addEventListener("click", handleClickOutside);
+    }, 100);
 
     return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
+      clearTimeout(timeoutId);
+      document.removeEventListener("click", handleClickOutside);
     };
   }, [showCategories]);
 
@@ -353,17 +352,11 @@ export default function App() {
                   Frontpage
                 </motion.button>
 
-                {/* CATEGORIES DROPDOWN - COMPLETELY FIXED */}
+                {/* CATEGORIES DROPDOWN - FIXED (NO FRAMER MOTION) */}
                 <div className="relative" ref={categoriesRef}>
                   <button
                     type="button"
-                    onMouseDown={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                    }}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
+                    onClick={() => {
                       setShowCategories((p) => !p);
                       setActiveTopTab("Frontpage");
                     }}
@@ -381,16 +374,11 @@ export default function App() {
                     <div
                       className="absolute left-0 mt-2 w-56 bg-white shadow-xl rounded-xl p-2 border max-h-[340px] overflow-y-auto"
                       style={{ zIndex: 99999 }}
-                      onMouseDown={(e) => e.stopPropagation()}
                     >
                       {categories.map((cat) => (
                         <button
                           key={cat}
-                          onMouseDown={(e) => {
-                            e.stopPropagation();
-                          }}
-                          onClick={(e) => {
-                            e.stopPropagation();
+                          onClick={() => {
                             setSelectedCategory(cat === "All" ? "" : cat);
                             setSearchRaw("");
                             setShowCategories(false);
@@ -541,7 +529,7 @@ export default function App() {
                 </div>
               </div>
 
-              <motion.button
+             <motion.button
                 whileTap={{ scale: 0.9 }}
                 onClick={() => requireLoginFor("Coins")}
                 className={`flex flex-col items-center text-xs font-medium transition-all ${
@@ -628,3 +616,4 @@ export default function App() {
     </Router>
   );
 }
+              
