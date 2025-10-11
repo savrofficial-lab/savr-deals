@@ -15,7 +15,7 @@ import ForumPage from "./components/ForumPage";
 import ThreadDetail from "./components/ThreadDetail";
 
 /* ---------------------------------------------------------------------------
-   Small inline icons (enhanced with animations)
+   Small inline icons
 --------------------------------------------------------------------------- */
 function IconHome({ className = "h-6 w-6" }) {
   return (
@@ -190,7 +190,7 @@ export default function App() {
     })();
   }, []);
 
-  // ---------------- OUTSIDE CLICK ----------------
+  // ---------------- OUTSIDE CLICK (ORIGINAL CODE) ----------------
   useEffect(() => {
     if (!showCategories) return;
 
@@ -200,6 +200,7 @@ export default function App() {
       }
     }
 
+    // Add delay to prevent immediate closing
     const timeoutId = setTimeout(() => {
       document.addEventListener("click", handleClickOutside);
     }, 100);
@@ -351,7 +352,7 @@ export default function App() {
                   Frontpage
                 </motion.button>
 
-                {/* CATEGORIES DROPDOWN */}
+                {/* CATEGORIES DROPDOWN - ORIGINAL WORKING CODE */}
                 <div className="relative" ref={categoriesRef}>
                   <button
                     type="button"
@@ -527,8 +528,7 @@ export default function App() {
                   Post
                 </div>
               </div>
-
-              <motion.button
+               <motion.button
                 whileTap={{ scale: 0.9 }}
                 onClick={() => requireLoginFor("Coins")}
                 className={`flex flex-col items-center text-xs font-medium transition-all ${
@@ -580,7 +580,7 @@ export default function App() {
         )}
       </div>
 
-      <style jsx>{`
+      <style>{`
         @keyframes blob {
           0% {
             transform: translate(0px, 0px) scale(1);
@@ -615,3 +615,5 @@ export default function App() {
     </Router>
   );
 }
+
+              
