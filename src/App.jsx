@@ -190,7 +190,7 @@ export default function App() {
     })();
   }, []);
 
-  // ---------------- OUTSIDE CLICK ----------------
+  // ---------------- OUTSIDE CLICK (EXACT COPY FROM OLD WORKING CODE) ----------------
   useEffect(() => {
     if (!showCategories) return;
 
@@ -352,7 +352,7 @@ export default function App() {
                   Frontpage
                 </motion.button>
 
-                {/* CATEGORIES DROPDOWN - FIXED (NO FRAMER MOTION) */}
+                {/* CATEGORIES DROPDOWN - EXACT COPY FROM OLD WORKING CODE */}
                 <div className="relative" ref={categoriesRef}>
                   <button
                     type="button"
@@ -529,7 +529,7 @@ export default function App() {
                 </div>
               </div>
 
-             <motion.button
+              <motion.button
                 whileTap={{ scale: 0.9 }}
                 onClick={() => requireLoginFor("Coins")}
                 className={`flex flex-col items-center text-xs font-medium transition-all ${
@@ -616,4 +616,3 @@ export default function App() {
     </Router>
   );
 }
-              
