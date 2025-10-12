@@ -24,7 +24,7 @@ export default function DealsGrid({
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentTime(Date.now());
-    }, 60000); // Update every minute
+    }, 60000);
     return () => clearInterval(interval);
   }, []);
 
@@ -40,26 +40,29 @@ export default function DealsGrid({
   // Helpers (safe field lookups)
   const imgFor = (d) => d.image || d.image_url || d.img || d.thumbnail || "/placeholder.png";
   const priceFor = (d) => d.price ?? d.discounted_price ?? d.amount ?? "";
-  const oldPriceFor = (d) => d.oldPrice ?? d.old_price ?? d.mrp ?? "";
+  const oldPriceFor = (d) => d.old_price ?? d.oldPrice ?? d.mrp ?? "";
 
-  // Calculate time remaining
+  // Calculate time remaining - simplified
   const getTimeRemaining = (createdAt) => {
-    if (!createdAt) {
-      console.log("No created_at timestamp found");
+    if (!createdAt) return null;
+    
+    try {
+      const created = new Date(createdAt).getTime();
+      if (isNaN(created)) return null;
+      
+      const expiresAt = created + (7 * 24 * 60 * 60 * 1000);
+      const remaining = expiresAt - currentTime;
+      
+      if (remaining <= 0) return null;
+      
+      const days = Math.floor(remaining / (24 * 60 * 60 * 1000));
+      const hours = Math.floor((remaining % (24 * 60 * 60 * 1000)) / (60 * 60 * 1000));
+      const minutes = Math.floor((remaining % (60 * 60 * 1000)) / (60 * 1000));
+      
+      return { days, hours, minutes };
+    } catch (e) {
       return null;
     }
-    
-    const created = new Date(createdAt).getTime();
-    const expiresAt = created + (7 * 24 * 60 * 60 * 1000); // 7 days in milliseconds
-    const remaining = expiresAt - currentTime;
-    
-    if (remaining <= 0) return { expired: true };
-    
-    const days = Math.floor(remaining / (24 * 60 * 60 * 1000));
-    const hours = Math.floor((remaining % (24 * 60 * 60 * 1000)) / (60 * 60 * 1000));
-    const minutes = Math.floor((remaining % (60 * 60 * 1000)) / (60 * 1000));
-    
-    return { days, hours, minutes, expired: false };
   };
 
   // Load categories
@@ -95,24 +98,18 @@ export default function DealsGrid({
       setErrorMsg("");
 
       try {
-        let query = supabase
-          .from("deals")
-          .select("id, title, image, category, link, posted_by, published, description, old_price, created_at, price, expires_at")
-          .eq("published", true);
+        let query = supabase.from("deals").select("*").eq("published", true);
 
         const finalCategory = (selectedCategoryInternal || "All");
 
-        // Special handling for "Hot Deals" - we'll filter it client-side
         if (finalCategory && finalCategory !== "All" && finalCategory !== "Hot Deals") {
           query = query.eq("category", finalCategory);
         }
 
-        // search filter (server-side)
         if (search && search.trim() !== "") {
           query = query.ilike("title", `%${search.trim()}%`);
         }
 
-        // Order newest first
         const { data: dealsData, error: dealsError } = await query.order("id", { ascending: false });
 
         if (!mounted) return;
@@ -132,9 +129,6 @@ export default function DealsGrid({
           setLoading(false);
           return;
         }
-
-        // Debug: Check if created_at is being fetched
-        console.log("First deal created_at:", list[0]?.created_at);
 
         // Fetch like counts
         const ids = list.map((d) => d.id).filter(Boolean);
@@ -227,7 +221,7 @@ export default function DealsGrid({
 
           {/* Popup */}
           {showDropdown && (
-            <div className="absolute top-16 bg-white rounded-2xl shadow-2xl border border-gray-100 p-4 w-64 z-10 animate-fadeIn">
+            <div className="absolute top-16 bg-white rounded-2xl shadow-2xl border border-gray-100 p-4 w-64 z-10">
               {allCategories.map((cat) => (
                 <button
                   key={cat}
@@ -257,9 +251,6 @@ export default function DealsGrid({
           const oldPrice = oldPriceFor(deal);
           const timeRemaining = getTimeRemaining(deal.created_at);
 
-          // Debug log for each deal
-          console.log(`Deal ${deal.id} - created_at:`, deal.created_at, "timeRemaining:", timeRemaining);
-
           // discount percent
           let discountBadge = null;
           const p = parseFloat(price);
@@ -280,22 +271,25 @@ export default function DealsGrid({
               {/* Decorative corner accent */}
               <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-yellow-200/20 to-transparent rounded-full blur-2xl -mr-16 -mt-16 group-hover:scale-150 transition-transform duration-500"></div>
 
-              {/* 7-Day Timer - Top of card with enhanced design */}
-              {timeRemaining && !timeRemaining.expired && (
-                <div className="relative bg-gradient-to-r from-red-500 via-red-600 to-orange-600 text-white text-xs font-bold px-4 py-2 rounded-xl mb-3 flex items-center gap-2 shadow-lg z-10 animate-pulse-slow">
-                  <Clock className="w-4 h-4 animate-spin-slow" />
-                  <span className="flex items-center gap-1">
-                    {timeRemaining.days > 0 && (
-                      <span className="bg-white/20 px-2 py-0.5 rounded-md">{timeRemaining.days}d</span>
-                    )}
-                    <span className="bg-white/20 px-2 py-0.5 rounded-md">{timeRemaining.hours}h</span>
-                    <span className="bg-white/20 px-2 py-0.5 rounded-md">{timeRemaining.minutes}m</span>
-                  </span>
-                  <Sparkles className="w-3 h-3 ml-auto" />
-                </div>
-              )}
+              {/* 7-Day Timer - ALWAYS SHOW for testing */}
+              <div className="relative bg-gradient-to-r from-red-500 via-red-600 to-orange-600 text-white text-xs font-bold px-3 py-1.5 rounded-lg mb-3 flex items-center gap-1.5 shadow-lg z-10">
+                <Clock className="w-3.5 h-3.5" />
+                <span className="flex items-center gap-1">
+                  {timeRemaining ? (
+                    <>
+                      {timeRemaining.days > 0 && (
+                        <span className="bg-white/20 px-1.5 py-0.5 rounded">{timeRemaining.days}d</span>
+                      )}
+                      <span className="bg-white/20 px-1.5 py-0.5 rounded">{timeRemaining.hours}h</span>
+                      <span className="bg-white/20 px-1.5 py-0.5 rounded">{timeRemaining.minutes}m</span>
+                    </>
+                  ) : (
+                    <span>7 days left</span>
+                  )}
+                </span>
+              </div>
 
-              {/* like count badge top-right with enhanced design */}
+              {/* like count badge top-right */}
               <div className="absolute top-4 right-4 bg-gradient-to-br from-white to-gray-50 backdrop-blur-sm rounded-2xl px-3 py-2 flex items-center gap-2 shadow-xl text-sm font-bold text-gray-800 z-20 border border-gray-200 group-hover:scale-110 transition-transform duration-300">
                 <div className="bg-gradient-to-br from-yellow-400 to-yellow-600 p-1 rounded-full">
                   <ArrowUp className="w-3.5 h-3.5 text-white" />
@@ -306,7 +300,7 @@ export default function DealsGrid({
               </div>
 
               <div className="relative z-10">
-                {/* Image container with overlay effects */}
+                {/* Image container */}
                 <div className="relative rounded-2xl overflow-hidden bg-white mb-4 group-hover:scale-105 transition-transform duration-500">
                   <img
                     src={imageSrc}
@@ -318,15 +312,10 @@ export default function DealsGrid({
                   {/* Gradient overlay on hover */}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                   
+                  {/* Smaller discount badge */}
                   {discountBadge && (
-                    <div className="absolute left-3 top-3 z-10">
-                      <div className="relative">
-                        <div className="absolute inset-0 bg-gradient-to-r from-yellow-600 to-orange-600 rounded-xl blur-md opacity-75"></div>
-                        <div className="relative bg-gradient-to-r from-yellow-700 to-orange-700 text-white text-xs font-black px-4 py-2 rounded-xl shadow-2xl flex items-center gap-1.5 border-2 border-white/30">
-                          <TrendingUp className="w-3.5 h-3.5" />
-                          {discountBadge}
-                        </div>
-                      </div>
+                    <div className="absolute left-2 top-2 bg-gradient-to-r from-yellow-700 to-orange-700 text-white text-xs font-bold px-2.5 py-1 rounded-lg shadow-lg z-10">
+                      {discountBadge}
                     </div>
                   )}
                 </div>
@@ -354,7 +343,7 @@ export default function DealsGrid({
                           </span>
                         )}
                       </div>
-                      {oldPrice && (
+                      {oldPrice && parseFloat(oldPrice) > parseFloat(price) && (
                         <span className="text-xs font-semibold text-green-600">
                           Save ₹{fmt(parseFloat(oldPrice) - parseFloat(price))}
                         </span>
@@ -367,7 +356,6 @@ export default function DealsGrid({
                     >
                       <span className="relative z-10 flex items-center gap-1">
                         View Deal
-                        <Sparkles className="w-3 h-3" />
                       </span>
                       <div className="absolute inset-0 bg-gradient-to-r from-yellow-600 to-orange-600 opacity-0 group-hover/btn:opacity-100 transition-opacity duration-300"></div>
                     </Link>
@@ -378,49 +366,6 @@ export default function DealsGrid({
           );
         })}
       </div>
-
-      <style jsx>{`
-        @keyframes fadeIn {
-          from {
-            opacity: 0;
-            transform: translateY(-10px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-        
-        @keyframes pulse-slow {
-          0%, 100% {
-            opacity: 1;
-          }
-          50% {
-            opacity: 0.95;
-          }
-        }
-        
-        @keyframes spin-slow {
-          from {
-            transform: rotate(0deg);
-          }
-          to {
-            transform: rotate(360deg);
-          }
-        }
-        
-        .animate-fadeIn {
-          animation: fadeIn 0.3s ease-out;
-        }
-        
-        .animate-pulse-slow {
-          animation: pulse-slow 2s ease-in-out infinite;
-        }
-        
-        .animate-spin-slow {
-          animation: spin-slow 8s linear infinite;
-        }
-      `}</style>
     </div>
   );
-      }
+}
