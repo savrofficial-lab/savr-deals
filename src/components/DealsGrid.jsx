@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from "react";
 import { supabase } from "../supabaseClient";
 import { Link } from "react-router-dom";
-import { ChevronDown, ArrowUp } from "lucide-react";
+import { ChevronDown, ArrowUp, Clock, Sparkles, TrendingUp } from "lucide-react";
 
 export default function DealsGrid({
   search = "",
@@ -18,6 +18,15 @@ export default function DealsGrid({
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState("");
   const [showDropdown, setShowDropdown] = useState(false);
+  const [currentTime, setCurrentTime] = useState(Date.now());
+
+  // Update current time every minute for timer updates
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentTime(Date.now());
+    }, 60000); // Update every minute
+    return () => clearInterval(interval);
+  }, []);
 
   // Keep internal selection in sync when parent passes a category
   useEffect(() => {
@@ -32,6 +41,23 @@ export default function DealsGrid({
   const imgFor = (d) => d.image || d.image_url || d.img || d.thumbnail || "/placeholder.png";
   const priceFor = (d) => d.price ?? d.discounted_price ?? d.amount ?? "";
   const oldPriceFor = (d) => d.oldPrice ?? d.old_price ?? d.mrp ?? "";
+
+  // Calculate time remaining
+  const getTimeRemaining = (createdAt) => {
+    if (!createdAt) return null;
+    
+    const created = new Date(createdAt).getTime();
+    const expiresAt = created + (7 * 24 * 60 * 60 * 1000); // 7 days in milliseconds
+    const remaining = expiresAt - currentTime;
+    
+    if (remaining <= 0) return { expired: true };
+    
+    const days = Math.floor(remaining / (24 * 60 * 60 * 1000));
+    const hours = Math.floor((remaining % (24 * 60 * 60 * 1000)) / (60 * 60 * 1000));
+    const minutes = Math.floor((remaining % (60 * 60 * 1000)) / (60 * 1000));
+    
+    return { days, hours, minutes, expired: false };
+  };
 
   // Load categories
   useEffect(() => {
@@ -184,14 +210,15 @@ export default function DealsGrid({
         <div className="flex justify-center mb-6 relative">
           <button
             onClick={() => setShowDropdown((s) => !s)}
-            className="flex items-center gap-1 px-4 py-2 bg-white border border-gray-300 rounded-full shadow-sm hover:bg-gray-100 transition"
+            className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-yellow-700 to-yellow-900 text-white rounded-full shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 font-semibold"
           >
-            Categories <ChevronDown className="w-4 h-4" />
+            <Sparkles className="w-4 h-4" />
+            Categories <ChevronDown className="w-5 h-5" />
           </button>
 
           {/* Popup */}
           {showDropdown && (
-            <div className="absolute top-12 bg-white rounded-xl shadow-lg border border-gray-200 p-3 w-56 z-10">
+            <div className="absolute top-16 bg-white rounded-2xl shadow-2xl border border-gray-100 p-4 w-64 z-10 animate-fadeIn">
               {allCategories.map((cat) => (
                 <button
                   key={cat}
@@ -199,8 +226,10 @@ export default function DealsGrid({
                     setSelectedCategoryInternal(cat);
                     setShowDropdown(false);
                   }}
-                  className={`block w-full text-left px-4 py-2 rounded-lg text-sm ${
-                    selectedCategoryInternal === cat ? "bg-yellow-800 text-white" : "hover:bg-gray-100 text-gray-700"
+                  className={`block w-full text-left px-5 py-3 rounded-xl text-sm font-medium transition-all duration-200 mb-1 ${
+                    selectedCategoryInternal === cat 
+                      ? "bg-gradient-to-r from-yellow-700 to-yellow-900 text-white shadow-md transform scale-105" 
+                      : "hover:bg-gradient-to-r hover:from-gray-50 hover:to-gray-100 text-gray-700"
                   }`}
                 >
                   {cat}
@@ -217,6 +246,7 @@ export default function DealsGrid({
           const imageSrc = imgFor(deal);
           const price = priceFor(deal);
           const oldPrice = oldPriceFor(deal);
+          const timeRemaining = getTimeRemaining(deal.created_at);
 
           // discount percent
           let discountBadge = null;
@@ -230,53 +260,155 @@ export default function DealsGrid({
           return (
             <div
               key={deal.id ?? idx}
-              className="bg-white rounded-2xl shadow-md hover:shadow-xl transition-transform hover:-translate-y-1 flex flex-col p-3 relative"
+              className="group bg-gradient-to-br from-white via-white to-gray-50 rounded-3xl shadow-lg hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 flex flex-col p-4 relative overflow-hidden border border-gray-100"
             >
-              {/* like count badge top-right */}
-              <div className="absolute top-3 right-3 bg-white/95 rounded-full px-2 py-1 flex items-center gap-2 shadow-sm text-sm font-medium text-gray-700 z-20">
-                <ArrowUp className="w-4 h-4 text-yellow-700" />
-                <span>{deal.like_count ?? 0}</span>
-              </div>
+              {/* Animated gradient background on hover */}
+              <div className="absolute inset-0 bg-gradient-to-br from-yellow-50/0 via-orange-50/0 to-red-50/0 group-hover:from-yellow-50/40 group-hover:via-orange-50/40 group-hover:to-red-50/40 transition-all duration-500 rounded-3xl"></div>
+              
+              {/* Decorative corner accent */}
+              <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-yellow-200/20 to-transparent rounded-full blur-2xl -mr-16 -mt-16 group-hover:scale-150 transition-transform duration-500"></div>
 
-              <div className="relative">
-                <img
-                  src={imageSrc}
-                  alt={deal.title || "Deal image"}
-                  loading="lazy"
-                  className="w-full h-36 object-contain mb-3 bg-white"
-                />
-                {discountBadge && (
-                  <div className="absolute left-3 top-3 bg-yellow-800 text-white text-xs font-semibold px-2 py-1 rounded z-10">
-                    {discountBadge}
-                  </div>
-                )}
-              </div>
-
-              <h3 className="text-sm sm:text-base font-semibold text-gray-800 mb-1 line-clamp-2">
-                {deal.title}
-              </h3>
-
-              {deal.description && (
-                <p className="text-xs text-gray-600 mb-2 line-clamp-3">{deal.description}</p>
+              {/* 7-Day Timer - Top of card with enhanced design */}
+              {timeRemaining && !timeRemaining.expired && (
+                <div className="relative bg-gradient-to-r from-red-500 via-red-600 to-orange-600 text-white text-xs font-bold px-4 py-2 rounded-xl mb-3 flex items-center gap-2 shadow-lg z-10 animate-pulse-slow">
+                  <Clock className="w-4 h-4 animate-spin-slow" />
+                  <span className="flex items-center gap-1">
+                    {timeRemaining.days > 0 && (
+                      <span className="bg-white/20 px-2 py-0.5 rounded-md">{timeRemaining.days}d</span>
+                    )}
+                    <span className="bg-white/20 px-2 py-0.5 rounded-md">{timeRemaining.hours}h</span>
+                    <span className="bg-white/20 px-2 py-0.5 rounded-md">{timeRemaining.minutes}m</span>
+                  </span>
+                  <Sparkles className="w-3 h-3 ml-auto" />
+                </div>
               )}
 
-              <div className="mt-auto flex items-center justify-between gap-3">
-                <div>
-                  <div className="text-sm font-bold text-gray-900">₹{fmt(price)}</div>
-                  {oldPrice && <div className="text-xs text-gray-500 line-through">₹{fmt(oldPrice)}</div>}
+              {/* like count badge top-right with enhanced design */}
+              <div className="absolute top-4 right-4 bg-gradient-to-br from-white to-gray-50 backdrop-blur-sm rounded-2xl px-3 py-2 flex items-center gap-2 shadow-xl text-sm font-bold text-gray-800 z-20 border border-gray-200 group-hover:scale-110 transition-transform duration-300">
+                <div className="bg-gradient-to-br from-yellow-400 to-yellow-600 p-1 rounded-full">
+                  <ArrowUp className="w-3.5 h-3.5 text-white" />
+                </div>
+                <span className="bg-gradient-to-r from-yellow-600 to-orange-600 bg-clip-text text-transparent">
+                  {deal.like_count ?? 0}
+                </span>
+              </div>
+
+              <div className="relative z-10">
+                {/* Image container with overlay effects */}
+                <div className="relative rounded-2xl overflow-hidden bg-white mb-4 group-hover:scale-105 transition-transform duration-500">
+                  <img
+                    src={imageSrc}
+                    alt={deal.title || "Deal image"}
+                    loading="lazy"
+                    className="w-full h-40 object-contain p-3"
+                  />
+                  
+                  {/* Gradient overlay on hover */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                  
+                  {discountBadge && (
+                    <div className="absolute left-3 top-3 z-10">
+                      <div className="relative">
+                        <div className="absolute inset-0 bg-gradient-to-r from-yellow-600 to-orange-600 rounded-xl blur-md opacity-75"></div>
+                        <div className="relative bg-gradient-to-r from-yellow-700 to-orange-700 text-white text-xs font-black px-4 py-2 rounded-xl shadow-2xl flex items-center gap-1.5 border-2 border-white/30">
+                          <TrendingUp className="w-3.5 h-3.5" />
+                          {discountBadge}
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
-                <Link
-                  to={`/deal/${deal.id}`}
-                  className="px-3 py-2 bg-yellow-800 text-white rounded"
-                >
-                  View Deal
-                </Link>
+                <h3 className="text-sm sm:text-base font-bold text-gray-900 mb-2 line-clamp-2 group-hover:text-yellow-800 transition-colors duration-300">
+                  {deal.title}
+                </h3>
+
+                {deal.description && (
+                  <p className="text-xs text-gray-600 mb-3 line-clamp-2 leading-relaxed">
+                    {deal.description}
+                  </p>
+                )}
+
+                <div className="mt-auto pt-3 border-t border-gray-100">
+                  <div className="flex items-end justify-between gap-3">
+                    <div className="flex flex-col gap-1">
+                      <div className="flex items-baseline gap-2">
+                        <span className="text-lg font-black bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
+                          ₹{fmt(price)}
+                        </span>
+                        {oldPrice && (
+                          <span className="text-xs text-gray-400 line-through font-medium">
+                            ₹{fmt(oldPrice)}
+                          </span>
+                        )}
+                      </div>
+                      {oldPrice && (
+                        <span className="text-xs font-semibold text-green-600">
+                          Save ₹{fmt(parseFloat(oldPrice) - parseFloat(price))}
+                        </span>
+                      )}
+                    </div>
+
+                    <Link
+                      to={`/deal/${deal.id}`}
+                      className="relative px-4 py-2.5 bg-gradient-to-r from-yellow-700 to-yellow-900 text-white rounded-xl font-bold text-sm shadow-lg hover:shadow-2xl hover:scale-105 transition-all duration-300 overflow-hidden group/btn"
+                    >
+                      <span className="relative z-10 flex items-center gap-1">
+                        View Deal
+                        <Sparkles className="w-3 h-3" />
+                      </span>
+                      <div className="absolute inset-0 bg-gradient-to-r from-yellow-600 to-orange-600 opacity-0 group-hover/btn:opacity-100 transition-opacity duration-300"></div>
+                    </Link>
+                  </div>
+                </div>
               </div>
             </div>
           );
         })}
       </div>
+
+      <style jsx>{`
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+            transform: translateY(-10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        
+        @keyframes pulse-slow {
+          0%, 100% {
+            opacity: 1;
+          }
+          50% {
+            opacity: 0.95;
+          }
+        }
+        
+        @keyframes spin-slow {
+          from {
+            transform: rotate(0deg);
+          }
+          to {
+            transform: rotate(360deg);
+          }
+        }
+        
+        .animate-fadeIn {
+          animation: fadeIn 0.3s ease-out;
+        }
+        
+        .animate-pulse-slow {
+          animation: pulse-slow 2s ease-in-out infinite;
+        }
+        
+        .animate-spin-slow {
+          animation: spin-slow 8s linear infinite;
+        }
+      `}</style>
     </div>
   );
 }
