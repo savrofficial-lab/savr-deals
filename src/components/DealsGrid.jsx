@@ -348,4 +348,4 @@ export default function DealsGrid({
       </div>
     </div>
   );
-    
+}
