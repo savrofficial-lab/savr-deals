@@ -283,15 +283,17 @@ export default function DealsGrid({
                 <span>{deal.like_count ?? 0}</span>
               </div>
 
-              <div className="relative">
+              {/* Image container with discount badge INSIDE */}
+              <div className="relative mb-3">
                 <img
                   src={imageSrc}
                   alt={deal.title || "Deal image"}
                   loading="lazy"
-                  className="w-full h-36 object-contain mb-3 bg-white"
+                  className="w-full h-36 object-contain bg-white"
                 />
+                {/* Discount badge positioned at top-left corner of image */}
                 {discountBadge && (
-                  <div className="absolute left-3 top-3 bg-yellow-800 text-white text-xs font-semibold px-2 py-1 rounded z-10">
+                  <div className="absolute left-2 top-2 bg-yellow-800 text-white text-xs font-semibold px-2 py-1 rounded z-10">
                     {discountBadge}
                   </div>
                 )}
@@ -324,4 +326,4 @@ export default function DealsGrid({
       </div>
     </div>
   );
-} 
+                }
