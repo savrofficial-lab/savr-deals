@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from "react";
 import { supabase } from "../supabaseClient";
 import { Link } from "react-router-dom";
-import { ChevronDown, ArrowUp, Clock, Sparkles, TrendingUp } from "lucide-react";
+import { ChevronDown, ArrowUp, Clock, Sparkles } from "lucide-react";
 
 export default function DealsGrid({
   search = "",
@@ -210,18 +210,18 @@ export default function DealsGrid({
     <div className="relative">
       {/* If parent didn't provide header categories, show small dropdown here */}
       {!hideHeaderCategories && (
-        <div className="flex justify-center mb-6 relative">
+        <div className="flex justify-center mb-4 relative">
           <button
             onClick={() => setShowDropdown((s) => !s)}
-            className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-yellow-700 to-yellow-900 text-white rounded-full shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 font-semibold"
+            className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-yellow-700 to-yellow-900 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 font-semibold text-sm"
           >
             <Sparkles className="w-4 h-4" />
-            Categories <ChevronDown className="w-5 h-5" />
+            Categories <ChevronDown className="w-4 h-4" />
           </button>
 
           {/* Popup */}
           {showDropdown && (
-            <div className="absolute top-16 bg-white rounded-2xl shadow-2xl border border-gray-100 p-4 w-64 z-10">
+            <div className="absolute top-12 bg-white rounded-2xl shadow-2xl border border-gray-100 p-3 w-56 z-10">
               {allCategories.map((cat) => (
                 <button
                   key={cat}
@@ -229,10 +229,10 @@ export default function DealsGrid({
                     setSelectedCategoryInternal(cat);
                     setShowDropdown(false);
                   }}
-                  className={`block w-full text-left px-5 py-3 rounded-xl text-sm font-medium transition-all duration-200 mb-1 ${
+                  className={`block w-full text-left px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 mb-1 ${
                     selectedCategoryInternal === cat 
-                      ? "bg-gradient-to-r from-yellow-700 to-yellow-900 text-white shadow-md transform scale-105" 
-                      : "hover:bg-gradient-to-r hover:from-gray-50 hover:to-gray-100 text-gray-700"
+                      ? "bg-gradient-to-r from-yellow-700 to-yellow-900 text-white shadow-md" 
+                      : "hover:bg-gray-100 text-gray-700"
                   }`}
                 >
                   {cat}
@@ -243,8 +243,8 @@ export default function DealsGrid({
         </div>
       )}
 
-      {/* Deals grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
+      {/* Deals grid - Mobile optimized */}
+      <div className="grid grid-cols-2 gap-3 px-2">
         {deals.map((deal, idx) => {
           const imageSrc = imgFor(deal);
           const price = priceFor(deal);
@@ -263,100 +263,84 @@ export default function DealsGrid({
           return (
             <div
               key={deal.id ?? idx}
-              className="group bg-gradient-to-br from-white via-white to-gray-50 rounded-3xl shadow-lg hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 flex flex-col p-4 relative overflow-hidden border border-gray-100"
+              className="bg-white rounded-2xl shadow-md hover:shadow-lg transition-all duration-300 flex flex-col p-3 relative"
             >
-              {/* Animated gradient background on hover */}
-              <div className="absolute inset-0 bg-gradient-to-br from-yellow-50/0 via-orange-50/0 to-red-50/0 group-hover:from-yellow-50/40 group-hover:via-orange-50/40 group-hover:to-red-50/40 transition-all duration-500 rounded-3xl"></div>
-              
-              {/* Decorative corner accent */}
-              <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-yellow-200/20 to-transparent rounded-full blur-2xl -mr-16 -mt-16 group-hover:scale-150 transition-transform duration-500"></div>
-
-              {/* 7-Day Timer - Half width, left aligned */}
-              <div className="relative bg-gradient-to-r from-red-500 via-red-600 to-orange-600 text-white text-xs font-bold px-3 py-1.5 rounded-lg mb-3 flex items-center gap-1.5 shadow-lg z-10 w-fit max-w-[60%]">
-                <Clock className="w-3.5 h-3.5" />
-                <span className="flex items-center gap-1">
+              {/* 7-Day Timer - Mobile friendly */}
+              <div className="bg-gradient-to-r from-red-500 to-red-600 text-white text-xs font-bold px-2.5 py-1.5 rounded-lg mb-2 flex items-center gap-1 w-fit">
+                <Clock className="w-3 h-3" />
+                <span className="whitespace-nowrap">
                   {timeRemaining ? (
                     <>
-                      {timeRemaining.days > 0 && (
-                        <span className="bg-white/20 px-1.5 py-0.5 rounded">{timeRemaining.days}d</span>
-                      )}
-                      <span className="bg-white/20 px-1.5 py-0.5 rounded">{timeRemaining.hours}h</span>
-                      <span className="bg-white/20 px-1.5 py-0.5 rounded">{timeRemaining.minutes}m</span>
+                      {timeRemaining.days > 0 ? `${timeRemaining.days}d ` : ''}
+                      {timeRemaining.hours}h {timeRemaining.minutes}m
                     </>
                   ) : (
-                    <span>7 days left</span>
+                    '7 days left'
                   )}
                 </span>
               </div>
 
-              {/* like count badge top-right - Back to original colors */}
-              <div className="absolute top-4 right-4 bg-white/95 rounded-full px-2 py-1 flex items-center gap-2 shadow-sm text-sm font-medium text-gray-700 z-20">
-                <ArrowUp className="w-4 h-4 text-yellow-700" />
+              {/* like count badge top-right - Mobile optimized */}
+              <div className="absolute top-2 right-2 bg-white/95 rounded-full px-2 py-1 flex items-center gap-1 shadow-sm text-xs font-medium text-gray-700 z-10">
+                <ArrowUp className="w-3 h-3 text-yellow-700" />
                 <span>{deal.like_count ?? 0}</span>
               </div>
 
-              <div className="relative z-10">
-                {/* Image container */}
-                <div className="relative rounded-2xl overflow-hidden bg-white mb-4 group-hover:scale-105 transition-transform duration-500">
-                  <img
-                    src={imageSrc}
-                    alt={deal.title || "Deal image"}
-                    loading="lazy"
-                    className="w-full h-40 object-contain p-3"
-                  />
-                  
-                  {/* Gradient overlay on hover */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                  
-                  {/* Smaller discount badge */}
-                  {discountBadge && (
-                    <div className="absolute left-2 top-2 bg-gradient-to-r from-yellow-700 to-orange-700 text-white text-xs font-bold px-2.5 py-1 rounded-lg shadow-lg z-10">
-                      {discountBadge}
-                    </div>
+              {/* Image container - Mobile optimized */}
+              <div className="relative rounded-xl overflow-hidden bg-gray-50 mb-2">
+                <img
+                  src={imageSrc}
+                  alt={deal.title || "Deal image"}
+                  loading="lazy"
+                  className="w-full h-32 object-contain p-2"
+                />
+                
+                {/* Discount badge - Mobile friendly */}
+                {discountBadge && (
+                  <div className="absolute left-2 top-2 bg-gradient-to-r from-yellow-700 to-orange-700 text-white text-xs font-bold px-2 py-1 rounded-md shadow-md">
+                    {discountBadge}
+                  </div>
+                )}
+              </div>
+
+              {/* Title - Mobile optimized */}
+              <h3 className="text-sm font-bold text-gray-900 mb-1 line-clamp-2 leading-tight">
+                {deal.title}
+              </h3>
+
+              {/* Description - Hidden on mobile for cleaner look */}
+              {deal.description && (
+                <p className="text-xs text-gray-600 mb-2 line-clamp-1 hidden sm:block">
+                  {deal.description}
+                </p>
+              )}
+
+              {/* Price section - Mobile optimized */}
+              <div className="mt-auto pt-2">
+                <div className="flex items-baseline gap-1.5 mb-1">
+                  <span className="text-base font-black text-green-600">
+                    ₹{fmt(price)}
+                  </span>
+                  {oldPrice && (
+                    <span className="text-xs text-gray-400 line-through">
+                      ₹{fmt(oldPrice)}
+                    </span>
                   )}
                 </div>
-
-                <h3 className="text-sm sm:text-base font-bold text-gray-900 mb-2 line-clamp-2 group-hover:text-yellow-800 transition-colors duration-300">
-                  {deal.title}
-                </h3>
-
-                {deal.description && (
-                  <p className="text-xs text-gray-600 mb-3 line-clamp-2 leading-relaxed">
-                    {deal.description}
-                  </p>
+                
+                {oldPrice && parseFloat(oldPrice) > parseFloat(price) && (
+                  <span className="text-xs font-semibold text-green-600 block mb-2">
+                    Save ₹{fmt(parseFloat(oldPrice) - parseFloat(price))}
+                  </span>
                 )}
 
-                <div className="mt-auto pt-3 border-t border-gray-100">
-                  <div className="flex items-end justify-between gap-3">
-                    <div className="flex flex-col gap-1">
-                      <div className="flex items-baseline gap-2">
-                        <span className="text-lg font-black bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
-                          ₹{fmt(price)}
-                        </span>
-                        {oldPrice && (
-                          <span className="text-xs text-gray-400 line-through font-medium">
-                            ₹{fmt(oldPrice)}
-                          </span>
-                        )}
-                      </div>
-                      {oldPrice && parseFloat(oldPrice) > parseFloat(price) && (
-                        <span className="text-xs font-semibold text-green-600">
-                          Save ₹{fmt(parseFloat(oldPrice) - parseFloat(price))}
-                        </span>
-                      )}
-                    </div>
-
-                    <Link
-                      to={`/deal/${deal.id}`}
-                      className="relative px-4 py-2.5 bg-gradient-to-r from-yellow-700 to-yellow-900 text-white rounded-xl font-bold text-sm shadow-lg hover:shadow-2xl hover:scale-105 transition-all duration-300 overflow-hidden group/btn"
-                    >
-                      <span className="relative z-10 flex items-center gap-1">
-                        View Deal
-                      </span>
-                      <div className="absolute inset-0 bg-gradient-to-r from-yellow-600 to-orange-600 opacity-0 group-hover/btn:opacity-100 transition-opacity duration-300"></div>
-                    </Link>
-                  </div>
-                </div>
+                {/* View Deal button - Mobile optimized */}
+                <Link
+                  to={`/deal/${deal.id}`}
+                  className="block w-full text-center px-3 py-2 bg-gradient-to-r from-yellow-700 to-yellow-900 text-white rounded-xl font-bold text-sm shadow-md hover:shadow-lg transition-all duration-300"
+                >
+                  View Deal
+                </Link>
               </div>
             </div>
           );
@@ -364,4 +348,4 @@ export default function DealsGrid({
       </div>
     </div>
   );
-}
+    
