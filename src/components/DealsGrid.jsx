@@ -271,8 +271,8 @@ export default function DealsGrid({
               {/* Decorative corner accent */}
               <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-yellow-200/20 to-transparent rounded-full blur-2xl -mr-16 -mt-16 group-hover:scale-150 transition-transform duration-500"></div>
 
-              {/* 7-Day Timer - ALWAYS SHOW for testing */}
-              <div className="relative bg-gradient-to-r from-red-500 via-red-600 to-orange-600 text-white text-xs font-bold px-3 py-1.5 rounded-lg mb-3 flex items-center gap-1.5 shadow-lg z-10">
+              {/* 7-Day Timer - Half width, left aligned */}
+              <div className="relative bg-gradient-to-r from-red-500 via-red-600 to-orange-600 text-white text-xs font-bold px-3 py-1.5 rounded-lg mb-3 flex items-center gap-1.5 shadow-lg z-10 w-fit max-w-[60%]">
                 <Clock className="w-3.5 h-3.5" />
                 <span className="flex items-center gap-1">
                   {timeRemaining ? (
@@ -289,14 +289,10 @@ export default function DealsGrid({
                 </span>
               </div>
 
-              {/* like count badge top-right */}
-              <div className="absolute top-4 right-4 bg-gradient-to-br from-white to-gray-50 backdrop-blur-sm rounded-2xl px-3 py-2 flex items-center gap-2 shadow-xl text-sm font-bold text-gray-800 z-20 border border-gray-200 group-hover:scale-110 transition-transform duration-300">
-                <div className="bg-gradient-to-br from-yellow-400 to-yellow-600 p-1 rounded-full">
-                  <ArrowUp className="w-3.5 h-3.5 text-white" />
-                </div>
-                <span className="bg-gradient-to-r from-yellow-600 to-orange-600 bg-clip-text text-transparent">
-                  {deal.like_count ?? 0}
-                </span>
+              {/* like count badge top-right - Back to original colors */}
+              <div className="absolute top-4 right-4 bg-white/95 rounded-full px-2 py-1 flex items-center gap-2 shadow-sm text-sm font-medium text-gray-700 z-20">
+                <ArrowUp className="w-4 h-4 text-yellow-700" />
+                <span>{deal.like_count ?? 0}</span>
               </div>
 
               <div className="relative z-10">
