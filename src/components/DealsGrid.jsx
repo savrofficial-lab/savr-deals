@@ -44,7 +44,10 @@ export default function DealsGrid({
 
   // Calculate time remaining
   const getTimeRemaining = (createdAt) => {
-    if (!createdAt) return null;
+    if (!createdAt) {
+      console.log("No created_at timestamp found");
+      return null;
+    }
     
     const created = new Date(createdAt).getTime();
     const expiresAt = created + (7 * 24 * 60 * 60 * 1000); // 7 days in milliseconds
@@ -92,7 +95,10 @@ export default function DealsGrid({
       setErrorMsg("");
 
       try {
-        let query = supabase.from("deals").select("*").eq("published", true);
+        let query = supabase
+          .from("deals")
+          .select("id, title, image, category, link, posted_by, published, description, old_price, created_at, price, expires_at")
+          .eq("published", true);
 
         const finalCategory = (selectedCategoryInternal || "All");
 
@@ -127,6 +133,9 @@ export default function DealsGrid({
           return;
         }
 
+        // Debug: Check if created_at is being fetched
+        console.log("First deal created_at:", list[0]?.created_at);
+
         // Fetch like counts
         const ids = list.map((d) => d.id).filter(Boolean);
         let likeCounts = {};
@@ -150,7 +159,7 @@ export default function DealsGrid({
         // Merge like counts and calculate discount for ALL deals
         let merged = list.map((d) => {
           const price = parseFloat(d.price ?? d.discounted_price ?? 0);
-          const oldPrice = parseFloat(d.oldPrice ?? d.old_price ?? 0);
+          const oldPrice = parseFloat(d.old_price ?? d.oldPrice ?? d.mrp ?? 0);
           let discountPercent = 0;
           
           if (!Number.isNaN(price) && !Number.isNaN(oldPrice) && oldPrice > price) {
@@ -247,6 +256,9 @@ export default function DealsGrid({
           const price = priceFor(deal);
           const oldPrice = oldPriceFor(deal);
           const timeRemaining = getTimeRemaining(deal.created_at);
+
+          // Debug log for each deal
+          console.log(`Deal ${deal.id} - created_at:`, deal.created_at, "timeRemaining:", timeRemaining);
 
           // discount percent
           let discountBadge = null;
@@ -411,4 +423,4 @@ export default function DealsGrid({
       `}</style>
     </div>
   );
-}
+      }
