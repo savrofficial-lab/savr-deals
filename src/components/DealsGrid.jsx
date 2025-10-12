@@ -210,18 +210,17 @@ export default function DealsGrid({
     <div className="relative">
       {/* If parent didn't provide header categories, show small dropdown here */}
       {!hideHeaderCategories && (
-        <div className="flex justify-center mb-4 relative">
+        <div className="flex justify-center mb-6 relative">
           <button
             onClick={() => setShowDropdown((s) => !s)}
-            className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-yellow-700 to-yellow-900 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 font-semibold text-sm"
+            className="flex items-center gap-1 px-4 py-2 bg-white border border-gray-300 rounded-full shadow-sm hover:bg-gray-100 transition"
           >
-            <Sparkles className="w-4 h-4" />
             Categories <ChevronDown className="w-4 h-4" />
           </button>
 
           {/* Popup */}
           {showDropdown && (
-            <div className="absolute top-12 bg-white rounded-2xl shadow-2xl border border-gray-100 p-3 w-56 z-10">
+            <div className="absolute top-12 bg-white rounded-xl shadow-lg border border-gray-200 p-3 w-56 z-10">
               {allCategories.map((cat) => (
                 <button
                   key={cat}
@@ -229,10 +228,8 @@ export default function DealsGrid({
                     setSelectedCategoryInternal(cat);
                     setShowDropdown(false);
                   }}
-                  className={`block w-full text-left px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 mb-1 ${
-                    selectedCategoryInternal === cat 
-                      ? "bg-gradient-to-r from-yellow-700 to-yellow-900 text-white shadow-md" 
-                      : "hover:bg-gray-100 text-gray-700"
+                  className={`block w-full text-left px-4 py-2 rounded-lg text-sm ${
+                    selectedCategoryInternal === cat ? "bg-yellow-800 text-white" : "hover:bg-gray-100 text-gray-700"
                   }`}
                 >
                   {cat}
@@ -243,8 +240,8 @@ export default function DealsGrid({
         </div>
       )}
 
-      {/* Deals grid - Mobile optimized */}
-      <div className="grid grid-cols-2 gap-3 px-2">
+      {/* Deals grid - BACK TO ORIGINAL: 2 cols mobile, 3 cols sm, 4 cols lg */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
         {deals.map((deal, idx) => {
           const imageSrc = imgFor(deal);
           const price = priceFor(deal);
@@ -263,12 +260,12 @@ export default function DealsGrid({
           return (
             <div
               key={deal.id ?? idx}
-              className="bg-white rounded-2xl shadow-md hover:shadow-lg transition-all duration-300 flex flex-col p-3 relative"
+              className="bg-white rounded-2xl shadow-md hover:shadow-xl transition-transform hover:-translate-y-1 flex flex-col p-3 relative"
             >
-              {/* 7-Day Timer - Mobile friendly */}
-              <div className="bg-gradient-to-r from-red-500 to-red-600 text-white text-xs font-bold px-2.5 py-1.5 rounded-lg mb-2 flex items-center gap-1 w-fit">
+              {/* 7-Day Timer - Mobile friendly, half width */}
+              <div className="bg-gradient-to-r from-red-500 to-red-600 text-white text-xs font-bold px-2.5 py-1.5 rounded-lg mb-2 flex items-center gap-1 w-fit max-w-[65%]">
                 <Clock className="w-3 h-3" />
-                <span className="whitespace-nowrap">
+                <span className="whitespace-nowrap text-[10px] sm:text-xs">
                   {timeRemaining ? (
                     <>
                       {timeRemaining.days > 0 ? `${timeRemaining.days}d ` : ''}
@@ -280,64 +277,43 @@ export default function DealsGrid({
                 </span>
               </div>
 
-              {/* like count badge top-right - Mobile optimized */}
-              <div className="absolute top-2 right-2 bg-white/95 rounded-full px-2 py-1 flex items-center gap-1 shadow-sm text-xs font-medium text-gray-700 z-10">
-                <ArrowUp className="w-3 h-3 text-yellow-700" />
+              {/* like count badge top-right */}
+              <div className="absolute top-3 right-3 bg-white/95 rounded-full px-2 py-1 flex items-center gap-2 shadow-sm text-sm font-medium text-gray-700 z-20">
+                <ArrowUp className="w-4 h-4 text-yellow-700" />
                 <span>{deal.like_count ?? 0}</span>
               </div>
 
-              {/* Image container - Mobile optimized */}
-              <div className="relative rounded-xl overflow-hidden bg-gray-50 mb-2">
+              <div className="relative">
                 <img
                   src={imageSrc}
                   alt={deal.title || "Deal image"}
                   loading="lazy"
-                  className="w-full h-32 object-contain p-2"
+                  className="w-full h-36 object-contain mb-3 bg-white"
                 />
-                
-                {/* Discount badge - Mobile friendly */}
                 {discountBadge && (
-                  <div className="absolute left-2 top-2 bg-gradient-to-r from-yellow-700 to-orange-700 text-white text-xs font-bold px-2 py-1 rounded-md shadow-md">
+                  <div className="absolute left-3 top-3 bg-yellow-800 text-white text-xs font-semibold px-2 py-1 rounded z-10">
                     {discountBadge}
                   </div>
                 )}
               </div>
 
-              {/* Title - Mobile optimized */}
-              <h3 className="text-sm font-bold text-gray-900 mb-1 line-clamp-2 leading-tight">
+              <h3 className="text-sm sm:text-base font-semibold text-gray-800 mb-1 line-clamp-2">
                 {deal.title}
               </h3>
 
-              {/* Description - Hidden on mobile for cleaner look */}
               {deal.description && (
-                <p className="text-xs text-gray-600 mb-2 line-clamp-1 hidden sm:block">
-                  {deal.description}
-                </p>
+                <p className="text-xs text-gray-600 mb-2 line-clamp-3">{deal.description}</p>
               )}
 
-              {/* Price section - Mobile optimized */}
-              <div className="mt-auto pt-2">
-                <div className="flex items-baseline gap-1.5 mb-1">
-                  <span className="text-base font-black text-green-600">
-                    ₹{fmt(price)}
-                  </span>
-                  {oldPrice && (
-                    <span className="text-xs text-gray-400 line-through">
-                      ₹{fmt(oldPrice)}
-                    </span>
-                  )}
+              <div className="mt-auto flex items-center justify-between gap-3">
+                <div>
+                  <div className="text-sm font-bold text-gray-900">₹{fmt(price)}</div>
+                  {oldPrice && <div className="text-xs text-gray-500 line-through">₹{fmt(oldPrice)}</div>}
                 </div>
-                
-                {oldPrice && parseFloat(oldPrice) > parseFloat(price) && (
-                  <span className="text-xs font-semibold text-green-600 block mb-2">
-                    Save ₹{fmt(parseFloat(oldPrice) - parseFloat(price))}
-                  </span>
-                )}
 
-                {/* View Deal button - Mobile optimized */}
                 <Link
                   to={`/deal/${deal.id}`}
-                  className="block w-full text-center px-3 py-2 bg-gradient-to-r from-yellow-700 to-yellow-900 text-white rounded-xl font-bold text-sm shadow-md hover:shadow-lg transition-all duration-300"
+                  className="px-3 py-2 bg-yellow-800 text-white rounded"
                 >
                   View Deal
                 </Link>
@@ -348,4 +324,4 @@ export default function DealsGrid({
       </div>
     </div>
   );
-}
+} 
