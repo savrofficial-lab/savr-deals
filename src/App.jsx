@@ -97,6 +97,35 @@ function IconPlus({ className = "h-6 w-6" }) {
 }
 
 /* ---------------------------------------------------------------------------
+   FIXED CATEGORIES - SINGLE SOURCE OF TRUTH
+--------------------------------------------------------------------------- */
+const FIXED_CATEGORIES = [
+  "All",
+  "Mobiles",
+  "Laptops & Computers",
+  "Men's fashion",
+  "Electronics",
+  "Watches",
+  "TVs",
+  "Women's Fashion",
+  "Grocery",
+  "Health & Fitness",
+  "Bags & Luggage",
+  "Toys",
+  "Baby products",
+  "Kids fashion",
+  "Sports",
+  "Gaming",
+  "Home Appliances",
+  "Accessories",
+  "Beauty",
+  "Books",
+  "Movies & Music",
+  "Pets",
+  "Cars, Bikes & Industrial",
+];
+
+/* ---------------------------------------------------------------------------
    MAIN APP
 --------------------------------------------------------------------------- */
 export default function App() {
@@ -108,33 +137,8 @@ export default function App() {
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [intendedTab, setIntendedTab] = useState(null);
 
-  const DEFAULT_CATEGORIES = [
-    "All",
-    "Mobiles",
-    "Laptops & Computers",
-    "Men's fashion",
-    "Electronics",
-    "Watches",
-    "TVs",
-    "Women's Fashion",
-    "Grocery",
-    "Health & Fitness",
-    "Bags & Luggage",
-    "Toys",
-    "Baby products",
-    "Kids fashion",
-    "Sports",
-    "Gaming",
-    "Home Appliances",
-    "Accessories",
-    "Beauty",
-    "Books",
-    "Movies & Music",
-    "Pets",
-    "Cars, Bikes & Industrial",
-  ];
-
-  const [categories, setCategories] = useState(DEFAULT_CATEGORIES);
+  // USE FIXED CATEGORIES - NO DYNAMIC LOADING
+  const [categories, setCategories] = useState(FIXED_CATEGORIES);
   const [selectedCategory, setSelectedCategory] = useState("");
   const [showCategories, setShowCategories] = useState(false);
   const categoriesRef = useRef(null);
@@ -172,44 +176,28 @@ export default function App() {
     }
   }
 
-  // ---------------- FETCH CATEGORIES ----------------
-  useEffect(() => {
-    (async () => {
-      const { data, error } = await supabase
-        .from("deals")
-        .select("category")
-        .eq("published", true);
-      if (!error && data) {
-        const cats = Array.from(
-          new Set(
-            data.map((d) => (d.category || "").trim()).filter(Boolean)
-          )
-        );
-        setCategories([...DEFAULT_CATEGORIES, ...cats]);
-      }
-    })();
-  }, []);
+  // REMOVED: Dynamic category fetching useEffect - no longer needed!
 
   // ---------------- OUTSIDE CLICK ----------------
   useEffect(() => {
-  if (!showCategories) return;
+    if (!showCategories) return;
 
-  function handleClickOutside(e) {
-    if (categoriesRef.current && !categoriesRef.current.contains(e.target)) {
-      setShowCategories(false);
+    function handleClickOutside(e) {
+      if (categoriesRef.current && !categoriesRef.current.contains(e.target)) {
+        setShowCategories(false);
+      }
     }
-  }
 
-  // Add delay to prevent immediate closing
-  const timeoutId = setTimeout(() => {
-    document.addEventListener("click", handleClickOutside);
-  }, 100);
+    // Add delay to prevent immediate closing
+    const timeoutId = setTimeout(() => {
+      document.addEventListener("click", handleClickOutside);
+    }, 100);
 
-  return () => {
-    clearTimeout(timeoutId);
-    document.removeEventListener("click", handleClickOutside);
-  };
-}, [showCategories]);
+    return () => {
+      clearTimeout(timeoutId);
+      document.removeEventListener("click", handleClickOutside);
+    };
+  }, [showCategories]);
 
   // ---------------- MAIN RENDER ----------------
   function renderMain() {
@@ -615,4 +603,4 @@ export default function App() {
       `}</style>
     </Router>
   );
-} 
+}
