@@ -1,7 +1,7 @@
 // src/components/ForumPage.jsx
 import React, { useEffect, useState } from "react";
 import { supabase } from "../supabaseClient";
-import { MessageSquare, Heart, Plus, TrendingUp, Sparkles } from "lucide-react";
+import { MessageSquare, Heart, Plus, Zap, Star, Flame, Clock } from "lucide-react";
 import NewThreadModal from "./NewThreadModal";
 import { useNavigate } from "react-router-dom";
 
@@ -66,64 +66,91 @@ export default function ForumPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-amber-50/30 to-slate-100">
-      {/* Decorative background elements */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-amber-200/20 rounded-full blur-3xl"></div>
-        <div className="absolute bottom-0 left-0 w-96 h-96 bg-yellow-200/20 rounded-full blur-3xl"></div>
+    <div className="min-h-screen bg-black relative overflow-hidden">
+      {/* Animated Background */}
+      <div className="fixed inset-0 pointer-events-none">
+        <div className="absolute inset-0 bg-gradient-to-br from-purple-900/20 via-black to-orange-900/20"></div>
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-purple-500/30 rounded-full blur-[120px] animate-pulse"></div>
+        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-orange-500/30 rounded-full blur-[120px] animate-pulse" style={{animationDelay: '1s'}}></div>
+        <div className="absolute top-1/2 left-1/2 w-96 h-96 bg-yellow-500/20 rounded-full blur-[120px] animate-pulse" style={{animationDelay: '2s'}}></div>
+        
+        {/* Grid overlay */}
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.02)_1px,transparent_1px)] bg-[size:100px_100px]"></div>
       </div>
 
-      <div className="relative max-w-5xl mx-auto px-4 py-8">
-        {/* Header Section */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-3">
-              <div className="p-3 bg-gradient-to-br from-amber-500 to-yellow-600 rounded-2xl shadow-lg">
-                <Sparkles className="w-6 h-6 text-white" />
+      <div className="relative max-w-6xl mx-auto px-4 py-8">
+        {/* Glassmorphic Header */}
+        <div className="mb-8 backdrop-blur-xl bg-white/5 rounded-3xl p-8 border border-white/10 shadow-2xl">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="relative">
+                <div className="absolute inset-0 bg-gradient-to-r from-purple-600 to-orange-600 rounded-2xl blur-xl opacity-75 animate-pulse"></div>
+                <div className="relative p-4 bg-gradient-to-br from-purple-600 via-pink-600 to-orange-600 rounded-2xl">
+                  <Flame className="w-8 h-8 text-white" />
+                </div>
               </div>
               <div>
-                <h1 className="text-4xl font-bold bg-gradient-to-r from-gray-900 via-amber-900 to-gray-900 bg-clip-text text-transparent">
+                <h1 className="text-5xl font-black bg-gradient-to-r from-white via-purple-200 to-orange-200 bg-clip-text text-transparent mb-2">
                   Community Forum
                 </h1>
-                <p className="text-sm text-gray-600 mt-1">Share ideas, ask questions, connect with others</p>
+                <p className="text-gray-400 text-sm flex items-center gap-2">
+                  <Zap className="w-4 h-4 text-yellow-400" />
+                  Where ideas spark and conversations ignite
+                </p>
               </div>
             </div>
+            
             <button
               onClick={() => setShowModal(true)}
-              className="group relative bg-gradient-to-r from-amber-600 to-yellow-600 text-white px-6 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 flex items-center gap-2 overflow-hidden"
+              className="relative group"
             >
-              <div className="absolute inset-0 bg-gradient-to-r from-yellow-600 to-amber-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-              <Plus size={20} className="relative z-10" />
-              <span className="relative z-10">New Thread</span>
+              <div className="absolute -inset-1 bg-gradient-to-r from-purple-600 to-orange-600 rounded-2xl blur opacity-75 group-hover:opacity-100 transition duration-1000 group-hover:duration-200 animate-pulse"></div>
+              <div className="relative px-8 py-4 bg-gradient-to-r from-purple-600 to-orange-600 rounded-xl leading-none flex items-center gap-3">
+                <Plus className="w-5 h-5 text-white" />
+                <span className="text-white font-bold text-lg">Create Thread</span>
+              </div>
             </button>
           </div>
 
           {/* Stats Bar */}
-          <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-4 shadow-sm border border-gray-100">
-            <div className="flex items-center gap-6 text-sm">
-              <div className="flex items-center gap-2">
-                <TrendingUp className="w-4 h-4 text-amber-600" />
-                <span className="text-gray-600">
-                  <span className="font-semibold text-gray-900">{threads.length}</span> Threads
-                </span>
+          <div className="mt-6 grid grid-cols-3 gap-4">
+            <div className="backdrop-blur-sm bg-white/5 rounded-2xl p-4 border border-white/10 hover:bg-white/10 transition-all duration-300 group">
+              <div className="flex items-center gap-3">
+                <div className="p-3 bg-gradient-to-br from-purple-500/20 to-purple-600/20 rounded-xl group-hover:scale-110 transition-transform">
+                  <Star className="w-6 h-6 text-purple-400" />
+                </div>
+                <div>
+                  <div className="text-3xl font-black text-white">{threads.length}</div>
+                  <div className="text-xs text-gray-400 uppercase tracking-wider">Active Threads</div>
+                </div>
               </div>
-              <div className="h-4 w-px bg-gray-200"></div>
-              <div className="flex items-center gap-2">
-                <MessageSquare className="w-4 h-4 text-amber-600" />
-                <span className="text-gray-600">
-                  <span className="font-semibold text-gray-900">
+            </div>
+            
+            <div className="backdrop-blur-sm bg-white/5 rounded-2xl p-4 border border-white/10 hover:bg-white/10 transition-all duration-300 group">
+              <div className="flex items-center gap-3">
+                <div className="p-3 bg-gradient-to-br from-pink-500/20 to-pink-600/20 rounded-xl group-hover:scale-110 transition-transform">
+                  <MessageSquare className="w-6 h-6 text-pink-400" />
+                </div>
+                <div>
+                  <div className="text-3xl font-black text-white">
                     {threads.reduce((acc, t) => acc + (t.comment_count || 0), 0)}
-                  </span> Comments
-                </span>
+                  </div>
+                  <div className="text-xs text-gray-400 uppercase tracking-wider">Total Comments</div>
+                </div>
               </div>
-              <div className="h-4 w-px bg-gray-200"></div>
-              <div className="flex items-center gap-2">
-                <Heart className="w-4 h-4 text-amber-600" />
-                <span className="text-gray-600">
-                  <span className="font-semibold text-gray-900">
+            </div>
+            
+            <div className="backdrop-blur-sm bg-white/5 rounded-2xl p-4 border border-white/10 hover:bg-white/10 transition-all duration-300 group">
+              <div className="flex items-center gap-3">
+                <div className="p-3 bg-gradient-to-br from-orange-500/20 to-orange-600/20 rounded-xl group-hover:scale-110 transition-transform">
+                  <Heart className="w-6 h-6 text-orange-400" />
+                </div>
+                <div>
+                  <div className="text-3xl font-black text-white">
                     {threads.reduce((acc, t) => acc + (t.likes_count || 0), 0)}
-                  </span> Likes
-                </span>
+                  </div>
+                  <div className="text-xs text-gray-400 uppercase tracking-wider">Total Reactions</div>
+                </div>
               </div>
             </div>
           </div>
@@ -131,111 +158,128 @@ export default function ForumPage() {
 
         {/* Threads List */}
         {loading ? (
-          <div className="flex flex-col items-center justify-center py-20">
+          <div className="flex flex-col items-center justify-center py-32">
             <div className="relative">
-              <div className="w-16 h-16 border-4 border-gray-200 border-t-amber-600 rounded-full animate-spin"></div>
-              <Sparkles className="w-6 h-6 text-amber-600 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" />
+              <div className="w-24 h-24 border-4 border-purple-500/20 border-t-purple-500 rounded-full animate-spin"></div>
+              <div className="absolute inset-0 w-24 h-24 border-4 border-orange-500/20 border-t-orange-500 rounded-full animate-spin" style={{animationDirection: 'reverse', animationDuration: '1.5s'}}></div>
+              <Zap className="w-10 h-10 text-yellow-400 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 animate-pulse" />
             </div>
-            <p className="text-gray-500 mt-4 font-medium">Loading threads...</p>
+            <p className="text-gray-400 mt-6 font-semibold text-lg">Loading amazing content...</p>
           </div>
         ) : threads.length === 0 ? (
-          <div className="bg-white/60 backdrop-blur-sm rounded-3xl p-12 text-center border border-gray-100 shadow-sm">
-            <div className="w-20 h-20 bg-gradient-to-br from-amber-100 to-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <MessageSquare className="w-10 h-10 text-amber-600" />
+          <div className="backdrop-blur-xl bg-white/5 rounded-3xl p-16 text-center border border-white/10">
+            <div className="relative inline-block mb-6">
+              <div className="absolute inset-0 bg-gradient-to-r from-purple-600 to-orange-600 rounded-full blur-2xl opacity-50"></div>
+              <div className="relative w-32 h-32 bg-gradient-to-br from-purple-600 to-orange-600 rounded-full flex items-center justify-center">
+                <MessageSquare className="w-16 h-16 text-white" />
+              </div>
             </div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">No threads yet</h3>
-            <p className="text-gray-600 mb-6">Be the first to start a conversation!</p>
+            <h3 className="text-3xl font-black text-white mb-4">No Threads Yet</h3>
+            <p className="text-gray-400 mb-8 text-lg">Be the pioneer and start the first conversation!</p>
             <button
               onClick={() => setShowModal(true)}
-              className="bg-gradient-to-r from-amber-600 to-yellow-600 text-white px-6 py-2.5 rounded-xl font-semibold hover:shadow-lg transition-all duration-300"
+              className="px-8 py-4 bg-gradient-to-r from-purple-600 to-orange-600 rounded-xl text-white font-bold text-lg hover:shadow-2xl hover:shadow-purple-500/50 transition-all duration-300 hover:scale-105"
             >
               Create First Thread
             </button>
           </div>
         ) : (
-          <div className="space-y-3">
+          <div className="space-y-4">
             {threads.map((t, idx) => (
               <div
                 key={t.id}
-                className="group relative bg-white/80 backdrop-blur-sm rounded-2xl shadow-sm hover:shadow-xl border border-gray-100 hover:border-amber-200 transition-all duration-300 overflow-hidden cursor-pointer"
+                className="group relative backdrop-blur-xl bg-gradient-to-r from-white/5 to-white/10 rounded-3xl border border-white/10 overflow-hidden cursor-pointer hover:border-purple-500/50 transition-all duration-500"
                 onClick={() => navigate(`/thread/${t.id}`)}
                 style={{
-                  animation: `fadeInUp 0.4s ease-out ${idx * 0.05}s both`
+                  animation: `slideInLeft 0.6s ease-out ${idx * 0.1}s both`
                 }}
               >
-                {/* Hover gradient effect */}
-                <div className="absolute inset-0 bg-gradient-to-r from-amber-50/0 via-amber-50/50 to-amber-50/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                {/* Gradient overlay on hover */}
+                <div className="absolute inset-0 bg-gradient-to-r from-purple-600/0 via-purple-600/5 to-orange-600/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                 
-                <div className="relative p-6">
-                  {/* Thread Header */}
-                  <div className="flex items-start justify-between gap-4 mb-3">
-                    <div className="flex-1 min-w-0">
-                      <h2 className="font-bold text-xl text-gray-900 group-hover:text-amber-900 transition-colors duration-300 line-clamp-2">
+                {/* Animated border */}
+                <div className="absolute inset-0 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+                  <div className="absolute inset-0 rounded-3xl bg-gradient-to-r from-purple-600 via-pink-600 to-orange-600 animate-spin-slow" style={{padding: '1px', WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)', WebkitMaskComposite: 'xor', maskComposite: 'exclude'}}></div>
+                </div>
+
+                <div className="relative p-8">
+                  {/* Header */}
+                  <div className="flex items-start justify-between gap-4 mb-4">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3 mb-3">
+                        {t.profiles?.avatar_url ? (
+                          <div className="relative">
+                            <div className="absolute inset-0 bg-gradient-to-r from-purple-600 to-orange-600 rounded-full blur-md opacity-75"></div>
+                            <img
+                              src={t.profiles.avatar_url}
+                              alt={t.profiles.username}
+                              className="relative w-12 h-12 rounded-full object-cover border-2 border-white/20"
+                            />
+                          </div>
+                        ) : (
+                          <div className="relative">
+                            <div className="absolute inset-0 bg-gradient-to-r from-purple-600 to-orange-600 rounded-full blur-md opacity-75"></div>
+                            <div className="relative w-12 h-12 rounded-full bg-gradient-to-br from-purple-600 to-orange-600 flex items-center justify-center text-white text-lg font-black border-2 border-white/20">
+                              {(t.profiles?.username?.[0] || "U").toUpperCase()}
+                            </div>
+                          </div>
+                        )}
+                        <div>
+                          <div className="text-white font-bold">{t.profiles?.username || "Anonymous"}</div>
+                          <div className="flex items-center gap-2 text-xs text-gray-400">
+                            <Clock className="w-3 h-3" />
+                            {new Date(t.created_at).toLocaleDateString("en-IN", {
+                              day: "numeric",
+                              month: "short",
+                              year: "numeric"
+                            })}
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <h2 className="font-black text-2xl text-white group-hover:text-transparent group-hover:bg-gradient-to-r group-hover:from-purple-400 group-hover:to-orange-400 group-hover:bg-clip-text transition-all duration-300 mb-3 leading-tight">
                         {t.title}
                       </h2>
-                    </div>
-                    <div className="flex flex-col items-end gap-1 flex-shrink-0">
-                      <div className="text-xs font-medium text-gray-400 bg-gray-50 px-3 py-1 rounded-full">
-                        {new Date(t.created_at).toLocaleDateString("en-IN", {
-                          day: "numeric",
-                          month: "short",
-                        })}
-                      </div>
+                      <p className="text-gray-300 leading-relaxed line-clamp-2">
+                        {t.content}
+                      </p>
                     </div>
                   </div>
 
-                  {/* Thread Content */}
-                  <p className="text-gray-600 leading-relaxed line-clamp-2 mb-4">
-                    {t.content}
-                  </p>
-
-                  {/* Thread Footer */}
-                  <div className="flex items-center justify-between pt-4 border-t border-gray-100">
-                    {/* Interaction Stats */}
-                    <div className="flex items-center gap-4">
+                  {/* Footer */}
+                  <div className="flex items-center justify-between pt-6 border-t border-white/10">
+                    <div className="flex items-center gap-6">
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
                           handleLike(t.id);
                         }}
-                        className="flex items-center gap-1.5 text-gray-600 hover:text-red-500 transition-colors duration-200 group/like"
+                        className="group/btn flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 hover:bg-gradient-to-r hover:from-red-500/20 hover:to-pink-500/20 border border-white/10 hover:border-red-500/50 transition-all duration-300"
                       >
                         <Heart
-                          className={`h-5 w-5 transition-all duration-300 group-hover/like:scale-110 ${
-                            t.likes_count > 0 ? "fill-red-500 text-red-500" : ""
+                          className={`w-5 h-5 transition-all duration-300 group-hover/btn:scale-125 ${
+                            t.likes_count > 0 ? "fill-red-500 text-red-500" : "text-gray-400"
                           }`}
                         />
-                        <span className="font-semibold text-sm">{t.likes_count}</span>
+                        <span className={`font-bold ${t.likes_count > 0 ? 'text-red-400' : 'text-gray-400'}`}>
+                          {t.likes_count}
+                        </span>
                       </button>
                       
-                      <div className="flex items-center gap-1.5 text-gray-500">
-                        <MessageSquare className="w-5 h-5" />
-                        <span className="font-semibold text-sm">{t.comment_count || 0}</span>
+                      <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 border border-white/10">
+                        <MessageSquare className="w-5 h-5 text-purple-400" />
+                        <span className="font-bold text-purple-400">{t.comment_count || 0}</span>
                       </div>
                     </div>
 
-                    {/* Author Info */}
-                    <div className="flex items-center gap-2.5">
-                      <span className="text-sm text-gray-600 font-medium">
-                        {t.profiles?.username || "Anonymous"}
-                      </span>
-                      {t.profiles?.avatar_url ? (
-                        <img
-                          src={t.profiles.avatar_url}
-                          alt={t.profiles.username}
-                          className="w-9 h-9 rounded-full object-cover ring-2 ring-white shadow-sm"
-                        />
-                      ) : (
-                        <div className="w-9 h-9 rounded-full bg-gradient-to-br from-amber-500 to-yellow-600 text-white flex items-center justify-center text-sm font-bold shadow-sm ring-2 ring-white">
-                          {(t.profiles?.username?.[0] || "U").toUpperCase()}
-                        </div>
-                      )}
+                    <div className="px-4 py-2 rounded-xl bg-gradient-to-r from-purple-500/10 to-orange-500/10 border border-purple-500/20 text-xs text-purple-300 font-semibold uppercase tracking-wider">
+                      View Discussion →
                     </div>
                   </div>
                 </div>
 
-                {/* Bottom accent line */}
-                <div className="h-1 bg-gradient-to-r from-transparent via-amber-500 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                {/* Bottom glow */}
+                <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-purple-600 via-pink-600 to-orange-600 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
               </div>
             ))}
           </div>
@@ -245,15 +289,28 @@ export default function ForumPage() {
       {showModal && <NewThreadModal onClose={() => setShowModal(false)} onPost={fetchThreads} />}
 
       <style>{`
-        @keyframes fadeInUp {
+        @keyframes slideInLeft {
           from {
             opacity: 0;
-            transform: translateY(20px);
+            transform: translateX(-30px);
           }
           to {
             opacity: 1;
-            transform: translateY(0);
+            transform: translateX(0);
           }
+        }
+        
+        @keyframes spin-slow {
+          from {
+            transform: rotate(0deg);
+          }
+          to {
+            transform: rotate(360deg);
+          }
+        }
+        
+        .animate-spin-slow {
+          animation: spin-slow 3s linear infinite;
         }
       `}</style>
     </div>
