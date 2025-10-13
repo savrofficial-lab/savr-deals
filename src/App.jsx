@@ -192,24 +192,20 @@ export default function App() {
 
   // ---------------- OUTSIDE CLICK ----------------
   useEffect(() => {
-    if (!showCategories) return;
+  if (!showCategories) return;
 
-    function handleClickOutside(e) {
-      if (categoriesRef.current && !categoriesRef.current.contains(e.target)) {
-        setShowCategories(false);
-      }
+  function handleClickOutside(e) {
+    if (categoriesRef.current && !categoriesRef.current.contains(e.target)) {
+      setShowCategories(false);
     }
+  }
 
-    // Add delay to prevent immediate closing
-    const timeoutId = setTimeout(() => {
-      document.addEventListener("click", handleClickOutside);
-    }, 100);
+  document.addEventListener("click", handleClickOutside);
 
-    return () => {
-      clearTimeout(timeoutId);
-      document.removeEventListener("click", handleClickOutside);
-    };
-  }, [showCategories]);
+  return () => {
+    document.removeEventListener("click", handleClickOutside);
+  };
+}, [showCategories]);
 
   // ---------------- MAIN RENDER ----------------
   function renderMain() {
