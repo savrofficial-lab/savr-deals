@@ -66,28 +66,31 @@ export default function DealsGrid({
   };
 
   // Load categories
-  useEffect(() => {
-    let mounted = true;
-    (async () => {
-      try {
-        const { data, error } = await supabase.from("deals").select("category").eq("published", true);
-        if (error) {
-          console.warn("Could not load categories:", error);
-          return;
-        }
-        if (!mounted) return;
-        const cats = Array.from(
-          new Set((data || []).map((r) => (r.category || "").toString().trim()).filter(Boolean))
-        );
-        setAllCategories(["All", ...cats]);
-      } catch (err) {
-        console.error("Unexpected categories error:", err);
-      }
-    })();
-    return () => {
-      mounted = false;
-    };
-  }, []);
+  const allCategories = [
+  "All",
+  "Mobiles",
+  "Laptops & Computers",
+  "Men's fashion",
+  "Electronics",
+  "Watches",
+  "TVs",
+  "Women's Fashion",
+  "Grocery",
+  "Health & Fitness",
+  "Bags & Luggage",
+  "Toys",
+  "Baby products",
+  "Kids fashion",
+  "Sports",
+  "Gaming",
+  "Home Appliances",
+  "Accessories",
+  "Beauty",
+  "Books",
+  "Movies & Music",
+  "Pets",
+  "Cars, Bikes & Industrial",
+];
 
   // Fetch deals + like counts
   useEffect(() => {
