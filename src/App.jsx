@@ -200,9 +200,13 @@ export default function App() {
     }
   }
 
-  document.addEventListener("click", handleClickOutside);
+  // Add delay to prevent immediate closing
+  const timeoutId = setTimeout(() => {
+    document.addEventListener("click", handleClickOutside);
+  }, 100);
 
   return () => {
+    clearTimeout(timeoutId);
     document.removeEventListener("click", handleClickOutside);
   };
 }, [showCategories]);
@@ -331,7 +335,7 @@ export default function App() {
           {/* TOP TABS - FIXED FOR MOBILE */}
           <div className="bg-gradient-to-r from-amber-50/80 to-yellow-50/80 backdrop-blur-md sticky top-[88px] z-40 border-t border-amber-100/30">
             <div className="max-w-5xl mx-auto px-2 sm:px-4 py-2 sm:py-3">
-              <div className="flex items-center gap-1 sm:gap-2 overflow-x-auto scrollbar-hide">
+              <div className="flex items-center gap-2 overflow-visible">
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
