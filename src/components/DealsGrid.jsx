@@ -1,8 +1,35 @@
-// src/components/DealsGrid.jsx
+ // src/components/DealsGrid.jsx
 import React, { useEffect, useState } from "react";
 import { supabase } from "../supabaseClient";
 import { Link } from "react-router-dom";
 import { ChevronDown, ArrowUp, Clock, Sparkles } from "lucide-react";
+
+// FIXED CATEGORIES LIST
+const FIXED_CATEGORIES = [
+  "All",
+  "Mobiles",
+  "Laptops & Computers",
+  "Men's fashion",
+  "Electronics",
+  "Watches",
+  "TVs",
+  "Women's Fashion",
+  "Grocery",
+  "Health & Fitness",
+  "Bags & Luggage",
+  "Toys",
+  "Baby products",
+  "Kids fashion",
+  "Sports",
+  "Gaming",
+  "Home Appliances",
+  "Accessories",
+  "Beauty",
+  "Books",
+  "Movies & Music",
+  "Pets",
+  "Cars, Bikes & Industrial",
+];
 
 export default function DealsGrid({
   search = "",
@@ -11,7 +38,7 @@ export default function DealsGrid({
   filterHotDeals = false,
 }) {
   const [deals, setDeals] = useState([]);
-  const [allCategories, setAllCategories] = useState(["All"]);
+  const [allCategories, setAllCategories] = useState(FIXED_CATEGORIES); // USE FIXED LIST
   const [selectedCategoryInternal, setSelectedCategoryInternal] = useState(
     propSelectedCategory === "" || propSelectedCategory == null ? "All" : propSelectedCategory
   );
@@ -65,32 +92,7 @@ export default function DealsGrid({
     }
   };
 
-  // Load categories
-  const allCategories = [
-  "All",
-  "Mobiles",
-  "Laptops & Computers",
-  "Men's fashion",
-  "Electronics",
-  "Watches",
-  "TVs",
-  "Women's Fashion",
-  "Grocery",
-  "Health & Fitness",
-  "Bags & Luggage",
-  "Toys",
-  "Baby products",
-  "Kids fashion",
-  "Sports",
-  "Gaming",
-  "Home Appliances",
-  "Accessories",
-  "Beauty",
-  "Books",
-  "Movies & Music",
-  "Pets",
-  "Cars, Bikes & Industrial",
-];
+  // REMOVED: Dynamic category loading useEffect - no longer needed!
 
   // Fetch deals + like counts
   useEffect(() => {
@@ -329,4 +331,4 @@ export default function DealsGrid({
       </div>
     </div>
   );
-                }
+}
