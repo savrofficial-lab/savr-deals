@@ -332,10 +332,10 @@ export default function App() {
             </div>
           </div>
 
-          {/* TOP TABS */}
+          {/* TOP TABS - FIXED FOR MOBILE */}
           <div className="bg-gradient-to-r from-amber-50/80 to-yellow-50/80 backdrop-blur-md sticky top-[88px] z-40 border-t border-amber-100/30">
-            <div className="max-w-5xl mx-auto px-4 py-3">
-              <div className="flex items-center gap-2 overflow-visible">
+            <div className="max-w-5xl mx-auto px-2 sm:px-4 py-2 sm:py-3">
+              <div className="flex items-center gap-1 sm:gap-2 overflow-x-auto scrollbar-hide">
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
@@ -343,7 +343,7 @@ export default function App() {
                     setActiveTopTab("Frontpage");
                     setSelectedCategory("");
                   }}
-                  className={`whitespace-nowrap px-5 py-2.5 rounded-xl text-sm font-semibold transition-all shadow-sm ${
+                  className={`whitespace-nowrap px-2.5 sm:px-4 md:px-5 py-1.5 sm:py-2 md:py-2.5 rounded-lg sm:rounded-xl text-xs sm:text-sm font-semibold transition-all shadow-sm flex-shrink-0 ${
                     activeTopTab === "Frontpage"
                       ? "bg-gradient-to-r from-amber-600 to-yellow-600 text-white shadow-md"
                       : "bg-white/90 text-gray-700 border-2 border-amber-100 hover:bg-amber-50 hover:border-amber-200"
@@ -353,18 +353,18 @@ export default function App() {
                 </motion.button>
 
                 {/* CATEGORIES DROPDOWN - FIXED */}
-                <div className="relative" ref={categoriesRef}>
+                <div className="relative flex-shrink-0" ref={categoriesRef}>
                   <button
                     type="button"
                     onClick={() => {
                       setShowCategories((p) => !p);
                       setActiveTopTab("Frontpage");
                     }}
-                    className="whitespace-nowrap px-5 py-2.5 rounded-xl text-sm font-semibold bg-white/90 text-gray-700 hover:bg-amber-50 border-2 border-amber-100 hover:border-amber-200 flex items-center gap-2 shadow-sm transition-all"
+                    className="whitespace-nowrap px-2.5 sm:px-4 md:px-5 py-1.5 sm:py-2 md:py-2.5 rounded-lg sm:rounded-xl text-xs sm:text-sm font-semibold bg-white/90 text-gray-700 hover:bg-amber-50 border-2 border-amber-100 hover:border-amber-200 flex items-center gap-1 sm:gap-2 shadow-sm transition-all"
                   >
                     Categories{" "}
                     <ChevronDown
-                      className={`h-4 w-4 transition-transform duration-200 ${
+                      className={`h-3 w-3 sm:h-4 sm:w-4 transition-transform duration-200 ${
                         showCategories ? "rotate-180" : ""
                       }`}
                     />
@@ -400,7 +400,7 @@ export default function App() {
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={() => setActiveTopTab("Forums")}
-                  className={`whitespace-nowrap px-5 py-2.5 rounded-xl text-sm font-semibold transition-all shadow-sm ${
+                  className={`whitespace-nowrap px-2.5 sm:px-4 md:px-5 py-1.5 sm:py-2 md:py-2.5 rounded-lg sm:rounded-xl text-xs sm:text-sm font-semibold transition-all shadow-sm flex-shrink-0 ${
                     activeTopTab === "Forums"
                       ? "bg-gradient-to-r from-amber-600 to-yellow-600 text-white shadow-md"
                       : "bg-white/90 text-gray-700 border-2 border-amber-100 hover:bg-amber-50 hover:border-amber-200"
@@ -413,14 +413,14 @@ export default function App() {
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={() => setActiveTopTab("Hot Deals")}
-                  className={`whitespace-nowrap px-5 py-2.5 rounded-xl text-sm font-semibold transition-all shadow-sm flex items-center gap-2 ${
+                  className={`whitespace-nowrap px-2.5 sm:px-4 md:px-5 py-1.5 sm:py-2 md:py-2.5 rounded-lg sm:rounded-xl text-xs sm:text-sm font-semibold transition-all shadow-sm flex items-center gap-1 sm:gap-2 flex-shrink-0 ${
                     activeTopTab === "Hot Deals"
                       ? "bg-gradient-to-r from-amber-600 to-yellow-600 text-white shadow-md"
                       : "bg-white/90 text-gray-700 border-2 border-amber-100 hover:bg-amber-50 hover:border-amber-200"
                   }`}
                 >
                   Hot Deals
-                  <Sparkles className="h-4 w-4" />
+                  <Sparkles className="h-3 w-3 sm:h-4 sm:w-4" />
                 </motion.button>
               </div>
             </div>
@@ -615,4 +615,4 @@ export default function App() {
       `}</style>
     </Router>
   );
-}
+} 
