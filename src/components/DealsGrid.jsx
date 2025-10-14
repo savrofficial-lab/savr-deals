@@ -38,7 +38,7 @@ export default function DealsGrid({
   filterHotDeals = false,
 }) {
   const [deals, setDeals] = useState([]);
-  const [allCategories, setAllCategories] = useState(FIXED_CATEGORIES); // USE FIXED LIST
+  const [allCategories, setAllCategories] = useState(FIXED_CATEGORIES);
   const [selectedCategoryInternal, setSelectedCategoryInternal] = useState(
     propSelectedCategory === "" || propSelectedCategory == null ? "All" : propSelectedCategory
   );
@@ -51,7 +51,7 @@ export default function DealsGrid({
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentTime(Date.now());
-    }, 60000);
+    }, 60000); // Update every 1 minute
     return () => clearInterval(interval);
   }, []);
 
@@ -263,12 +263,13 @@ export default function DealsGrid({
         </div>
       )}
 
-      {/* Deals grid - BACK TO ORIGINAL: 2 cols mobile, 3 cols sm, 4 cols lg */}
+      {/* Deals grid */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
         {deals.map((deal, idx) => {
           const imageSrc = imgFor(deal);
           const price = priceFor(deal);
           const oldPrice = oldPriceFor(deal);
+          // Timer recalculates whenever currentTime changes
           const timeRemaining = getTimeRemaining(deal.created_at);
 
           // discount percent
@@ -285,7 +286,7 @@ export default function DealsGrid({
               key={deal.id ?? idx}
               className="bg-white rounded-2xl shadow-md hover:shadow-xl transition-transform hover:-translate-y-1 flex flex-col p-3 relative"
             >
-              {/* 7-Day Timer - Always show unless expired */}
+              {/* 7-Day Timer - Updates every minute */}
               {timeRemaining && (
                 <div className="bg-gradient-to-r from-red-500 to-red-600 text-white text-xs font-bold px-2.5 py-1.5 rounded-lg mb-2 flex items-center gap-1 w-fit max-w-[65%]">
                   <Clock className="w-3 h-3" />
@@ -345,4 +346,4 @@ export default function DealsGrid({
       </div>
     </div>
   );
-}
+                   }
