@@ -47,11 +47,12 @@ export default function DealsGrid({
   const [showDropdown, setShowDropdown] = useState(false);
   const [currentTime, setCurrentTime] = useState(Date.now());
 
-  // Update current time every minute for timer updates
+  // Update current time every second for testing (change back to 60000 after confirming it works)
   useEffect(() => {
     const interval = setInterval(() => {
+      console.log("Timer updating at:", new Date().toLocaleTimeString());
       setCurrentTime(Date.now());
-    }, 60000); // Update every 1 minute
+    }, 1000); // Update every 1 SECOND for testing
     return () => clearInterval(interval);
   }, []);
 
@@ -346,4 +347,4 @@ export default function DealsGrid({
       </div>
     </div>
   );
-}
+                }
