@@ -29,7 +29,7 @@ export default function AdminDashboard({ user }) {
         const { data, error } = await supabase
           .from("profiles")
           .select("role")
-          .eq("id", user.id)
+          .eq("user_id", user.id)
           .single();
         
         if (error) {
@@ -127,7 +127,7 @@ export default function AdminDashboard({ user }) {
         } else if (activeTab === "users") {
           const { data, error } = await supabase
             .from("profiles")
-            .select("id, username, email, role, created_at");
+            .select("user_id, username, email, role, created_at");
           
           if (error) {
             setError(`Error loading users: ${error.message}`);
@@ -174,11 +174,11 @@ export default function AdminDashboard({ user }) {
 
   const changeUserRole = async (id, newRole) => {
     try {
-      const { error } = await supabase.from("profiles").update({ role: newRole }).eq("id", id);
+      const { error } = await supabase.from("profiles").update({ role: newRole }).eq("user_id", id);
       if (error) {
         setError(`Failed to change role: ${error.message}`);
       } else {
-        setUsers(users.map((u) => (u.id === id ? { ...u, role: newRole } : u)));
+        setUsers(users.map((u) => (u.user_id === id ? { ...u, role: newRole } : u)));
       }
     } catch (e) {
       setError(`Error: ${e.message}`);
@@ -353,7 +353,7 @@ export default function AdminDashboard({ user }) {
               <p className="text-gray-500">No users found</p>
             ) : (
               users.map((user) => (
-                <div key={user.id} className="bg-white rounded-lg shadow p-4 border">
+                <div key={user.user_id} className="bg-white rounded-lg shadow p-4 border">
                   <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
                     <div className="flex-1">
                       <h3 className="font-medium">{user.username || "No username"}</h3>
@@ -369,7 +369,7 @@ export default function AdminDashboard({ user }) {
                       <button
                         onClick={() =>
                           changeUserRole(
-                            user.id,
+                            user.user_id,
                             user.role === "user" ? "moderator" : "user"
                           )
                         }
@@ -388,4 +388,4 @@ export default function AdminDashboard({ user }) {
       </motion.main>
     </div>
   );
-                            }
+                        }
