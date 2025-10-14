@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from "react";
 import { supabase } from "../supabaseClient";
 import { Link } from "react-router-dom";
-import { ChevronDown, ArrowUp, Clock, Sparkles } from "lucide-react";
+import { ChevronDown, ArrowUp, Clock } from "lucide-react";
 
 // FIXED CATEGORIES LIST
 const FIXED_CATEGORIES = [
@@ -40,18 +40,20 @@ export default function DealsGrid({
   const [deals, setDeals] = useState([]);
   const [allCategories, setAllCategories] = useState(FIXED_CATEGORIES);
   const [selectedCategoryInternal, setSelectedCategoryInternal] = useState(
-    propSelectedCategory === "" || propSelectedCategory == null ? "All" : propSelectedCategory
+    propSelectedCategory === "" || propSelectedCategory == null
+      ? "All"
+      : propSelectedCategory
   );
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState("");
   const [showDropdown, setShowDropdown] = useState(false);
   const [currentTime, setCurrentTime] = useState(Date.now());
 
-  // Update current time every minute for timer updates
+  // Update current time every second for real-time timer updates
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentTime(Date.now());
-    }, 60000); // Update every 1 minute
+    }, 1000); // every second
     return () => clearInterval(interval);
   }, []);
 
@@ -65,49 +67,38 @@ export default function DealsGrid({
   }, [propSelectedCategory]);
 
   // Helpers (safe field lookups)
-  const imgFor = (d) => d.image || d.image_url || d.img || d.thumbnail || "/placeholder.png";
+  const imgFor = (d) =>
+    d.image || d.image_url || d.img || d.thumbnail || "/placeholder.png";
   const priceFor = (d) => d.price ?? d.discounted_price ?? d.amount ?? "";
   const oldPriceFor = (d) => d.old_price ?? d.oldPrice ?? d.mrp ?? "";
 
-  // Calculate time remaining - IMPROVED VERSION
-  const getTimeRemaining = (createdAt) => {
-    // If no created_at, return default 7 days
-    if (!createdAt) {
-      return { days: 7, hours: 0, minutes: 0, isDefault: true };
-    }
-    
+  // Calculate time remaining
+  const getTimeRemaining = (deal) => {
+    let endTime;
+
     try {
-      // Try to parse the date
-      let created;
-      
-      // If it's already a timestamp number
-      if (typeof createdAt === 'number') {
-        created = createdAt;
+      if (deal.expiry_at) {
+        endTime = new Date(deal.expiry_at).getTime();
+      } else if (deal.created_at) {
+        endTime =
+          new Date(deal.created_at).getTime() + 7 * 24 * 60 * 60 * 1000;
       } else {
-        // Parse as date string
-        created = new Date(createdAt).getTime();
-      }
-      
-      // Check if valid
-      if (isNaN(created) || created <= 0) {
-        return { days: 7, hours: 0, minutes: 0, isDefault: true };
-      }
-      
-      const expiresAt = created + (7 * 24 * 60 * 60 * 1000); // 7 days in milliseconds
-      const remaining = expiresAt - currentTime;
-      
-      // If expired, don't show timer
-      if (remaining <= 0) {
         return null;
       }
-      
+
+      const remaining = endTime - currentTime;
+      if (remaining <= 0) return null;
+
       const days = Math.floor(remaining / (24 * 60 * 60 * 1000));
-      const hours = Math.floor((remaining % (24 * 60 * 60 * 1000)) / (60 * 60 * 1000));
+      const hours = Math.floor(
+        (remaining % (24 * 60 * 60 * 1000)) / (60 * 60 * 1000)
+      );
       const minutes = Math.floor((remaining % (60 * 60 * 1000)) / (60 * 1000));
-      
-      return { days, hours, minutes, isDefault: false };
-    } catch (e) {
-      return { days: 7, hours: 0, minutes: 0, isDefault: true };
+      const seconds = Math.floor((remaining % (60 * 1000)) / 1000);
+
+      return { days, hours, minutes, seconds };
+    } catch {
+      return null;
     }
   };
 
@@ -121,10 +112,13 @@ export default function DealsGrid({
 
       try {
         let query = supabase.from("deals").select("*").eq("published", true);
+        const finalCategory = selectedCategoryInternal || "All";
 
-        const finalCategory = (selectedCategoryInternal || "All");
-
-        if (finalCategory && finalCategory !== "All" && finalCategory !== "Hot Deals") {
+        if (
+          finalCategory &&
+          finalCategory !== "All" &&
+          finalCategory !== "Hot Deals"
+        ) {
           query = query.eq("category", finalCategory);
         }
 
@@ -133,7 +127,10 @@ export default function DealsGrid({
         }
 
         // Order by created_at instead of id for proper chronological order
-        const { data: dealsData, error: dealsError } = await query.order("created_at", { ascending: false });
+        const { data: dealsData, error: dealsError } = await query.order(
+          "created_at",
+          { ascending: false }
+        );
 
         if (!mounted) return;
 
@@ -176,23 +173,26 @@ export default function DealsGrid({
         // Merge like counts and calculate discount for ALL deals
         let merged = list.map((d) => {
           const price = parseFloat(d.price ?? d.discounted_price ?? 0);
-          const oldPrice = parseFloat(d.old_price ?? d.oldPrice ?? d.mrp ?? 0);
+          const oldPrice = parseFloat(
+            d.old_price ?? d.oldPrice ?? d.mrp ?? 0
+          );
           let discountPercent = 0;
-          
+
           if (!Number.isNaN(price) && !Number.isNaN(oldPrice) && oldPrice > price) {
             discountPercent = Math.round(((oldPrice - price) / oldPrice) * 100);
           }
-          
+
           return {
             ...d,
             like_count: likeCounts[d.id] || 0,
-            discountPercent: discountPercent
+            discountPercent: discountPercent,
           };
         });
-        
+
         // Apply Hot Deals filter if needed
-        const isHotDeals = selectedCategoryInternal === "Hot Deals" || filterHotDeals;
-        
+        const isHotDeals =
+          selectedCategoryInternal === "Hot Deals" || filterHotDeals;
+
         if (isHotDeals) {
           merged = merged
             .filter((d) => d.discountPercent >= 55)
@@ -211,15 +211,31 @@ export default function DealsGrid({
 
     fetchDeals();
 
+    // Supabase real-time listener
+    const channel = supabase
+      .channel("realtime-deals")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "deals" },
+        () => {
+          fetchDeals();
+        }
+      )
+      .subscribe();
+
     return () => {
       mounted = false;
+      supabase.removeChannel(channel);
     };
   }, [selectedCategoryInternal, search, filterHotDeals]);
 
   // UI states
-  if (loading) return <div className="text-center text-gray-500 py-8">Loading deals…</div>;
-  if (errorMsg) return <div className="text-center text-red-600 py-8">Error: {errorMsg}</div>;
-  if (!deals || deals.length === 0) return <div className="text-center text-gray-500 py-8">No deals yet.</div>;
+  if (loading)
+    return <div className="text-center text-gray-500 py-8">Loading deals…</div>;
+  if (errorMsg)
+    return <div className="text-center text-red-600 py-8">Error: {errorMsg}</div>;
+  if (!deals || deals.length === 0)
+    return <div className="text-center text-gray-500 py-8">No deals yet.</div>;
 
   // currency formatter helper
   const fmt = (v) => {
@@ -231,7 +247,7 @@ export default function DealsGrid({
 
   return (
     <div className="relative">
-      {/* If parent didn't provide header categories, show small dropdown here */}
+      {/* Category dropdown if header not provided */}
       {!hideHeaderCategories && (
         <div className="flex justify-center mb-6 relative">
           <button
@@ -241,7 +257,6 @@ export default function DealsGrid({
             Categories <ChevronDown className="w-4 h-4" />
           </button>
 
-          {/* Popup */}
           {showDropdown && (
             <div className="absolute top-12 bg-white rounded-xl shadow-lg border border-gray-200 p-3 w-56 z-10">
               {allCategories.map((cat) => (
@@ -252,7 +267,9 @@ export default function DealsGrid({
                     setShowDropdown(false);
                   }}
                   className={`block w-full text-left px-4 py-2 rounded-lg text-sm ${
-                    selectedCategoryInternal === cat ? "bg-yellow-800 text-white" : "hover:bg-gray-100 text-gray-700"
+                    selectedCategoryInternal === cat
+                      ? "bg-yellow-800 text-white"
+                      : "hover:bg-gray-100 text-gray-700"
                   }`}
                 >
                   {cat}
@@ -269,8 +286,7 @@ export default function DealsGrid({
           const imageSrc = imgFor(deal);
           const price = priceFor(deal);
           const oldPrice = oldPriceFor(deal);
-          // Timer recalculates whenever currentTime changes
-          const timeRemaining = getTimeRemaining(deal.created_at);
+          const timeRemaining = getTimeRemaining(deal);
 
           // discount percent
           let discountBadge = null;
@@ -286,24 +302,26 @@ export default function DealsGrid({
               key={deal.id ?? idx}
               className="bg-white rounded-2xl shadow-md hover:shadow-xl transition-transform hover:-translate-y-1 flex flex-col p-3 relative"
             >
-              {/* 7-Day Timer - Updates every minute */}
+              {/* Countdown timer - smooth UI */}
               {timeRemaining && (
-                <div className="bg-gradient-to-r from-red-500 to-red-600 text-white text-xs font-bold px-2.5 py-1.5 rounded-lg mb-2 flex items-center gap-1 w-fit max-w-[65%]">
+                <div className="bg-gradient-to-r from-red-500 to-red-600 text-white text-xs font-bold px-2.5 py-1.5 rounded-lg mb-2 flex items-center gap-1 w-fit max-w-[80%]">
                   <Clock className="w-3 h-3" />
                   <span className="whitespace-nowrap text-[10px] sm:text-xs">
                     {timeRemaining.days > 0 && `${timeRemaining.days}d `}
-                    {timeRemaining.hours}h {timeRemaining.minutes}m
+                    {String(timeRemaining.hours).padStart(2, "0")}h{" "}
+                    {String(timeRemaining.minutes).padStart(2, "0")}m{" "}
+                    {String(timeRemaining.seconds).padStart(2, "0")}s
                   </span>
                 </div>
               )}
 
-              {/* like count badge top-right */}
+              {/* like count badge */}
               <div className="absolute top-3 right-3 bg-white/95 rounded-full px-2 py-1 flex items-center gap-2 shadow-sm text-sm font-medium text-gray-700 z-20">
                 <ArrowUp className="w-4 h-4 text-yellow-700" />
                 <span>{deal.like_count ?? 0}</span>
               </div>
 
-              {/* Image container with discount badge INSIDE */}
+              {/* image with discount */}
               <div className="relative mb-3">
                 <img
                   src={imageSrc}
@@ -311,7 +329,6 @@ export default function DealsGrid({
                   loading="lazy"
                   className="w-full h-36 object-contain bg-white"
                 />
-                {/* Discount badge positioned at top-left corner of image */}
                 {discountBadge && (
                   <div className="absolute left-2 top-2 bg-yellow-800 text-white text-xs font-semibold px-2 py-1 rounded z-10">
                     {discountBadge}
@@ -324,13 +341,21 @@ export default function DealsGrid({
               </h3>
 
               {deal.description && (
-                <p className="text-xs text-gray-600 mb-2 line-clamp-3">{deal.description}</p>
+                <p className="text-xs text-gray-600 mb-2 line-clamp-3">
+                  {deal.description}
+                </p>
               )}
 
               <div className="mt-auto flex items-center justify-between gap-3">
                 <div>
-                  <div className="text-sm font-bold text-gray-900">₹{fmt(price)}</div>
-                  {oldPrice && <div className="text-xs text-gray-500 line-through">₹{fmt(oldPrice)}</div>}
+                  <div className="text-sm font-bold text-gray-900">
+                    ₹{fmt(price)}
+                  </div>
+                  {oldPrice && (
+                    <div className="text-xs text-gray-500 line-through">
+                      ₹{fmt(oldPrice)}
+                    </div>
+                  )}
                 </div>
 
                 <Link
@@ -346,4 +371,4 @@ export default function DealsGrid({
       </div>
     </div>
   );
-                   }
+}
