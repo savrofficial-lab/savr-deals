@@ -4,7 +4,53 @@ import { supabase } from "../supabaseClient";
 import { Loader2, Shield, Trash2, CheckCircle2, UserCog, AlertCircle } from "lucide-react";
 import { motion } from "framer-motion";
 
-export default function AdminDashboard({ user }) {
+// Error Boundary Component
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null, errorInfo: null };
+  }
+
+  static getDerivedStateFromError(error) {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error, errorInfo) {
+    this.setState({ error, errorInfo });
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="min-h-screen bg-red-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg shadow-lg p-8 max-w-2xl">
+            <h1 className="text-2xl font-bold text-red-600 mb-4">Something went wrong</h1>
+            <div className="bg-red-100 p-4 rounded mb-4">
+              <p className="font-semibold mb-2">Error:</p>
+              <p className="text-sm text-red-800">{this.state.error?.toString()}</p>
+            </div>
+            {this.state.errorInfo && (
+              <div className="bg-gray-100 p-4 rounded text-xs overflow-auto max-h-64">
+                <p className="font-semibold mb-2">Stack Trace:</p>
+                <pre>{this.state.errorInfo.componentStack}</pre>
+              </div>
+            )}
+            <button 
+              onClick={() => window.location.href = '/'}
+              className="mt-4 px-6 py-2 bg-amber-600 text-white rounded-lg"
+            >
+              Go to Home
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
+
+function AdminDashboardContent({ user }) {
   const [activeTab, setActiveTab] = useState("reports");
   const [loading, setLoading] = useState(true);
   const [role, setRole] = useState("");
@@ -12,20 +58,26 @@ export default function AdminDashboard({ user }) {
   const [deals, setDeals] = useState([]);
   const [users, setUsers] = useState([]);
   const [error, setError] = useState(null);
-  const [debugInfo, setDebugInfo] = useState("");
+  const [debugInfo, setDebugInfo] = useState([]);
+
+  const addDebug = (message) => {
+    setDebugInfo(prev => [...prev, `${new Date().toLocaleTimeString()}: ${message}`]);
+  };
 
   // Fetch current user's role
   useEffect(() => {
     const fetchRole = async () => {
-      if (!user) {
-        setDebugInfo("No user found - please log in");
-        setLoading(false);
-        return;
-      }
-      
-      setDebugInfo(`Logged in as: ${user.email || user.id}`);
-      
       try {
+        addDebug("Starting role fetch");
+        
+        if (!user) {
+          addDebug("No user provided");
+          setLoading(false);
+          return;
+        }
+        
+        addDebug(`User found: ${user.email || user.id}`);
+        
         const { data, error } = await supabase
           .from("profiles")
           .select("role")
@@ -33,20 +85,23 @@ export default function AdminDashboard({ user }) {
           .single();
         
         if (error) {
+          addDebug(`Error fetching role: ${error.message}`);
           setError(`Error fetching role: ${error.message}`);
-          setDebugInfo(`${debugInfo} | Error: ${error.message}`);
         } else if (data) {
-          setRole(data.role || "user");
-          setDebugInfo(`${debugInfo} | Role: ${data.role || "user"}`);
+          addDebug(`Role fetched: ${data.role || "no role set"}`);
+          setRole(data.role || "");
         } else {
-          setDebugInfo(`${debugInfo} | No profile found`);
+          addDebug("No profile data returned");
+          setRole("");
         }
       } catch (e) {
+        addDebug(`Unexpected error: ${e.message}`);
         setError(`Unexpected error: ${e.message}`);
+      } finally {
+        setLoading(false);
       }
-      
-      setLoading(false);
     };
+    
     fetchRole();
   }, [user]);
 
@@ -64,13 +119,19 @@ export default function AdminDashboard({ user }) {
           >
             Go to Home
           </a>
+          {debugInfo.length > 0 && (
+            <div className="mt-4 p-3 bg-gray-100 rounded text-left text-xs max-h-40 overflow-auto">
+              <p className="font-semibold mb-1">Debug Log:</p>
+              {debugInfo.map((log, i) => <p key={i}>{log}</p>)}
+            </div>
+          )}
         </div>
       </div>
     );
   }
 
   // Show access denied
-  if (!loading && user && role && role !== "admin" && role !== "moderator") {
+  if (!loading && user && role !== "admin" && role !== "moderator") {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
         <div className="bg-white rounded-lg shadow-lg p-8 max-w-md text-center">
@@ -82,6 +143,12 @@ export default function AdminDashboard({ user }) {
             <p><strong>Your Role:</strong> {role || "Not set"}</p>
             <p className="text-xs text-gray-500 mt-2">You need 'admin' or 'moderator' role to access this page.</p>
           </div>
+          {debugInfo.length > 0 && (
+            <div className="mb-4 p-3 bg-blue-50 rounded text-left text-xs max-h-40 overflow-auto">
+              <p className="font-semibold mb-1">Debug Log:</p>
+              {debugInfo.map((log, i) => <p key={i}>{log}</p>)}
+            </div>
+          )}
           <a 
             href="/" 
             className="inline-block px-6 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition"
@@ -96,10 +163,14 @@ export default function AdminDashboard({ user }) {
   // Fetch reports, deals, users
   useEffect(() => {
     const fetchData = async () => {
-      if (!user || !role || (role !== "admin" && role !== "moderator")) return;
+      if (!user || !role || (role !== "admin" && role !== "moderator")) {
+        addDebug("Skipping data fetch - user not authorized");
+        return;
+      }
       
       setLoading(true);
       setError(null);
+      addDebug(`Fetching ${activeTab} data`);
       
       try {
         if (activeTab === "reports") {
@@ -109,8 +180,10 @@ export default function AdminDashboard({ user }) {
             .order("created_at", { ascending: false });
           
           if (error) {
+            addDebug(`Reports error: ${error.message}`);
             setError(`Error loading reports: ${error.message}`);
           } else {
+            addDebug(`Loaded ${data?.length || 0} reports`);
             setReports(data || []);
           }
         } else if (activeTab === "deals") {
@@ -120,8 +193,10 @@ export default function AdminDashboard({ user }) {
             .order("created_at", { ascending: false });
           
           if (error) {
+            addDebug(`Deals error: ${error.message}`);
             setError(`Error loading deals: ${error.message}`);
           } else {
+            addDebug(`Loaded ${data?.length || 0} deals`);
             setDeals(data || []);
           }
         } else if (activeTab === "users") {
@@ -130,29 +205,35 @@ export default function AdminDashboard({ user }) {
             .select("user_id, username, email, role, created_at");
           
           if (error) {
+            addDebug(`Users error: ${error.message}`);
             setError(`Error loading users: ${error.message}`);
           } else {
+            addDebug(`Loaded ${data?.length || 0} users`);
             setUsers(data || []);
           }
         }
       } catch (e) {
+        addDebug(`Unexpected error in fetchData: ${e.message}`);
         setError(`Unexpected error: ${e.message}`);
       }
       
       setLoading(false);
     };
+    
     fetchData();
   }, [activeTab, user, role]);
 
   // Handle actions
   const deleteDeal = async (id) => {
     try {
+      addDebug(`Deleting deal: ${id}`);
       const { error } = await supabase.from("deals").delete().eq("id", id);
       if (error) {
         setError(`Failed to delete: ${error.message}`);
       } else {
         setDeals(deals.filter((d) => d.id !== id));
         setReports(reports.filter((r) => r.deals?.id !== id));
+        addDebug("Deal deleted successfully");
       }
     } catch (e) {
       setError(`Error: ${e.message}`);
@@ -161,11 +242,13 @@ export default function AdminDashboard({ user }) {
 
   const markReviewed = async (id) => {
     try {
+      addDebug(`Marking report as reviewed: ${id}`);
       const { error } = await supabase.from("reports").delete().eq("deal_id", id);
       if (error) {
         setError(`Failed to mark reviewed: ${error.message}`);
       } else {
         setReports(reports.filter((r) => r.deal_id !== id));
+        addDebug("Report marked as reviewed");
       }
     } catch (e) {
       setError(`Error: ${e.message}`);
@@ -174,11 +257,13 @@ export default function AdminDashboard({ user }) {
 
   const changeUserRole = async (id, newRole) => {
     try {
+      addDebug(`Changing user role: ${id} to ${newRole}`);
       const { error } = await supabase.from("profiles").update({ role: newRole }).eq("user_id", id);
       if (error) {
         setError(`Failed to change role: ${error.message}`);
       } else {
         setUsers(users.map((u) => (u.user_id === id ? { ...u, role: newRole } : u)));
+        addDebug("User role changed successfully");
       }
     } catch (e) {
       setError(`Error: ${e.message}`);
@@ -187,13 +272,13 @@ export default function AdminDashboard({ user }) {
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center h-screen text-gray-600 bg-gray-50">
+      <div className="flex flex-col items-center justify-center h-screen text-gray-600 bg-gray-50 p-4">
         <Loader2 className="animate-spin mb-4 h-12 w-12" />
-        <p className="text-lg">Loading dashboard...</p>
-        {debugInfo && (
-          <div className="mt-4 p-4 bg-blue-50 rounded text-sm max-w-md">
-            <p className="font-semibold mb-1">Debug Info:</p>
-            <p className="text-xs">{debugInfo}</p>
+        <p className="text-lg mb-4">Loading dashboard...</p>
+        {debugInfo.length > 0 && (
+          <div className="p-4 bg-blue-50 rounded text-sm max-w-2xl w-full max-h-60 overflow-auto">
+            <p className="font-semibold mb-2">Debug Log:</p>
+            {debugInfo.map((log, i) => <p key={i} className="text-xs">{log}</p>)}
           </div>
         )}
       </div>
@@ -207,10 +292,10 @@ export default function AdminDashboard({ user }) {
         <div className="fixed top-0 left-0 right-0 bg-red-100 border-b-2 border-red-400 p-4 z-50">
           <div className="flex items-center gap-2 max-w-5xl mx-auto">
             <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0" />
-            <p className="text-red-800 text-sm">{error}</p>
+            <p className="text-red-800 text-sm flex-1">{error}</p>
             <button 
               onClick={() => setError(null)}
-              className="ml-auto text-red-600 hover:text-red-800"
+              className="text-red-600 hover:text-red-800 text-xl"
             >
               ✕
             </button>
@@ -292,7 +377,7 @@ export default function AdminDashboard({ user }) {
                         Reason: {report.reason}
                       </p>
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 flex-wrap">
                       <button
                         onClick={() => deleteDeal(report.deal_id)}
                         className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg flex items-center gap-2 transition-all text-sm"
@@ -362,7 +447,7 @@ export default function AdminDashboard({ user }) {
                         Joined: {user.created_at ? new Date(user.created_at).toLocaleDateString() : "Unknown"}
                       </p>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
                       <span className="px-2 py-1 bg-gray-100 text-xs rounded">
                         {user.role || "user"}
                       </span>
@@ -388,4 +473,12 @@ export default function AdminDashboard({ user }) {
       </motion.main>
     </div>
   );
-                        }
+}
+
+export default function AdminDashboard({ user }) {
+  return (
+    <ErrorBoundary>
+      <AdminDashboardContent user={user} />
+    </ErrorBoundary>
+  );
+        }
