@@ -133,6 +133,13 @@ export default function DealsGrid({
       // no date -> assume full 7 days remaining
       return { days: 7, hours: 0, minutes: 0 };
     }
+    // Track live time
+const [currentTime, setCurrentTime] = useState(Date.now());
+
+useEffect(() => {
+  const timer = setInterval(() => setCurrentTime(Date.now()), 1000); // update every second
+  return () => clearInterval(timer);
+}, []);
     // Normalize createdAt: Supabase can return ISO string; sometimes it's nested
     const createdMs = typeof createdAt === "number" ? createdAt : new Date(createdAt).getTime();
     if (!createdMs || Number.isNaN(createdMs)) {
