@@ -70,32 +70,31 @@ export default function DealsGrid({
   const priceFor = (d) => d.price ?? d.discounted_price ?? d.amount ?? "";
   const oldPriceFor = (d) => d.old_price ?? d.oldPrice ?? d.mrp ?? "";
 
-  // Calculate time remaining - FIXED VERSION (now accepts currentTime parameter)
-  const getTimeRemaining = (createdAt, now) => {
-    // If no created_at, return default 7 days
-    if (!createdAt) {
-      return { days: 7, hours: 0, minutes: 0, isDefault: true };
+  // Calculate time remaining - FIXED VERSION (uses expires_at directly)
+  const getTimeRemaining = (expiresAt, now) => {
+    // If no expires_at, don't show timer
+    if (!expiresAt) {
+      return null;
     }
     
     try {
-      // Try to parse the date
-      let created;
+      // Try to parse the expiration date
+      let expirationTime;
       
       // If it's already a timestamp number
-      if (typeof createdAt === 'number') {
-        created = createdAt;
+      if (typeof expiresAt === 'number') {
+        expirationTime = expiresAt;
       } else {
         // Parse as date string
-        created = new Date(createdAt).getTime();
+        expirationTime = new Date(expiresAt).getTime();
       }
       
       // Check if valid
-      if (isNaN(created) || created <= 0) {
-        return { days: 7, hours: 0, minutes: 0, isDefault: true };
+      if (isNaN(expirationTime) || expirationTime <= 0) {
+        return null;
       }
       
-      const expiresAt = created + (7 * 24 * 60 * 60 * 1000); // 7 days in milliseconds
-      const remaining = expiresAt - now; // Use the passed 'now' parameter
+      const remaining = expirationTime - now; // Use the passed 'now' parameter
       
       // If expired, don't show timer
       if (remaining <= 0) {
@@ -108,7 +107,7 @@ export default function DealsGrid({
       
       return { days, hours, minutes, isDefault: false };
     } catch (e) {
-      return { days: 7, hours: 0, minutes: 0, isDefault: true };
+      return null;
     }
   };
 
@@ -270,8 +269,8 @@ export default function DealsGrid({
           const imageSrc = imgFor(deal);
           const price = priceFor(deal);
           const oldPrice = oldPriceFor(deal);
-          // Timer recalculates whenever currentTime changes - PASS currentTime as parameter
-          const timeRemaining = getTimeRemaining(deal.created_at, currentTime);
+          // Timer recalculates whenever currentTime changes - USE expires_at field
+          const timeRemaining = getTimeRemaining(deal.expires_at, currentTime);
 
           // discount percent
           let discountBadge = null;
@@ -347,4 +346,4 @@ export default function DealsGrid({
       </div>
     </div>
   );
-                }
+}
