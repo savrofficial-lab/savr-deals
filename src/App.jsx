@@ -13,6 +13,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDown, Sparkles } from "lucide-react";
 import ForumPage from "./components/ForumPage";
 import ThreadDetail from "./components/ThreadDetail";
+import AdminDashboard from "./components/AdminDashboard";
 
 /* ---------------------------------------------------------------------------
    Small inline icons
@@ -175,8 +176,6 @@ export default function App() {
       setShowLoginModal(true);
     }
   }
-
-  // REMOVED: Dynamic category fetching useEffect - no longer needed!
 
   // ---------------- OUTSIDE CLICK ----------------
   useEffect(() => {
@@ -421,6 +420,8 @@ export default function App() {
             <Route path="/" element={renderMain()} />
             <Route path="/deal/:id" element={<DealDetail />} />
             <Route path="/thread/:id" element={<ThreadDetail />} />
+            {/* ADMIN ROUTE - Added here */}
+            <Route path="/admin" element={<AdminDashboard user={user} />} />
           </Routes>
         </main>
 
@@ -517,7 +518,7 @@ export default function App() {
                 </div>
               </div>
 
-              <motion.button
+               <motion.button
                 whileTap={{ scale: 0.9 }}
                 onClick={() => requireLoginFor("Coins")}
                 className={`flex flex-col items-center text-xs font-medium transition-all ${
@@ -604,3 +605,4 @@ export default function App() {
     </Router>
   );
 }
+              
