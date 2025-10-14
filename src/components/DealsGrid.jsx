@@ -71,9 +71,9 @@ export default function DealsGrid({
 
   // Calculate time remaining - IMPROVED VERSION
   const getTimeRemaining = (createdAt) => {
-    // Return null if no created_at
+    // If no created_at, return default 7 days
     if (!createdAt) {
-      return null;
+      return { days: 7, hours: 0, minutes: 0, isDefault: true };
     }
     
     try {
@@ -90,13 +90,13 @@ export default function DealsGrid({
       
       // Check if valid
       if (isNaN(created) || created <= 0) {
-        return null;
+        return { days: 7, hours: 0, minutes: 0, isDefault: true };
       }
       
       const expiresAt = created + (7 * 24 * 60 * 60 * 1000); // 7 days in milliseconds
       const remaining = expiresAt - currentTime;
       
-      // If expired, return null
+      // If expired, don't show timer
       if (remaining <= 0) {
         return null;
       }
@@ -105,9 +105,9 @@ export default function DealsGrid({
       const hours = Math.floor((remaining % (24 * 60 * 60 * 1000)) / (60 * 60 * 1000));
       const minutes = Math.floor((remaining % (60 * 60 * 1000)) / (60 * 1000));
       
-      return { days, hours, minutes };
+      return { days, hours, minutes, isDefault: false };
     } catch (e) {
-      return null;
+      return { days: 7, hours: 0, minutes: 0, isDefault: true };
     }
   };
 
@@ -214,7 +214,7 @@ export default function DealsGrid({
     return () => {
       mounted = false;
     };
-  }, [selectedCategoryInternal, search, filterHotDeals, currentTime]);
+  }, [selectedCategoryInternal, search, filterHotDeals]);
 
   // UI states
   if (loading) return <div className="text-center text-gray-500 py-8">Loading deals…</div>;
@@ -285,7 +285,7 @@ export default function DealsGrid({
               key={deal.id ?? idx}
               className="bg-white rounded-2xl shadow-md hover:shadow-xl transition-transform hover:-translate-y-1 flex flex-col p-3 relative"
             >
-              {/* 7-Day Timer - Only show if timeRemaining exists */}
+              {/* 7-Day Timer - Always show unless expired */}
               {timeRemaining && (
                 <div className="bg-gradient-to-r from-red-500 to-red-600 text-white text-xs font-bold px-2.5 py-1.5 rounded-lg mb-2 flex items-center gap-1 w-fit max-w-[65%]">
                   <Clock className="w-3 h-3" />
