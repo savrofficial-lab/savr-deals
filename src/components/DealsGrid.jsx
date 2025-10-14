@@ -1,4 +1,4 @@
- // src/components/DealsGrid.jsx
+// src/components/DealsGrid.jsx
 import React, { useEffect, useState } from "react";
 import { supabase } from "../supabaseClient";
 import { Link } from "react-router-dom";
@@ -69,18 +69,37 @@ export default function DealsGrid({
   const priceFor = (d) => d.price ?? d.discounted_price ?? d.amount ?? "";
   const oldPriceFor = (d) => d.old_price ?? d.oldPrice ?? d.mrp ?? "";
 
-  // Calculate time remaining - simplified
+  // Calculate time remaining - IMPROVED VERSION
   const getTimeRemaining = (createdAt) => {
-    if (!createdAt) return null;
+    // Return null if no created_at
+    if (!createdAt) {
+      return null;
+    }
     
     try {
-      const created = new Date(createdAt).getTime();
-      if (isNaN(created)) return null;
+      // Try to parse the date
+      let created;
       
-      const expiresAt = created + (7 * 24 * 60 * 60 * 1000);
+      // If it's already a timestamp number
+      if (typeof createdAt === 'number') {
+        created = createdAt;
+      } else {
+        // Parse as date string
+        created = new Date(createdAt).getTime();
+      }
+      
+      // Check if valid
+      if (isNaN(created) || created <= 0) {
+        return null;
+      }
+      
+      const expiresAt = created + (7 * 24 * 60 * 60 * 1000); // 7 days in milliseconds
       const remaining = expiresAt - currentTime;
       
-      if (remaining <= 0) return null;
+      // If expired, return null
+      if (remaining <= 0) {
+        return null;
+      }
       
       const days = Math.floor(remaining / (24 * 60 * 60 * 1000));
       const hours = Math.floor((remaining % (24 * 60 * 60 * 1000)) / (60 * 60 * 1000));
@@ -91,8 +110,6 @@ export default function DealsGrid({
       return null;
     }
   };
-
-  // REMOVED: Dynamic category loading useEffect - no longer needed!
 
   // Fetch deals + like counts
   useEffect(() => {
@@ -115,7 +132,8 @@ export default function DealsGrid({
           query = query.ilike("title", `%${search.trim()}%`);
         }
 
-        const { data: dealsData, error: dealsError } = await query.order("id", { ascending: false });
+        // Order by created_at instead of id for proper chronological order
+        const { data: dealsData, error: dealsError } = await query.order("created_at", { ascending: false });
 
         if (!mounted) return;
 
@@ -196,7 +214,7 @@ export default function DealsGrid({
     return () => {
       mounted = false;
     };
-  }, [selectedCategoryInternal, search, filterHotDeals]);
+  }, [selectedCategoryInternal, search, filterHotDeals, currentTime]);
 
   // UI states
   if (loading) return <div className="text-center text-gray-500 py-8">Loading deals…</div>;
@@ -267,20 +285,16 @@ export default function DealsGrid({
               key={deal.id ?? idx}
               className="bg-white rounded-2xl shadow-md hover:shadow-xl transition-transform hover:-translate-y-1 flex flex-col p-3 relative"
             >
-              {/* 7-Day Timer - Mobile friendly, half width */}
-              <div className="bg-gradient-to-r from-red-500 to-red-600 text-white text-xs font-bold px-2.5 py-1.5 rounded-lg mb-2 flex items-center gap-1 w-fit max-w-[65%]">
-                <Clock className="w-3 h-3" />
-                <span className="whitespace-nowrap text-[10px] sm:text-xs">
-                  {timeRemaining ? (
-                    <>
-                      {timeRemaining.days > 0 ? `${timeRemaining.days}d ` : ''}
-                      {timeRemaining.hours}h {timeRemaining.minutes}m
-                    </>
-                  ) : (
-                    '7 days left'
-                  )}
-                </span>
-              </div>
+              {/* 7-Day Timer - Only show if timeRemaining exists */}
+              {timeRemaining && (
+                <div className="bg-gradient-to-r from-red-500 to-red-600 text-white text-xs font-bold px-2.5 py-1.5 rounded-lg mb-2 flex items-center gap-1 w-fit max-w-[65%]">
+                  <Clock className="w-3 h-3" />
+                  <span className="whitespace-nowrap text-[10px] sm:text-xs">
+                    {timeRemaining.days > 0 && `${timeRemaining.days}d `}
+                    {timeRemaining.hours}h {timeRemaining.minutes}m
+                  </span>
+                </div>
+              )}
 
               {/* like count badge top-right */}
               <div className="absolute top-3 right-3 bg-white/95 rounded-full px-2 py-1 flex items-center gap-2 shadow-sm text-sm font-medium text-gray-700 z-20">
