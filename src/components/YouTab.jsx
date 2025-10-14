@@ -3,10 +3,13 @@ import React, { useEffect, useState } from "react";
 import { supabase } from "../supabaseClient";
 import LoginModal from "./LoginModal";
 import Profile from "./Profile";
+import { Shield } from "lucide-react";
+import { motion } from "framer-motion";
 
 export default function YouTab() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [userRole, setUserRole] = useState(null);
 
   useEffect(() => {
     // get current user
@@ -21,6 +24,27 @@ export default function YouTab() {
     );
     return () => listener.subscription.unsubscribe();
   }, []);
+
+  // Fetch user role if logged in
+  useEffect(() => {
+    const fetchUserRole = async () => {
+      if (user) {
+        const { data, error } = await supabase
+          .from("profiles")
+          .select("role")
+          .eq("id", user.id)
+          .single();
+        
+        if (data && !error) {
+          setUserRole(data.role);
+        }
+      } else {
+        setUserRole(null);
+      }
+    };
+
+    fetchUserRole();
+  }, [user]);
 
   if (loading) {
     return (
@@ -71,6 +95,29 @@ export default function YouTab() {
     );
   }
 
-  // logged in → show profile
-  return <Profile userId={user.id} />;
+  // logged in → show profile with admin button if applicable
+  return (
+    <div>
+      {/* Admin Dashboard Button - Only visible to admins and moderators */}
+      {(userRole === "admin" || userRole === "moderator") && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+          className="mb-4"
+        >
+          <a
+            href="/admin"
+            className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-700 hover:to-blue-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105"
+          >
+            <Shield size={20} />
+            <span>Admin Dashboard</span>
+          </a>
+        </motion.div>
+      )}
+      
+      {/* Original Profile Component */}
+      <Profile userId={user.id} />
+    </div>
+  );
 }
