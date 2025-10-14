@@ -257,13 +257,13 @@ export default function MyCoins({ userId: propUserId }) {
 
   if (!uid) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center p-6">
-        <div className="bg-white/10 backdrop-blur-xl rounded-3xl p-8 border border-white/20 shadow-2xl max-w-md">
+      <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 flex items-center justify-center p-6">
+        <div className="bg-white/90 backdrop-blur-xl rounded-3xl p-8 border-2 border-orange-200 shadow-2xl max-w-md">
           <div className="text-center">
-            <Trophy className="w-16 h-16 text-yellow-400 mx-auto mb-4" />
-            <h3 className="text-2xl font-bold text-white mb-2">Sign In Required</h3>
-            <p className="text-gray-300">
-              You must be signed in to view your coins. Tap the <span className="font-semibold text-yellow-400">You</span> tab and sign in.
+            <Trophy className="w-16 h-16 text-orange-500 mx-auto mb-4" />
+            <h3 className="text-2xl font-bold text-gray-800 mb-2">Sign In Required</h3>
+            <p className="text-gray-600">
+              You must be signed in to view your coins. Tap the <span className="font-semibold text-orange-600">You</span> tab and sign in.
             </p>
           </div>
         </div>
@@ -272,15 +272,15 @@ export default function MyCoins({ userId: propUserId }) {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 pb-24">
+    <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 pb-24">
       <style>{`
         @keyframes float {
           0%, 100% { transform: translateY(0px); }
           50% { transform: translateY(-20px); }
         }
         @keyframes pulse-glow {
-          0%, 100% { box-shadow: 0 0 20px rgba(251, 191, 36, 0.5); }
-          50% { box-shadow: 0 0 40px rgba(251, 191, 36, 0.8); }
+          0%, 100% { box-shadow: 0 0 20px rgba(217, 119, 6, 0.3); }
+          50% { box-shadow: 0 0 30px rgba(217, 119, 6, 0.5); }
         }
         @keyframes shimmer {
           0% { background-position: -1000px 0; }
@@ -293,7 +293,7 @@ export default function MyCoins({ userId: propUserId }) {
           animation: pulse-glow 2s ease-in-out infinite;
         }
         .shimmer {
-          background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+          background: linear-gradient(90deg, transparent, rgba(255,255,255,0.5), transparent);
           background-size: 1000px 100%;
           animation: shimmer 3s infinite;
         }
@@ -302,28 +302,28 @@ export default function MyCoins({ userId: propUserId }) {
       <div className="max-w-2xl mx-auto px-4 pt-8">
         {/* Coin Balance Card */}
         <div className="relative mb-8">
-          <div className="absolute inset-0 bg-gradient-to-r from-yellow-400 via-amber-500 to-orange-600 rounded-3xl blur-xl opacity-50"></div>
-          <div className="relative bg-gradient-to-br from-yellow-400 via-amber-500 to-orange-600 rounded-3xl p-8 shadow-2xl overflow-hidden">
-            <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -mr-32 -mt-32"></div>
-            <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/10 rounded-full blur-3xl -ml-24 -mb-24"></div>
+          <div className="absolute inset-0 bg-gradient-to-r from-amber-400 via-orange-500 to-yellow-500 rounded-3xl blur-xl opacity-30"></div>
+          <div className="relative bg-gradient-to-br from-amber-400 via-orange-500 to-yellow-500 rounded-3xl p-8 shadow-2xl overflow-hidden border-2 border-orange-600/20">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-white/20 rounded-full blur-3xl -mr-32 -mt-32"></div>
+            <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/20 rounded-full blur-3xl -ml-24 -mb-24"></div>
             
             <div className="relative z-10 text-center">
               <div className="inline-flex items-center justify-center w-20 h-20 bg-white/20 backdrop-blur-sm rounded-full mb-4 float-animation">
                 <span className="text-4xl">🪙</span>
               </div>
               
-              <div className="text-white/90 text-sm font-medium uppercase tracking-wider mb-2">
+              <div className="text-white/95 text-sm font-medium uppercase tracking-wider mb-2">
                 Available Coins
               </div>
               
-              <div className="text-7xl font-black text-white mb-2 tracking-tight">
+              <div className="text-7xl font-black text-white drop-shadow-lg mb-2 tracking-tight">
                 {balance}
               </div>
               
               {pending > 0 && (
-                <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full">
-                  <div className="w-2 h-2 bg-yellow-300 rounded-full animate-pulse"></div>
-                  <span className="text-white text-sm font-medium">{pending} pending</span>
+                <div className="inline-flex items-center gap-2 bg-white/25 backdrop-blur-sm px-4 py-2 rounded-full border border-white/30">
+                  <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+                  <span className="text-white font-medium text-sm">{pending} pending</span>
                 </div>
               )}
 
@@ -332,16 +332,16 @@ export default function MyCoins({ userId: propUserId }) {
                 <button
                   onClick={refresh}
                   disabled={loading}
-                  className="group relative px-6 py-3 bg-white/20 backdrop-blur-sm rounded-xl hover:bg-white/30 transition-all duration-300 border border-white/30 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="group relative px-6 py-3 bg-white/25 backdrop-blur-sm rounded-xl hover:bg-white/35 transition-all duration-300 border border-white/40 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
                 >
                   <RefreshCw className={`w-5 h-5 text-white inline mr-2 ${loading ? 'animate-spin' : 'group-hover:rotate-180 transition-transform duration-500'}`} />
-                  <span className="text-white font-semibold">Refresh</span>
+                  <span className="text-white font-semibold drop-shadow">Refresh</span>
                 </button>
                 
-                <button className="group relative px-6 py-3 bg-white/90 backdrop-blur-sm rounded-xl hover:bg-white transition-all duration-300 border border-white/50 hover:scale-105 overflow-hidden">
+                <button className="group relative px-6 py-3 bg-white backdrop-blur-sm rounded-xl hover:bg-white/95 transition-all duration-300 border border-orange-200 hover:scale-105 overflow-hidden shadow-lg">
                   <div className="absolute inset-0 shimmer"></div>
-                  <Gift className="w-5 h-5 text-amber-600 inline mr-2" />
-                  <span className="relative text-amber-600 font-semibold">Redeem Soon</span>
+                  <Gift className="w-5 h-5 text-orange-600 inline mr-2" />
+                  <span className="relative text-orange-700 font-semibold">Redeem Soon</span>
                 </button>
               </div>
 
@@ -364,18 +364,18 @@ export default function MyCoins({ userId: propUserId }) {
 
         {/* Leaderboard Card */}
         <div className="relative">
-          <div className="absolute inset-0 bg-gradient-to-r from-purple-600 via-blue-600 to-cyan-600 rounded-3xl blur-xl opacity-30"></div>
-          <div className="relative bg-white/10 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-r from-orange-400 via-amber-500 to-yellow-500 rounded-3xl blur-xl opacity-20"></div>
+          <div className="relative bg-white/80 backdrop-blur-xl rounded-3xl shadow-2xl border-2 border-orange-200/50 overflow-hidden">
             {/* Header */}
-            <div className="bg-gradient-to-r from-purple-600 via-blue-600 to-cyan-600 p-6">
+            <div className="bg-gradient-to-r from-orange-600 via-amber-600 to-yellow-600 p-6">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
-                    <Trophy className="w-6 h-6 text-yellow-300" />
+                  <div className="w-12 h-12 bg-white/25 backdrop-blur-sm rounded-xl flex items-center justify-center border border-white/30">
+                    <Trophy className="w-6 h-6 text-white" />
                   </div>
                   <div>
-                    <h3 className="text-2xl font-bold text-white">Top Hunters</h3>
-                    <p className="text-white/70 text-sm">Global Leaderboard</p>
+                    <h3 className="text-2xl font-bold text-white drop-shadow">Top Hunters</h3>
+                    <p className="text-white/80 text-sm">Global Leaderboard</p>
                   </div>
                 </div>
               </div>
@@ -388,7 +388,7 @@ export default function MyCoins({ userId: propUserId }) {
                   {leaderboard.map((u, idx) => (
                     <div
                       key={u.user_id ?? u.username ?? idx}
-                      className={`group relative bg-white/5 backdrop-blur-sm rounded-2xl p-4 border border-white/10 hover:bg-white/10 hover:border-white/20 transition-all duration-300 ${
+                      className={`group relative bg-white/60 backdrop-blur-sm rounded-2xl p-4 border-2 border-orange-100 hover:bg-white/80 hover:border-orange-200 transition-all duration-300 shadow-md ${
                         u.rank <= 3 ? 'hover:scale-[1.02]' : ''
                       }`}
                     >
@@ -411,15 +411,15 @@ export default function MyCoins({ userId: propUserId }) {
                           {/* Username */}
                           <div className="flex-1 min-w-0">
                             <div className={`font-semibold truncate ${
-                              u.rank === 1 ? 'text-yellow-400 text-lg' :
-                              u.rank === 2 ? 'text-gray-300 text-lg' :
-                              u.rank === 3 ? 'text-amber-500 text-lg' :
-                              'text-white'
+                              u.rank === 1 ? 'text-yellow-600 text-lg' :
+                              u.rank === 2 ? 'text-gray-600 text-lg' :
+                              u.rank === 3 ? 'text-amber-700 text-lg' :
+                              'text-gray-700'
                             }`}>
                               {u.username ?? u.user_id}
                             </div>
                             {u.rank <= 3 && (
-                              <div className="text-white/50 text-xs mt-1">
+                              <div className="text-gray-500 text-xs mt-1">
                                 {u.rank === 1 ? '👑 Champion' : u.rank === 2 ? '🥈 Runner Up' : '🥉 Third Place'}
                               </div>
                             )}
@@ -427,9 +427,9 @@ export default function MyCoins({ userId: propUserId }) {
                         </div>
 
                         {/* Coins */}
-                        <div className="flex items-center gap-2 bg-gradient-to-r from-yellow-400/20 to-amber-600/20 backdrop-blur-sm px-4 py-2 rounded-xl border border-yellow-400/30">
+                        <div className="flex items-center gap-2 bg-gradient-to-r from-yellow-100 to-amber-100 backdrop-blur-sm px-4 py-2 rounded-xl border-2 border-yellow-300/50 shadow-sm">
                           <span className={`font-bold text-lg ${
-                            u.rank === 1 ? 'text-yellow-400' : 'text-yellow-300'
+                            u.rank === 1 ? 'text-yellow-600' : 'text-yellow-700'
                           }`}>
                             {u.coins ?? 0}
                           </span>
@@ -441,11 +441,11 @@ export default function MyCoins({ userId: propUserId }) {
                 </div>
               ) : (
                 <div className="text-center py-12">
-                  <div className="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Trophy className="w-8 h-8 text-white/30" />
+                  <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Trophy className="w-8 h-8 text-orange-400" />
                   </div>
-                  <p className="text-white/50">No leaderboard data yet.</p>
-                  <p className="text-white/30 text-sm mt-2">Be the first to earn coins!</p>
+                  <p className="text-gray-600 font-medium">No leaderboard data yet.</p>
+                  <p className="text-gray-400 text-sm mt-2">Be the first to earn coins!</p>
                 </div>
               )}
             </div>
@@ -454,4 +454,4 @@ export default function MyCoins({ userId: propUserId }) {
       </div>
     </div>
   );
-                  }
+                }
