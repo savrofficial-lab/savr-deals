@@ -1,9 +1,7 @@
 // src/components/AdminDashboard.jsx
 import React, { useEffect, useState } from "react";
 import { supabase } from "../supabaseClient";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Loader2, Shield, Trash2, CheckCircle2, UserCog, Users } from "lucide-react";
+import { Loader2, Shield, Trash2, CheckCircle2, UserCog } from "lucide-react";
 import { motion } from "framer-motion";
 
 export default function AdminDashboard({ user }) {
@@ -68,7 +66,7 @@ export default function AdminDashboard({ user }) {
   const deleteDeal = async (id) => {
     await supabase.from("deals").delete().eq("id", id);
     setDeals(deals.filter((d) => d.id !== id));
-    setReports(reports.filter((r) => r.deals.id !== id));
+    setReports(reports.filter((r) => r.deals?.id !== id));
   };
 
   const markReviewed = async (id) => {
@@ -96,25 +94,37 @@ export default function AdminDashboard({ user }) {
         <h2 className="text-xl font-bold text-sky-600 mb-3 flex items-center gap-2">
           <Shield size={20} /> Admin Panel
         </h2>
-        <Button
-          variant={activeTab === "reports" ? "default" : "outline"}
+        <button
           onClick={() => setActiveTab("reports")}
+          className={`px-4 py-2 rounded-lg font-medium transition-all ${
+            activeTab === "reports"
+              ? "bg-sky-600 text-white shadow-md"
+              : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+          }`}
         >
           Reports
-        </Button>
-        <Button
-          variant={activeTab === "deals" ? "default" : "outline"}
+        </button>
+        <button
           onClick={() => setActiveTab("deals")}
+          className={`px-4 py-2 rounded-lg font-medium transition-all ${
+            activeTab === "deals"
+              ? "bg-sky-600 text-white shadow-md"
+              : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+          }`}
         >
           Deals
-        </Button>
+        </button>
         {role === "admin" && (
-          <Button
-            variant={activeTab === "users" ? "default" : "outline"}
+          <button
             onClick={() => setActiveTab("users")}
+            className={`px-4 py-2 rounded-lg font-medium transition-all ${
+              activeTab === "users"
+                ? "bg-sky-600 text-white shadow-md"
+                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+            }`}
           >
             Users
-          </Button>
+          </button>
         )}
       </aside>
 
@@ -137,37 +147,38 @@ export default function AdminDashboard({ user }) {
               <p className="text-gray-500">No reports found 🎉</p>
             ) : (
               reports.map((report) => (
-                <Card key={report.id} className="p-4">
-                  <CardContent>
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h3 className="font-semibold text-lg">
-                          {report.deals?.title}
-                        </h3>
-                        <p className="text-gray-600 text-sm mb-2">
-                          Reported by:{" "}
-                          <span className="font-medium">
-                            {report.profiles?.username || "Unknown"}
-                          </span>
-                        </p>
-                        <p className="text-gray-500 text-sm italic">
-                          Reason: {report.reason}
-                        </p>
-                      </div>
-                      <div className="flex gap-2">
-                        <Button
-                          variant="destructive"
-                          onClick={() => deleteDeal(report.deal_id)}
-                        >
-                          <Trash2 size={16} /> Delete
-                        </Button>
-                        <Button onClick={() => markReviewed(report.deal_id)}>
-                          <CheckCircle2 size={16} /> Mark Reviewed
-                        </Button>
-                      </div>
+                <div key={report.id} className="bg-white rounded-lg shadow p-4 border">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="font-semibold text-lg">
+                        {report.deals?.title}
+                      </h3>
+                      <p className="text-gray-600 text-sm mb-2">
+                        Reported by:{" "}
+                        <span className="font-medium">
+                          {report.profiles?.username || "Unknown"}
+                        </span>
+                      </p>
+                      <p className="text-gray-500 text-sm italic">
+                        Reason: {report.reason}
+                      </p>
                     </div>
-                  </CardContent>
-                </Card>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => deleteDeal(report.deal_id)}
+                        className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg flex items-center gap-2 transition-all"
+                      >
+                        <Trash2 size={16} /> Delete
+                      </button>
+                      <button
+                        onClick={() => markReviewed(report.deal_id)}
+                        className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg flex items-center gap-2 transition-all"
+                      >
+                        <CheckCircle2 size={16} /> Mark Reviewed
+                      </button>
+                    </div>
+                  </div>
+                </div>
               ))
             )}
           </div>
@@ -177,26 +188,25 @@ export default function AdminDashboard({ user }) {
         {activeTab === "deals" && (
           <div className="grid md:grid-cols-2 gap-4">
             {deals.map((deal) => (
-              <Card key={deal.id} className="overflow-hidden">
+              <div key={deal.id} className="bg-white rounded-lg shadow overflow-hidden border">
                 <img
                   src={deal.image}
                   alt={deal.title}
                   className="h-40 w-full object-cover"
                 />
-                <CardContent className="p-4">
+                <div className="p-4">
                   <h3 className="font-semibold">{deal.title}</h3>
                   <p className="text-sm text-gray-500 mb-2">
                     {deal.description?.slice(0, 100)}...
                   </p>
-                  <Button
-                    size="sm"
-                    variant="destructive"
+                  <button
                     onClick={() => deleteDeal(deal.id)}
+                    className="px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white text-sm rounded-lg flex items-center gap-1 transition-all"
                   >
                     <Trash2 size={14} /> Delete
-                  </Button>
-                </CardContent>
-              </Card>
+                  </button>
+                </div>
+              </div>
             ))}
           </div>
         )}
@@ -205,7 +215,7 @@ export default function AdminDashboard({ user }) {
         {activeTab === "users" && role === "admin" && (
           <div className="grid gap-4">
             {users.map((user) => (
-              <Card key={user.id} className="p-4">
+              <div key={user.id} className="bg-white rounded-lg shadow p-4 border">
                 <div className="flex justify-between items-center">
                   <div>
                     <h3 className="font-medium">{user.username}</h3>
@@ -218,25 +228,25 @@ export default function AdminDashboard({ user }) {
                     <span className="px-2 py-1 bg-gray-100 text-xs rounded">
                       {user.role}
                     </span>
-                    <Button
-                      size="sm"
+                    <button
                       onClick={() =>
                         changeUserRole(
                           user.id,
                           user.role === "user" ? "moderator" : "user"
                         )
                       }
+                      className="px-3 py-1.5 bg-sky-600 hover:bg-sky-700 text-white text-sm rounded-lg flex items-center gap-1 transition-all"
                     >
                       <UserCog size={14} />{" "}
                       {user.role === "user" ? "Make Mod" : "Revoke"}
-                    </Button>
+                    </button>
                   </div>
                 </div>
-              </Card>
+              </div>
             ))}
           </div>
         )}
       </motion.main>
     </div>
   );
-      }
+}
