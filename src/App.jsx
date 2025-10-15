@@ -1,6 +1,6 @@
 // src/App.jsx
 import React, { useEffect, useRef, useState } from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
 import DealsGrid from "./components/DealsGrid";
 import MyCoins from "./components/MyCoins";
 import LoginModal from "./components/LoginModal";
@@ -9,15 +9,14 @@ import PostDeal from "./components/PostDeal";
 import { supabase } from "./supabaseClient";
 import YouTab from "./components/YouTab";
 import DealDetail from "./components/DealDetail";
-import { motion, AnimatePresence } from "framer-motion";
-import { ChevronDown, Sparkles } from "lucide-react";
+import { motion } from "framer-motion";
+import { ChevronDown, Sparkles, Bell } from "lucide-react";
 import ForumPage from "./components/ForumPage";
 import ThreadDetail from "./components/ThreadDetail";
 import AdminDashboard from "./components/AdminDashboard";
 import ModeratorDashboard from "./components/ModeratorDashboard";
 import Notifications from "./components/Notifications";
-import { Bell } from "lucide-react";
-import { Link } from "react-router-dom";
+
 /* ---------------------------------------------------------------------------
    Small inline icons
 --------------------------------------------------------------------------- */
@@ -309,28 +308,33 @@ export default function App() {
               </motion.a>
 
               {/* SEARCH + NOTIFICATION (fixed) */}
-<div className="relative flex items-center gap-3 flex-1">
-  {/* SEARCH BOX (slightly narrower so bell fits) */}
-  <div className="relative flex-1 group">
-    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-amber-600 pointer-events-none transition-all group-focus-within:scale-110">
-      <IconSearch />
-    </span>
-    <input
-      value={searchRaw}
-      onChange={(e) => setSearchRaw(e.target.value)}
-      placeholder="Search deals, phones, brands..."
-      // make input a bit shorter so icon fits nicely (you can tweak w-full -> w-[calc(100%-56px)] if using Tailwind JIT)
-      className="w-full pl-12 pr-12 py-2.5 rounded-2xl border-2 border-amber-200/50 bg-white/90 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all shadow-sm hover:shadow-md"
-    />
-  </div>
+              <div className="relative flex items-center gap-3 flex-1">
+                {/* SEARCH BOX (slightly narrower so bell fits) */}
+                <div className="relative flex-1 group">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-amber-600 pointer-events-none transition-all group-focus-within:scale-110">
+                    <IconSearch />
+                  </span>
+                  <input
+                    value={searchRaw}
+                    onChange={(e) => setSearchRaw(e.target.value)}
+                    placeholder="Search deals, phones, brands..."
+                    className="w-full pl-12 pr-12 py-2.5 rounded-2xl border-2 border-amber-200/50 bg-white/90 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all shadow-sm hover:shadow-md"
+                  />
+                </div>
 
-  {/* 🔔 NOTIFICATION ICON — use the imported Notifications component */}
-    <Link to="/notifications" className="flex items-center justify-center relative">
-  <Bell className="w-6 h-6 text-amber-600 hover:text-amber-700 transition-transform hover:scale-110" />
-</Link>
-</div>
-               </div>
-             </div>
+                {/* 🔔 NOTIFICATION ICON */}
+                <Link
+                  to="/notifications"
+                  className="flex items-center justify-center relative p-1 rounded-full hover:bg-gray-100 transition"
+                  aria-label="Notifications"
+                >
+                  <Bell className="w-6 h-6 text-amber-600 hover:text-amber-700 transition-transform hover:scale-110" />
+                  {/* small unread dot placeholder; you can conditionally render unreadCount > 0 */}
+                  {/* <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-red-500 rounded-full" /> */}
+                </Link>
+              </div>
+            </div>
+          </div>
 
           {/* TOP TABS - FIXED FOR MOBILE */}
           <div className="bg-gradient-to-r from-amber-50/80 to-yellow-50/80 backdrop-blur-md sticky top-[88px] z-40 border-t border-amber-100/30">
@@ -433,10 +437,11 @@ export default function App() {
             <Route path="/" element={renderMain()} />
             <Route path="/deal/:id" element={<DealDetail />} />
             <Route path="/thread/:id" element={<ThreadDetail />} />
-            {/* ADMIN ROUTE - Added here */}
+            {/* ADMIN / MODERATOR */}
             <Route path="/admin" element={<AdminDashboard user={user} />} />
-<Route path="/moderator" element={<ModeratorDashboard user={user} />} />
-             <Route path="/notifications" element={<Notifications user={user} />} />
+            <Route path="/moderator" element={<ModeratorDashboard user={user} />} />
+            {/* NOTIFICATIONS PAGE */}
+            <Route path="/notifications" element={<Notifications user={user} />} />
           </Routes>
         </main>
 
@@ -455,7 +460,7 @@ export default function App() {
                 </p>
                 <p className="text-sm text-gray-700 leading-relaxed">
                   Savrdeals helps you discover the best online deals across
-                  multiple stores. Majority deals you see here are affiliated we earn some commision on those deals
+                  multiple stores. Majority deals you see here are affiliated — we earn some commission on those deals.
                 </p>
               </div>
               <div>
@@ -489,7 +494,7 @@ export default function App() {
           </motion.div>
         </div>
 
-        {/* BOTTOM NAV */}
+                {/* BOTTOM NAV */}
         <nav className="fixed left-0 right-0 bottom-0 z-50 backdrop-blur-xl bg-white/90 border-t-2 border-amber-100 shadow-2xl">
           <div className="max-w-5xl mx-auto px-2">
             <div className="flex justify-around items-center py-2">
@@ -533,7 +538,7 @@ export default function App() {
                 </div>
               </div>
 
-               <motion.button
+              <motion.button
                 whileTap={{ scale: 0.9 }}
                 onClick={() => requireLoginFor("Coins")}
                 className={`flex flex-col items-center text-xs font-medium transition-all ${
@@ -620,4 +625,3 @@ export default function App() {
     </Router>
   );
 }
-              
