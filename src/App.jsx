@@ -14,6 +14,7 @@ import { ChevronDown, Sparkles } from "lucide-react";
 import ForumPage from "./components/ForumPage";
 import ThreadDetail from "./components/ThreadDetail";
 import AdminDashboard from "./components/AdminDashboard";
+import ModeratorDashboard from "./components/ModeratorDashboard";
 
 /* ---------------------------------------------------------------------------
    Small inline icons
@@ -422,6 +423,7 @@ export default function App() {
             <Route path="/thread/:id" element={<ThreadDetail />} />
             {/* ADMIN ROUTE - Added here */}
             <Route path="/admin" element={<AdminDashboard user={user} />} />
+<Route path="/moderator" element={<ModeratorDashboard user={user} />} />
           </Routes>
         </main>
 
