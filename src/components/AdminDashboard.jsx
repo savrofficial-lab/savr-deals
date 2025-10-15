@@ -14,7 +14,7 @@ export default function AdminDashboard({ user }) {
   const [error, setError] = useState(null);
   const [debugInfo, setDebugInfo] = useState("");
 
-  // Fetch current user's role
+  // Fetch current user's role (safe state updates + single finally)
   useEffect(() => {
     const fetchRole = async () => {
       if (!user) {
@@ -22,33 +22,36 @@ export default function AdminDashboard({ user }) {
         setLoading(false);
         return;
       }
-      
-      setDebugInfo(`Logged in as: ${user.email || user.id}`);
-      
+
+      setDebugInfo(prev => `${prev ? prev + " | " : ""}Logged in as: ${user.email || user.id}`);
+
       try {
         const { data, error } = await supabase
           .from("profiles")
           .select("role")
           .eq("user_id", user.id)
           .single();
-        
+
         if (error) {
-          setError(`Error fetching role: ${error.message}`);
-          setDebugInfo(`${debugInfo} | Error: ${error.message}`);
+          setError(`Error fetching role: ${error.message || "unknown error"}`);
+          setDebugInfo(prev => `${prev} | Error: ${error.message || "unknown"}`);
+          setRole("");
         } else if (data) {
           setRole(data.role || "user");
-          setDebugInfo(`${debugInfo} | Role: ${data.role || "user"}`);
+          setDebugInfo(prev => `${prev} | Role: ${data.role || "user"}`);
         } else {
-          setDebugInfo(`${debugInfo} | No profile found`);
+          setRole("");
+          setDebugInfo(prev => `${prev} | No profile found`);
         }
       } catch (e) {
-        setError(`Unexpected error: ${e.message}`);
+        setError(`Unexpected error: ${e?.message || "error"}`);
+        setRole("");
+      } finally {
+        setLoading(false);
       }
-      
-      setLoading(false);
     };
     fetchRole();
-  }, [user]);
+  }, [user?.id]);
 
   // Show login required message
   if (!loading && !user) {
@@ -58,8 +61,8 @@ export default function AdminDashboard({ user }) {
           <AlertCircle className="h-16 w-16 text-amber-600 mx-auto mb-4" />
           <h2 className="text-2xl font-bold text-gray-800 mb-2">Login Required</h2>
           <p className="text-gray-600 mb-4">Please log in to access the admin dashboard.</p>
-          <a 
-            href="/" 
+          <a
+            href="/"
             className="inline-block px-6 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition"
           >
             Go to Home
@@ -82,8 +85,8 @@ export default function AdminDashboard({ user }) {
             <p><strong>Your Role:</strong> {role || "Not set"}</p>
             <p className="text-xs text-gray-500 mt-2">You need 'admin' or 'moderator' role to access this page.</p>
           </div>
-          <a 
-            href="/" 
+          <a
+            href="/"
             className="inline-block px-6 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition"
           >
             Go to Home
@@ -93,95 +96,99 @@ export default function AdminDashboard({ user }) {
     );
   }
 
-  // Fetch reports, deals, users
+  // Fetch reports, deals, users (stable deps, cancel on unmount, clear errors per fetch)
   useEffect(() => {
+    let isMounted = true;
+
     const fetchData = async () => {
       if (!user || !role || (role !== "admin" && role !== "moderator")) return;
-      
-      setLoading(true);
+
       setError(null);
-      
+      setLoading(true);
+
       try {
         if (activeTab === "reports") {
+          // Use explicit aliasing to match FKs: deals:deal_id (...) and profiles:reporter_id (...) if your column is reporter_id
+          // If your reports table stores user_id for reporter, change reporter_id below to user_id.
           const { data, error } = await supabase
             .from("reports")
-            .select("*, deals(title, description, id, image), profiles(username)")
+            .select(`
+              id,
+              reason,
+              deal_id,
+              reporter_id,
+              created_at,
+              deals:deal_id ( id, title, description, image ),
+              profiles:reporter_id ( username )
+            `)
             .order("created_at", { ascending: false });
-          
-          if (error) {
-            setError(`Error loading reports: ${error.message}`);
-          } else {
-            setReports(data || []);
-          }
+
+          if (error) throw error;
+          if (isMounted) setReports(data || []);
         } else if (activeTab === "deals") {
           const { data, error } = await supabase
             .from("deals")
-            .select("*")
+            .select("id, title, description, image, created_at")
             .order("created_at", { ascending: false });
-          
-          if (error) {
-            setError(`Error loading deals: ${error.message}`);
-          } else {
-            setDeals(data || []);
-          }
+
+          if (error) throw error;
+          if (isMounted) setDeals(data || []);
         } else if (activeTab === "users") {
           const { data, error } = await supabase
             .from("profiles")
             .select("user_id, username, email, role, created_at");
-          
-          if (error) {
-            setError(`Error loading users: ${error.message}`);
-          } else {
-            setUsers(data || []);
-          }
+
+          if (error) throw error;
+          if (isMounted) setUsers(data || []);
         }
       } catch (e) {
-        setError(`Unexpected error: ${e.message}`);
+        if (isMounted) setError(`Error loading ${activeTab}: ${e?.message || "unknown error"}`);
+      } finally {
+        if (isMounted) setLoading(false);
       }
-      
-      setLoading(false);
     };
-    fetchData();
-  }, [activeTab, user, role]);
 
-  // Handle actions
+    fetchData();
+    return () => {
+      isMounted = false;
+    };
+  }, [activeTab, user?.id, role]);
+
+  // Handle actions (safer errors + functional updates)
   const deleteDeal = async (id) => {
     try {
       const { error } = await supabase.from("deals").delete().eq("id", id);
-      if (error) {
-        setError(`Failed to delete: ${error.message}`);
-      } else {
-        setDeals(deals.filter((d) => d.id !== id));
-        setReports(reports.filter((r) => r.deals?.id !== id));
-      }
+      if (error) throw error;
+
+      setDeals(prev => prev.filter((d) => d.id !== id));
+      setReports(prev => prev.filter((r) => r.deal_id !== id));
     } catch (e) {
-      setError(`Error: ${e.message}`);
+      setError(`Failed to delete: ${e?.message || "unknown error"}`);
     }
   };
 
   const markReviewed = async (id) => {
     try {
       const { error } = await supabase.from("reports").delete().eq("deal_id", id);
-      if (error) {
-        setError(`Failed to mark reviewed: ${error.message}`);
-      } else {
-        setReports(reports.filter((r) => r.deal_id !== id));
-      }
+      if (error) throw error;
+
+      setReports(prev => prev.filter((r) => r.deal_id !== id));
     } catch (e) {
-      setError(`Error: ${e.message}`);
+      setError(`Failed to mark reviewed: ${e?.message || "unknown error"}`);
     }
   };
 
   const changeUserRole = async (id, newRole) => {
     try {
-      const { error } = await supabase.from("profiles").update({ role: newRole }).eq("user_id", id);
-      if (error) {
-        setError(`Failed to change role: ${error.message}`);
-      } else {
-        setUsers(users.map((u) => (u.user_id === id ? { ...u, role: newRole } : u)));
-      }
+      const { error } = await supabase
+        .from("profiles")
+        .update({ role: newRole })
+        .eq("user_id", id);
+      if (error) throw error;
+
+      setUsers(prev => prev.map((u) => (u.user_id === id ? { ...u, role: newRole } : u)));
     } catch (e) {
-      setError(`Error: ${e.message}`);
+      setError(`Failed to change role: ${e?.message || "unknown error"}`);
     }
   };
 
@@ -208,7 +215,7 @@ export default function AdminDashboard({ user }) {
           <div className="flex items-center gap-2 max-w-5xl mx-auto">
             <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0" />
             <p className="text-red-800 text-sm">{error}</p>
-            <button 
+            <button
               onClick={() => setError(null)}
               className="ml-auto text-red-600 hover:text-red-800"
             >
@@ -280,12 +287,12 @@ export default function AdminDashboard({ user }) {
                   <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                     <div className="flex-1">
                       <h3 className="font-semibold text-lg">
-                        {report.deals?.title || "Unknown Deal"}
+                        {report.deals?.title ?? "Unknown Deal"}
                       </h3>
                       <p className="text-gray-600 text-sm mb-2">
                         Reported by:{" "}
                         <span className="font-medium">
-                          {report.profiles?.username || "Unknown"}
+                          {report.profiles?.username ?? "Unknown"}
                         </span>
                       </p>
                       <p className="text-gray-500 text-sm italic">
@@ -321,17 +328,17 @@ export default function AdminDashboard({ user }) {
             ) : (
               deals.map((deal) => (
                 <div key={deal.id} className="bg-white rounded-lg shadow overflow-hidden border">
-                  {deal.image && (
+                  {deal.image ? (
                     <img
                       src={deal.image}
-                      alt={deal.title}
+                      alt={deal.title || "deal image"}
                       className="h-40 w-full object-cover"
                     />
-                  )}
+                  ) : null}
                   <div className="p-4">
                     <h3 className="font-semibold">{deal.title}</h3>
                     <p className="text-sm text-gray-500 mb-2">
-                      {deal.description?.slice(0, 100)}...
+                      {deal.description ? `${deal.description.slice(0, 100)}...` : ""}
                     </p>
                     <button
                       onClick={() => deleteDeal(deal.id)}
@@ -352,31 +359,30 @@ export default function AdminDashboard({ user }) {
             {users.length === 0 ? (
               <p className="text-gray-500">No users found</p>
             ) : (
-              users.map((user) => (
-                <div key={user.user_id} className="bg-white rounded-lg shadow p-4 border">
+              users.map((u) => (
+                <div key={u.user_id} className="bg-white rounded-lg shadow p-4 border">
                   <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
                     <div className="flex-1">
-                      <h3 className="font-medium">{user.username || "No username"}</h3>
-                      <p className="text-sm text-gray-500">{user.email || "No email"}</p>
+                      <h3 className="font-medium">{u.username || "No username"}</h3>
+                      <p className="text-sm text-gray-500">{u.email || "No email"}</p>
                       <p className="text-xs text-gray-400">
-                        Joined: {user.created_at ? new Date(user.created_at).toLocaleDateString() : "Unknown"}
+                        Joined: {u.created_at ? new Date(u.created_at).toLocaleDateString() : "Unknown"}
                       </p>
                     </div>
                     <div className="flex items-center gap-2">
                       <span className="px-2 py-1 bg-gray-100 text-xs rounded">
-                        {user.role || "user"}
+                        {u.role || "user"}
                       </span>
                       <button
                         onClick={() =>
                           changeUserRole(
-                            user.user_id,
-                            user.role === "user" ? "moderator" : "user"
+                            u.user_id,
+                            u.role === "user" ? "moderator" : "user"
                           )
                         }
                         className="px-3 py-1.5 bg-sky-600 hover:bg-sky-700 text-white text-sm rounded-lg flex items-center gap-1 transition-all"
                       >
-                        <UserCog size={14} />{" "}
-                        {user.role === "user" ? "Make Mod" : "Revoke"}
+                        <UserCog size={14} /> {u.role === "user" ? "Make Mod" : "Revoke"}
                       </button>
                     </div>
                   </div>
