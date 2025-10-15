@@ -154,19 +154,24 @@ export default function AdminDashboard({ user }) {
   };
 
   const changeUserRole = async (id, newRole) => {
-    try {
-      const { error } = await supabase
-        .from("profiles")
-        .update({ role: newRole })
-        .eq("user_id", id);
-      if (error) throw error;
-      setUsers((prev) =>
-        prev.map((u) => (u.user_id === id ? { ...u, role: newRole } : u))
-      );
-    } catch (e) {
-      setError(e.message);
-    }
-  };
+  try {
+    const { data, error } = await supabase
+      .from("profiles")
+      .update({ roles: newRole }) // 👈 change to 'role' if that's the actual column name
+      .eq("user_id", id)
+      .select();
+
+    if (error) throw error;
+
+    console.log("Updated role:", data); // debug in console
+    setUsers((prev) =>
+      prev.map((u) => (u.user_id === id ? { ...u, roles: newRole } : u))
+    );
+  } catch (e) {
+    console.error("Error:", e.message);
+    setError(e.message);
+  }
+};
 
   // guards
   if (loading)
