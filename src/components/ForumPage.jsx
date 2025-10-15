@@ -1,7 +1,7 @@
 // src/components/ForumPage.jsx
 import React, { useEffect, useState } from "react";
 import { supabase } from "../supabaseClient";
-import { MessageSquare, Heart, Plus, Star, TrendingUp } from "lucide-react";
+import { MessageSquare, Heart, Plus, Star, TrendingUp, MoreVertical, Trash2 } from "lucide-react";
 import NewThreadModal from "./NewThreadModal";
 import { useNavigate } from "react-router-dom";
 
@@ -10,6 +10,7 @@ export default function ForumPage() {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [currentUserId, setCurrentUserId] = useState(null);
+  const [openMenuId, setOpenMenuId] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -63,6 +64,30 @@ export default function ForumPage() {
       if (error) console.error("Error liking:", error);
     }
     fetchThreads();
+  }
+
+  async function handleDeleteThread(threadId, userId) {
+    if (currentUserId !== userId) {
+      alert("You can only delete your own threads!");
+      return;
+    }
+
+    if (!confirm("Are you sure you want to delete this thread? This action cannot be undone.")) {
+      return;
+    }
+
+    const { error } = await supabase
+      .from("forum_threads")
+      .delete()
+      .eq("id", threadId);
+
+    if (error) {
+      console.error("Error deleting thread:", error);
+      alert("Failed to delete thread. Please try again.");
+    } else {
+      fetchThreads();
+      setOpenMenuId(null);
+    }
   }
 
   return (
@@ -236,6 +261,36 @@ export default function ForumPage() {
                         {t.content}
                       </p>
                     </div>
+
+                    {/* Three-dot menu for author */}
+                    {currentUserId === t.user_id && (
+                      <div className="relative flex-shrink-0">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setOpenMenuId(openMenuId === t.id ? null : t.id);
+                          }}
+                          className="p-2 hover:bg-amber-100 rounded-lg transition-colors duration-200"
+                        >
+                          <MoreVertical className="w-5 h-5 text-amber-700" />
+                        </button>
+                        
+                        {openMenuId === t.id && (
+                          <div className="absolute right-0 top-full mt-2 z-10 bg-white rounded-xl shadow-xl border border-amber-200 overflow-hidden min-w-[150px]">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteThread(t.id, t.user_id);
+                              }}
+                              className="w-full px-4 py-3 flex items-center gap-3 hover:bg-red-50 transition-colors duration-200 text-red-600 font-semibold"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                              <span>Delete</span>
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
 
                   {/* Footer */}
