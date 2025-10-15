@@ -2,7 +2,6 @@
 import React, { useEffect, useState } from "react";
 import { supabase } from "../supabaseClient";
 import { Loader2, Shield, Trash2, CheckCircle2, UserCog, AlertCircle } from "lucide-react";
-import { motion } from "framer-motion";
 
 // Error Boundary Component
 class ErrorBoundary extends React.Component {
@@ -343,10 +342,8 @@ function AdminDashboardContent({ user }) {
       </aside>
 
       {/* Main Content */}
-      <motion.main
+      <main
         className="flex-1 p-4 md:p-6 overflow-y-auto"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
       >
         <h1 className="text-2xl font-bold mb-6">
           {activeTab === "reports" && "Reported Deals"}
@@ -470,7 +467,7 @@ function AdminDashboardContent({ user }) {
             )}
           </div>
         )}
-      </motion.main>
+      </main>
     </div>
   );
 }
@@ -481,4 +478,4 @@ export default function AdminDashboard({ user }) {
       <AdminDashboardContent user={user} />
     </ErrorBoundary>
   );
-        }
+          }
