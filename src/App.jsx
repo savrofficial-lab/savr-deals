@@ -324,10 +324,8 @@ export default function App() {
   {/* 🔔 NOTIFICATION ICON */}
   <div className="flex-shrink-0">
     <NotificationIcon user={user} />
-  </div>
-        </div> 
-         </div>
-          </div>
+      </div>
+                 </div>
 
           {/* TOP TABS - FIXED FOR MOBILE */}
           <div className="bg-gradient-to-r from-amber-50/80 to-yellow-50/80 backdrop-blur-md sticky top-[88px] z-40 border-t border-amber-100/30">
