@@ -338,18 +338,18 @@ export default function App() {
         <header className="backdrop-blur-xl bg-white/80 sticky top-0 z-50 shadow-lg border-b border-amber-100/50">
           <div className="max-w-5xl mx-auto px-4 py-3">
             <div className="flex items-center gap-4">
-              <motion.a
-                href="/"
-                className="flex-shrink-0"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <img
-                  src="/savrdeals-logo.png"
-                  alt="Savrdeals"
-                  className="h-14 w-auto object-contain drop-shadow-md"
-                />
-              </motion.a>
+              <Link to="/" className="flex-shrink-0">
+                <motion.div
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <img
+                    src="/savrdeals-logo.png"
+                    alt="Savrdeals"
+                    className="h-14 w-auto object-contain drop-shadow-md"
+                  />
+                </motion.div>
+              </Link>
 
               {/* SEARCH + NOTIFICATION */}
               <div className="relative flex items-center gap-3 flex-1">
@@ -479,7 +479,7 @@ export default function App() {
         </header>
 
         {/* MAIN CONTENT */}
-        <main className="flex-1 max-w-5xl mx-auto px-4 py-6 w-full relative z-10">
+        <main className="flex-1 max-w-5xl mx-auto px-4 py-6 w-full relative z-10 pb-28">
           <Routes>
             <Route path="/" element={renderMain()} />
             <Route path="/deal/:id" element={<DealDetail />} />
@@ -528,9 +528,9 @@ export default function App() {
                   >
                     @savrofficialdeals
                   </a>
-                </p>
+                 </p>
               </div>
-                            <div className="flex flex-col justify-between items-start md:items-end">
+              <div className="flex flex-col justify-between items-start md:items-end">
                 <p className="text-xs text-gray-500">
                   © {new Date().getFullYear()} Savrdeals. All rights reserved.
                 </p>
@@ -670,3 +670,4 @@ export default function App() {
     </Router>
   );
 }
+              
