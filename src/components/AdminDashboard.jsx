@@ -157,7 +157,7 @@ export default function AdminDashboard({ user }) {
   try {
     const { data, error } = await supabase
       .from("profiles")
-      .update({ roles: newRole }) // 👈 change to 'role' if that's the actual column name
+      .update({ role: newRole }) // 👈 change to 'role' if that's the actual column name
       .eq("user_id", id)
       .select();
 
@@ -165,7 +165,7 @@ export default function AdminDashboard({ user }) {
 
     console.log("Updated role:", data); // debug in console
     setUsers((prev) =>
-      prev.map((u) => (u.user_id === id ? { ...u, roles: newRole } : u))
+      prev.map((u) => (u.user_id === id ? { ...u, role: newRole } : u))
     );
   } catch (e) {
     console.error("Error:", e.message);
