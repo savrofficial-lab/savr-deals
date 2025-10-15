@@ -16,7 +16,8 @@ import ThreadDetail from "./components/ThreadDetail";
 import AdminDashboard from "./components/AdminDashboard";
 import ModeratorDashboard from "./components/ModeratorDashboard";
 import Notifications from "./components/Notifications";
-
+import { Bell } from "lucide-react";
+import { Link } from "react-router-dom";
 /* ---------------------------------------------------------------------------
    Small inline icons
 --------------------------------------------------------------------------- */
@@ -324,9 +325,9 @@ export default function App() {
   </div>
 
   {/* 🔔 NOTIFICATION ICON — use the imported Notifications component */}
-  <div className="flex-shrink-0 ml-2">
-    <Notifications user={user} />
-  </div>
+    <Link to="/notifications" className="flex items-center justify-center relative">
+  <Bell className="w-6 h-6 text-amber-600 hover:text-amber-700 transition-transform hover:scale-110" />
+</Link>
 </div>
                </div>
              </div>
@@ -435,6 +436,7 @@ export default function App() {
             {/* ADMIN ROUTE - Added here */}
             <Route path="/admin" element={<AdminDashboard user={user} />} />
 <Route path="/moderator" element={<ModeratorDashboard user={user} />} />
+             <Route path="/notifications" element={<Notifications user={user} />} />
           </Routes>
         </main>
 
