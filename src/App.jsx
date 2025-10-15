@@ -325,7 +325,8 @@ export default function App() {
   <div className="flex-shrink-0">
     <NotificationIcon user={user} />
   </div>
-            </div>
+        </div> 
+         </div>
           </div>
 
           {/* TOP TABS - FIXED FOR MOBILE */}
