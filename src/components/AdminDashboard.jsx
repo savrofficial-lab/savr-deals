@@ -108,18 +108,17 @@ export default function AdminDashboard({ user }) {
 
       try {
         if (activeTab === "reports") {
-          // Use explicit aliasing to match FKs: deals:deal_id (...) and profiles:reporter_id (...) if your column is reporter_id
-          // If your reports table stores user_id for reporter, change reporter_id below to user_id.
+          // Adjust 'user_id' below to your actual reporter FK column if different (e.g., reporter_id).
           const { data, error } = await supabase
             .from("reports")
             .select(`
               id,
               reason,
               deal_id,
-              reporter_id,
+              user_id,
               created_at,
               deals:deal_id ( id, title, description, image ),
-              profiles:reporter_id ( username )
+              profiles:user_id ( username )
             `)
             .order("created_at", { ascending: false });
 
@@ -287,16 +286,16 @@ export default function AdminDashboard({ user }) {
                   <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                     <div className="flex-1">
                       <h3 className="font-semibold text-lg">
-                        {report.deals?.title ?? "Unknown Deal"}
+                        {report?.deals?.title ?? "Unknown Deal"}
                       </h3>
                       <p className="text-gray-600 text-sm mb-2">
                         Reported by:{" "}
                         <span className="font-medium">
-                          {report.profiles?.username ?? "Unknown"}
+                          {report?.profiles?.username ?? "Unknown"}
                         </span>
                       </p>
                       <p className="text-gray-500 text-sm italic">
-                        Reason: {report.reason}
+                        Reason: {report?.reason ?? "No reason provided"}
                       </p>
                     </div>
                     <div className="flex gap-2">
@@ -394,4 +393,4 @@ export default function AdminDashboard({ user }) {
       </motion.main>
     </div>
   );
-}
+                      }
