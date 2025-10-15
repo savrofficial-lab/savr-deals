@@ -1,6 +1,10 @@
 // src/components/AdminDashboard.jsx
 import React, { useEffect, useState } from "react";
 import { supabase } from "../supabaseClient";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Loader2, Shield, Trash2, CheckCircle2, UserCog, Users } from "lucide-react";
+import { motion } from "framer-motion";
 
 export default function AdminDashboard({ user }) {
   const [activeTab, setActiveTab] = useState("reports");
@@ -9,231 +13,118 @@ export default function AdminDashboard({ user }) {
   const [reports, setReports] = useState([]);
   const [deals, setDeals] = useState([]);
   const [users, setUsers] = useState([]);
-  const [error, setError] = useState(null);
 
   // Fetch current user's role
   useEffect(() => {
     const fetchRole = async () => {
-      if (!user) {
-        setLoading(false);
-        return;
-      }
-      
-      try {
-        const { data, error } = await supabase
-          .from("profiles")
-          .select("role")
-          .eq("user_id", user.id)
-          .single();
-        
-        if (error) {
-          console.error("Error:", error);
-          setError(error.message);
-        } else if (data) {
-          setRole(data.role || "");
-        }
-      } catch (e) {
-        console.error("Error:", e);
-        setError(e.message);
-      }
-      
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", user.id)
+        .single();
+      if (data) setRole(data.role);
       setLoading(false);
     };
-    
-    fetchRole();
+    if (user) fetchRole();
   }, [user]);
 
-  // Show login required
-  if (!loading && !user) {
+  // Redirect non-admin/moderators
+  if (!loading && role !== "admin" && role !== "moderator") {
     return (
-      <div style={{ textAlign: 'center', padding: '50px' }}>
-        <h2>Login Required</h2>
-        <p>Please log in to access the admin dashboard.</p>
-        <a href="/" style={{ color: '#f59e0b', textDecoration: 'underline' }}>Go to Home</a>
+      <div className="text-center mt-20 text-red-600 text-xl font-semibold">
+        Access Denied ❌ — You are not authorized to view this page.
       </div>
     );
   }
 
-  // Show access denied
-  if (!loading && user && role !== "admin" && role !== "moderator") {
-    return (
-      <div style={{ textAlign: 'center', padding: '50px' }}>
-        <h2>Access Denied</h2>
-        <p>You are not authorized to view this page.</p>
-        <div style={{ background: '#f3f4f6', padding: '15px', margin: '20px auto', maxWidth: '400px', borderRadius: '8px' }}>
-          <p><strong>User:</strong> {user.email || user.id}</p>
-          <p><strong>Your Role:</strong> {role || "Not set"}</p>
-          <p style={{ fontSize: '12px', color: '#6b7280', marginTop: '10px' }}>
-            You need 'admin' or 'moderator' role to access this page.
-          </p>
-        </div>
-        <a href="/" style={{ color: '#f59e0b', textDecoration: 'underline' }}>Go to Home</a>
-      </div>
-    );
-  }
-
-  // Fetch data
+  // Fetch reports, deals, users
   useEffect(() => {
     const fetchData = async () => {
-      if (!user || !role || (role !== "admin" && role !== "moderator")) return;
-      
       setLoading(true);
-      setError(null);
-      
-      try {
-        if (activeTab === "reports") {
-          const { data, error } = await supabase
-            .from("reports")
-            .select("*, deals(title, description, id, image), profiles(username)")
-            .order("created_at", { ascending: false });
-          
-          if (error) {
-            setError(error.message);
-          } else {
-            setReports(data || []);
-          }
-        } else if (activeTab === "deals") {
-          const { data, error } = await supabase
-            .from("deals")
-            .select("*")
-            .order("created_at", { ascending: false });
-          
-          if (error) {
-            setError(error.message);
-          } else {
-            setDeals(data || []);
-          }
-        } else if (activeTab === "users") {
-          const { data, error } = await supabase
-            .from("profiles")
-            .select("user_id, username, email, role, created_at");
-          
-          if (error) {
-            setError(error.message);
-          } else {
-            setUsers(data || []);
-          }
-        }
-      } catch (e) {
-        setError(e.message);
+      if (activeTab === "reports") {
+        const { data, error } = await supabase
+          .from("reports")
+          .select("*, deals(title, description, id, image), profiles(username)")
+          .order("created_at", { ascending: false });
+        if (data) setReports(data);
+      } else if (activeTab === "deals") {
+        const { data } = await supabase
+          .from("deals")
+          .select("*")
+          .order("created_at", { ascending: false });
+        if (data) setDeals(data);
+      } else if (activeTab === "users") {
+        const { data } = await supabase
+          .from("profiles")
+          .select("id, username, email, role, created_at");
+        if (data) setUsers(data);
       }
-      
       setLoading(false);
     };
-    
     fetchData();
-  }, [activeTab, user, role]);
+  }, [activeTab]);
 
-  // Actions
+  // Handle actions
   const deleteDeal = async (id) => {
-    try {
-      const { error } = await supabase.from("deals").delete().eq("id", id);
-      if (!error) {
-        setDeals(deals.filter((d) => d.id !== id));
-        setReports(reports.filter((r) => r.deals?.id !== id));
-      }
-    } catch (e) {
-      console.error(e);
-    }
+    await supabase.from("deals").delete().eq("id", id);
+    setDeals(deals.filter((d) => d.id !== id));
+    setReports(reports.filter((r) => r.deals.id !== id));
   };
 
   const markReviewed = async (id) => {
-    try {
-      const { error } = await supabase.from("reports").delete().eq("deal_id", id);
-      if (!error) {
-        setReports(reports.filter((r) => r.deal_id !== id));
-      }
-    } catch (e) {
-      console.error(e);
-    }
+    await supabase.from("reports").delete().eq("deal_id", id);
+    setReports(reports.filter((r) => r.deal_id !== id));
   };
 
   const changeUserRole = async (id, newRole) => {
-    try {
-      const { error } = await supabase.from("profiles").update({ role: newRole }).eq("user_id", id);
-      if (!error) {
-        setUsers(users.map((u) => (u.user_id === id ? { ...u, role: newRole } : u)));
-      }
-    } catch (e) {
-      console.error(e);
-    }
+    await supabase.from("profiles").update({ role: newRole }).eq("id", id);
+    setUsers(users.map((u) => (u.id === id ? { ...u, role: newRole } : u)));
   };
 
   if (loading) {
     return (
-      <div style={{ textAlign: 'center', padding: '100px' }}>
-        <p>Loading dashboard...</p>
+      <div className="flex items-center justify-center h-screen text-gray-600">
+        <Loader2 className="animate-spin mr-2" /> Loading dashboard...
       </div>
     );
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: '#f9fafb', display: 'flex' }}>
+    <div className="min-h-screen bg-gray-50 flex">
       {/* Sidebar */}
-      <aside style={{ width: '240px', background: 'white', borderRight: '1px solid #e5e7eb', padding: '20px' }}>
-        <h2 style={{ fontSize: '20px', fontWeight: 'bold', color: '#0284c7', marginBottom: '20px' }}>
-          🛡️ Admin Panel
+      <aside className="w-60 bg-white border-r shadow-sm p-4 flex flex-col gap-3">
+        <h2 className="text-xl font-bold text-sky-600 mb-3 flex items-center gap-2">
+          <Shield size={20} /> Admin Panel
         </h2>
-        <button
+        <Button
+          variant={activeTab === "reports" ? "default" : "outline"}
           onClick={() => setActiveTab("reports")}
-          style={{
-            width: '100%',
-            padding: '10px',
-            marginBottom: '10px',
-            borderRadius: '8px',
-            border: 'none',
-            background: activeTab === "reports" ? '#0284c7' : '#f3f4f6',
-            color: activeTab === "reports" ? 'white' : '#374151',
-            fontWeight: '500',
-            cursor: 'pointer'
-          }}
         >
           Reports
-        </button>
-        <button
+        </Button>
+        <Button
+          variant={activeTab === "deals" ? "default" : "outline"}
           onClick={() => setActiveTab("deals")}
-          style={{
-            width: '100%',
-            padding: '10px',
-            marginBottom: '10px',
-            borderRadius: '8px',
-            border: 'none',
-            background: activeTab === "deals" ? '#0284c7' : '#f3f4f6',
-            color: activeTab === "deals" ? 'white' : '#374151',
-            fontWeight: '500',
-            cursor: 'pointer'
-          }}
         >
           Deals
-        </button>
+        </Button>
         {role === "admin" && (
-          <button
+          <Button
+            variant={activeTab === "users" ? "default" : "outline"}
             onClick={() => setActiveTab("users")}
-            style={{
-              width: '100%',
-              padding: '10px',
-              borderRadius: '8px',
-              border: 'none',
-              background: activeTab === "users" ? '#0284c7' : '#f3f4f6',
-              color: activeTab === "users" ? 'white' : '#374151',
-              fontWeight: '500',
-              cursor: 'pointer'
-            }}
           >
             Users
-          </button>
+          </Button>
         )}
       </aside>
 
       {/* Main Content */}
-      <main style={{ flex: 1, padding: '30px', overflowY: 'auto' }}>
-        {error && (
-          <div style={{ background: '#fee2e2', border: '2px solid #ef4444', padding: '15px', borderRadius: '8px', marginBottom: '20px' }}>
-            <p style={{ color: '#dc2626' }}>Error: {error}</p>
-          </div>
-        )}
-
-        <h1 style={{ fontSize: '24px', fontWeight: 'bold', marginBottom: '30px' }}>
+      <motion.main
+        className="flex-1 p-6 overflow-y-auto"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+      >
+        <h1 className="text-2xl font-bold mb-6">
           {activeTab === "reports" && "Reported Deals"}
           {activeTab === "deals" && "All Deals"}
           {activeTab === "users" && "User Management"}
@@ -241,34 +132,42 @@ export default function AdminDashboard({ user }) {
 
         {/* Reports Tab */}
         {activeTab === "reports" && (
-          <div>
+          <div className="grid gap-4">
             {reports.length === 0 ? (
-              <p style={{ color: '#6b7280' }}>No reports found 🎉</p>
+              <p className="text-gray-500">No reports found 🎉</p>
             ) : (
               reports.map((report) => (
-                <div key={report.id} style={{ background: 'white', borderRadius: '8px', padding: '20px', marginBottom: '15px', border: '1px solid #e5e7eb' }}>
-                  <h3 style={{ fontWeight: '600', fontSize: '18px', marginBottom: '10px' }}>
-                    {report.deals?.title || "Unknown Deal"}
-                  </h3>
-                  <p style={{ fontSize: '14px', color: '#6b7280', marginBottom: '5px' }}>
-                    Reported by: <strong>{report.profiles?.username || "Unknown"}</strong>
-                  </p>
-                  <p style={{ fontSize: '14px', color: '#6b7280', fontStyle: 'italic', marginBottom: '15px' }}>
-                    Reason: {report.reason}
-                  </p>
-                  <button
-                    onClick={() => deleteDeal(report.deal_id)}
-                    style={{ padding: '8px 16px', background: '#dc2626', color: 'white', border: 'none', borderRadius: '6px', marginRight: '10px', cursor: 'pointer' }}
-                  >
-                    🗑️ Delete
-                  </button>
-                  <button
-                    onClick={() => markReviewed(report.deal_id)}
-                    style={{ padding: '8px 16px', background: '#16a34a', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer' }}
-                  >
-                    ✓ Mark Reviewed
-                  </button>
-                </div>
+                <Card key={report.id} className="p-4">
+                  <CardContent>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h3 className="font-semibold text-lg">
+                          {report.deals?.title}
+                        </h3>
+                        <p className="text-gray-600 text-sm mb-2">
+                          Reported by:{" "}
+                          <span className="font-medium">
+                            {report.profiles?.username || "Unknown"}
+                          </span>
+                        </p>
+                        <p className="text-gray-500 text-sm italic">
+                          Reason: {report.reason}
+                        </p>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button
+                          variant="destructive"
+                          onClick={() => deleteDeal(report.deal_id)}
+                        >
+                          <Trash2 size={16} /> Delete
+                        </Button>
+                        <Button onClick={() => markReviewed(report.deal_id)}>
+                          <CheckCircle2 size={16} /> Mark Reviewed
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
               ))
             )}
           </div>
@@ -276,65 +175,68 @@ export default function AdminDashboard({ user }) {
 
         {/* Deals Tab */}
         {activeTab === "deals" && (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '20px' }}>
-            {deals.length === 0 ? (
-              <p style={{ color: '#6b7280' }}>No deals found</p>
-            ) : (
-              deals.map((deal) => (
-                <div key={deal.id} style={{ background: 'white', borderRadius: '8px', overflow: 'hidden', border: '1px solid #e5e7eb' }}>
-                  {deal.image && (
-                    <img src={deal.image} alt={deal.title} style={{ width: '100%', height: '160px', objectFit: 'cover' }} />
-                  )}
-                  <div style={{ padding: '15px' }}>
-                    <h3 style={{ fontWeight: '600', marginBottom: '8px' }}>{deal.title}</h3>
-                    <p style={{ fontSize: '14px', color: '#6b7280', marginBottom: '12px' }}>
-                      {deal.description?.slice(0, 100)}...
-                    </p>
-                    <button
-                      onClick={() => deleteDeal(deal.id)}
-                      style={{ padding: '6px 12px', background: '#dc2626', color: 'white', border: 'none', borderRadius: '6px', fontSize: '14px', cursor: 'pointer' }}
-                    >
-                      🗑️ Delete
-                    </button>
-                  </div>
-                </div>
-              ))
-            )}
+          <div className="grid md:grid-cols-2 gap-4">
+            {deals.map((deal) => (
+              <Card key={deal.id} className="overflow-hidden">
+                <img
+                  src={deal.image}
+                  alt={deal.title}
+                  className="h-40 w-full object-cover"
+                />
+                <CardContent className="p-4">
+                  <h3 className="font-semibold">{deal.title}</h3>
+                  <p className="text-sm text-gray-500 mb-2">
+                    {deal.description?.slice(0, 100)}...
+                  </p>
+                  <Button
+                    size="sm"
+                    variant="destructive"
+                    onClick={() => deleteDeal(deal.id)}
+                  >
+                    <Trash2 size={14} /> Delete
+                  </Button>
+                </CardContent>
+              </Card>
+            ))}
           </div>
         )}
 
         {/* Users Tab */}
         {activeTab === "users" && role === "admin" && (
-          <div>
-            {users.length === 0 ? (
-              <p style={{ color: '#6b7280' }}>No users found</p>
-            ) : (
-              users.map((user) => (
-                <div key={user.user_id} style={{ background: 'white', borderRadius: '8px', padding: '20px', marginBottom: '15px', border: '1px solid #e5e7eb', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div className="grid gap-4">
+            {users.map((user) => (
+              <Card key={user.id} className="p-4">
+                <div className="flex justify-between items-center">
                   <div>
-                    <h3 style={{ fontWeight: '500' }}>{user.username || "No username"}</h3>
-                    <p style={{ fontSize: '14px', color: '#6b7280' }}>{user.email || "No email"}</p>
-                    <p style={{ fontSize: '12px', color: '#9ca3af' }}>
-                      Joined: {user.created_at ? new Date(user.created_at).toLocaleDateString() : "Unknown"}
+                    <h3 className="font-medium">{user.username}</h3>
+                    <p className="text-sm text-gray-500">{user.email}</p>
+                    <p className="text-xs text-gray-400">
+                      Joined: {new Date(user.created_at).toLocaleDateString()}
                     </p>
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <span style={{ padding: '4px 8px', background: '#f3f4f6', fontSize: '12px', borderRadius: '4px' }}>
-                      {user.role || "user"}
+                  <div className="flex items-center gap-2">
+                    <span className="px-2 py-1 bg-gray-100 text-xs rounded">
+                      {user.role}
                     </span>
-                    <button
-                      onClick={() => changeUserRole(user.user_id, user.role === "user" ? "moderator" : "user")}
-                      style={{ padding: '6px 12px', background: '#0284c7', color: 'white', border: 'none', borderRadius: '6px', fontSize: '14px', cursor: 'pointer' }}
+                    <Button
+                      size="sm"
+                      onClick={() =>
+                        changeUserRole(
+                          user.id,
+                          user.role === "user" ? "moderator" : "user"
+                        )
+                      }
                     >
-                      ⚙️ {user.role === "user" ? "Make Mod" : "Revoke"}
-                    </button>
+                      <UserCog size={14} />{" "}
+                      {user.role === "user" ? "Make Mod" : "Revoke"}
+                    </Button>
                   </div>
                 </div>
-              ))
-            )}
+              </Card>
+            ))}
           </div>
         )}
-      </main>
+      </motion.main>
     </div>
   );
-    }
+}
