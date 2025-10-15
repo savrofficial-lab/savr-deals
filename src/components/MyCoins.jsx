@@ -1,7 +1,7 @@
 // src/components/MyCoins.jsx
 import React, { useEffect, useState, useRef } from "react";
 import { supabase } from "../supabaseClient";
-import { Trophy, RefreshCw, Gift, Crown, Award, TrendingUp } from "lucide-react";
+import { Trophy, RefreshCw, Gift, Crown, Award, Medal, Sparkles } from "lucide-react";
 
 export default function MyCoins({ userId: propUserId }) {
   const mountedRef = useRef(true);
@@ -106,20 +106,21 @@ export default function MyCoins({ userId: propUserId }) {
     }
   }
 
-  // Load leaderboard
+  // Load leaderboard - LIMITED TO TOP 10
   async function loadLeaderboard() {
     try {
       const { data, error } = await supabase
         .from("leaderboard")
         .select("*")
-        .order("rank", { ascending: true });
+        .order("rank", { ascending: true })
+        .limit(10);
 
       if (!error && data && data.length) {
         if (mountedRef.current) setLeaderboard(data);
         return;
       }
 
-      // Fallback to profiles
+      // Fallback to profiles - LIMITED TO TOP 10
       const { data: profs, error: pErr } = await supabase
         .from("profiles")
         .select("user_id, username, coins")
@@ -242,28 +243,30 @@ export default function MyCoins({ userId: propUserId }) {
   };
 
   const getRankIcon = (rank) => {
-    if (rank === 1) return <Crown className="w-5 h-5 text-yellow-400" />;
-    if (rank === 2) return <Award className="w-5 h-5 text-gray-400" />;
-    if (rank === 3) return <Award className="w-5 h-5 text-amber-600" />;
-    return <TrendingUp className="w-4 h-4 text-blue-400" />;
+    if (rank === 1) return <Crown className="w-5 h-5" />;
+    if (rank === 2) return <Medal className="w-5 h-5" />;
+    if (rank === 3) return <Award className="w-5 h-5" />;
+    return null;
   };
 
-  const getRankGradient = (rank) => {
-    if (rank === 1) return "from-yellow-400 via-yellow-500 to-amber-600";
-    if (rank === 2) return "from-gray-300 via-gray-400 to-gray-500";
-    if (rank === 3) return "from-amber-500 via-amber-600 to-amber-700";
-    return "from-blue-400 via-blue-500 to-blue-600";
+  const getRankBadge = (rank) => {
+    if (rank === 1) return "👑 Champion";
+    if (rank === 2) return "🥈 Runner Up";
+    if (rank === 3) return "🥉 Third Place";
+    return `#${rank}`;
   };
 
   if (!uid) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 flex items-center justify-center p-6">
-        <div className="bg-white/90 backdrop-blur-xl rounded-3xl p-8 border-2 border-orange-200 shadow-2xl max-w-md">
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center p-6">
+        <div className="bg-white/10 backdrop-blur-2xl rounded-3xl p-10 border border-white/20 shadow-2xl max-w-md">
           <div className="text-center">
-            <Trophy className="w-16 h-16 text-orange-500 mx-auto mb-4" />
-            <h3 className="text-2xl font-bold text-gray-800 mb-2">Sign In Required</h3>
-            <p className="text-gray-600">
-              You must be signed in to view your coins. Tap the <span className="font-semibold text-orange-600">You</span> tab and sign in.
+            <div className="w-20 h-20 bg-gradient-to-br from-amber-400 to-orange-500 rounded-full flex items-center justify-center mx-auto mb-6">
+              <Trophy className="w-10 h-10 text-white" />
+            </div>
+            <h3 className="text-3xl font-bold text-white mb-3">Sign In Required</h3>
+            <p className="text-gray-300 text-lg">
+              Please sign in to view your coins and leaderboard rankings.
             </p>
           </div>
         </div>
@@ -272,180 +275,203 @@ export default function MyCoins({ userId: propUserId }) {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 pb-24">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 pb-24">
       <style>{`
+        @keyframes gradient-shift {
+          0%, 100% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
+        }
         @keyframes float {
-          0%, 100% { transform: translateY(0px); }
-          50% { transform: translateY(-20px); }
+          0%, 100% { transform: translateY(0px) rotate(0deg); }
+          50% { transform: translateY(-15px) rotate(5deg); }
         }
-        @keyframes pulse-glow {
-          0%, 100% { box-shadow: 0 0 20px rgba(217, 119, 6, 0.3); }
-          50% { box-shadow: 0 0 30px rgba(217, 119, 6, 0.5); }
+        @keyframes glow-pulse {
+          0%, 100% { box-shadow: 0 0 40px rgba(251, 191, 36, 0.3), 0 0 80px rgba(251, 191, 36, 0.1); }
+          50% { box-shadow: 0 0 60px rgba(251, 191, 36, 0.5), 0 0 100px rgba(251, 191, 36, 0.2); }
         }
-        @keyframes shimmer {
-          0% { background-position: -1000px 0; }
-          100% { background-position: 1000px 0; }
+        @keyframes shimmer-slide {
+          0% { transform: translateX(-100%); }
+          100% { transform: translateX(100%); }
         }
-        .float-animation {
-          animation: float 3s ease-in-out infinite;
+        @keyframes scale-in {
+          0% { transform: scale(0.95); opacity: 0; }
+          100% { transform: scale(1); opacity: 1; }
         }
-        .pulse-glow {
-          animation: pulse-glow 2s ease-in-out infinite;
+        .gradient-animate {
+          background-size: 200% 200%;
+          animation: gradient-shift 8s ease infinite;
         }
-        .shimmer {
-          background: linear-gradient(90deg, transparent, rgba(255,255,255,0.5), transparent);
-          background-size: 1000px 100%;
-          animation: shimmer 3s infinite;
+        .float-coin {
+          animation: float 4s ease-in-out infinite;
+        }
+        .glow-effect {
+          animation: glow-pulse 3s ease-in-out infinite;
+        }
+        .shimmer-overlay {
+          position: relative;
+          overflow: hidden;
+        }
+        .shimmer-overlay::after {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+          animation: shimmer-slide 3s infinite;
+        }
+        .scale-in-animation {
+          animation: scale-in 0.4s ease-out;
         }
       `}</style>
 
-      <div className="max-w-2xl mx-auto px-4 pt-8">
-        {/* Coin Balance Card */}
-        <div className="relative mb-8">
-          <div className="absolute inset-0 bg-gradient-to-r from-amber-400 via-orange-500 to-yellow-500 rounded-3xl blur-xl opacity-30"></div>
-          <div className="relative bg-gradient-to-br from-amber-400 via-orange-500 to-yellow-500 rounded-3xl p-8 shadow-2xl overflow-hidden border-2 border-orange-600/20">
-            <div className="absolute top-0 right-0 w-64 h-64 bg-white/20 rounded-full blur-3xl -mr-32 -mt-32"></div>
-            <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/20 rounded-full blur-3xl -ml-24 -mb-24"></div>
-            
-            <div className="relative z-10 text-center">
-              <div className="inline-flex items-center justify-center w-20 h-20 bg-white/20 backdrop-blur-sm rounded-full mb-4 float-animation">
-                <span className="text-4xl">🪙</span>
-              </div>
+      <div className="max-w-2xl mx-auto px-4 pt-8 space-y-6">
+        {/* Coin Balance Card - Premium Design */}
+        <div className="relative glow-effect">
+          <div className="absolute inset-0 bg-gradient-to-r from-amber-500 via-orange-500 to-yellow-500 rounded-[32px] blur-2xl opacity-40"></div>
+          <div className="relative bg-gradient-to-br from-amber-400 via-orange-500 to-yellow-600 rounded-[32px] p-1 gradient-animate">
+            <div className="bg-gradient-to-br from-orange-600 via-amber-600 to-yellow-600 rounded-[28px] p-8 relative overflow-hidden">
+              {/* Decorative elements */}
+              <div className="absolute top-0 right-0 w-72 h-72 bg-white/10 rounded-full blur-3xl"></div>
+              <div className="absolute bottom-0 left-0 w-64 h-64 bg-black/10 rounded-full blur-3xl"></div>
               
-              <div className="text-white/95 text-sm font-medium uppercase tracking-wider mb-2">
-                Available Coins
-              </div>
-              
-              <div className="text-7xl font-black text-white drop-shadow-lg mb-2 tracking-tight">
-                {balance}
-              </div>
-              
-              {pending > 0 && (
-                <div className="inline-flex items-center gap-2 bg-white/25 backdrop-blur-sm px-4 py-2 rounded-full border border-white/30">
-                  <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
-                  <span className="text-white font-medium text-sm">{pending} pending</span>
+              <div className="relative z-10 text-center">
+                {/* Animated Coin Icon */}
+                <div className="inline-flex items-center justify-center w-24 h-24 bg-gradient-to-br from-yellow-300 to-amber-500 rounded-full mb-6 shadow-2xl float-coin border-4 border-white/30">
+                  <span className="text-5xl">🪙</span>
                 </div>
-              )}
-
-              {/* Action Buttons */}
-              <div className="mt-6 flex justify-center gap-3">
-                <button
-                  onClick={refresh}
-                  disabled={loading}
-                  className="group relative px-6 py-3 bg-white/25 backdrop-blur-sm rounded-xl hover:bg-white/35 transition-all duration-300 border border-white/40 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
-                >
-                  <RefreshCw className={`w-5 h-5 text-white inline mr-2 ${loading ? 'animate-spin' : 'group-hover:rotate-180 transition-transform duration-500'}`} />
-                  <span className="text-white font-semibold drop-shadow">Refresh</span>
-                </button>
                 
-                <button className="group relative px-6 py-3 bg-white backdrop-blur-sm rounded-xl hover:bg-white/95 transition-all duration-300 border border-orange-200 hover:scale-105 overflow-hidden shadow-lg">
-                  <div className="absolute inset-0 shimmer"></div>
-                  <Gift className="w-5 h-5 text-orange-600 inline mr-2" />
-                  <span className="relative text-orange-700 font-semibold">Redeem Soon</span>
-                </button>
-              </div>
+                <div className="text-white/90 text-xs font-bold uppercase tracking-[0.3em] mb-3">
+                  Available Coins
+                </div>
+                
+                <div className="text-[80px] font-black text-white mb-3 leading-none tracking-tighter drop-shadow-2xl">
+                  {balance}
+                </div>
+                
+                {pending > 0 && (
+                  <div className="inline-flex items-center gap-2 bg-black/30 backdrop-blur-xl px-5 py-2.5 rounded-full border border-white/20 mb-6">
+                    <div className="w-2 h-2 bg-yellow-300 rounded-full animate-pulse shadow-lg shadow-yellow-400"></div>
+                    <span className="text-white/95 font-semibold text-sm">{pending} pending</span>
+                  </div>
+                )}
 
-              {loading && (
-                <div className="mt-4 text-white/80 text-sm flex items-center justify-center gap-2">
-                  <div className="w-2 h-2 bg-white rounded-full animate-bounce"></div>
-                  <div className="w-2 h-2 bg-white rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
-                  <div className="w-2 h-2 bg-white rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+                {/* Action Buttons */}
+                <div className="mt-8 flex justify-center gap-4">
+                  <button
+                    onClick={refresh}
+                    disabled={loading}
+                    className="group relative px-8 py-4 bg-white/20 backdrop-blur-xl rounded-2xl hover:bg-white/30 transition-all duration-300 border-2 border-white/30 hover:border-white/50 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed shadow-xl active:scale-95"
+                  >
+                    <RefreshCw className={`w-5 h-5 text-white inline mr-2 ${loading ? 'animate-spin' : 'group-hover:rotate-180 transition-transform duration-700'}`} />
+                    <span className="text-white font-bold tracking-wide">Refresh</span>
+                  </button>
+                  
+                  <button className="shimmer-overlay group relative px-8 py-4 bg-white backdrop-blur-xl rounded-2xl hover:bg-white transition-all duration-300 border-2 border-white/50 hover:scale-105 shadow-xl active:scale-95">
+                    <Gift className="w-5 h-5 text-orange-600 inline mr-2 group-hover:scale-110 transition-transform" />
+                    <span className="relative text-orange-700 font-bold tracking-wide">Redeem Soon</span>
+                  </button>
                 </div>
-              )}
-              
-              {error && (
-                <div className="mt-4 bg-red-500/20 backdrop-blur-sm border border-red-400/50 rounded-xl px-4 py-2">
-                  <p className="text-red-100 text-sm">{error}</p>
-                </div>
-              )}
+
+                {loading && (
+                  <div className="mt-6 flex items-center justify-center gap-2">
+                    <div className="w-2.5 h-2.5 bg-white rounded-full animate-bounce shadow-lg"></div>
+                    <div className="w-2.5 h-2.5 bg-white rounded-full animate-bounce shadow-lg" style={{animationDelay: '0.15s'}}></div>
+                    <div className="w-2.5 h-2.5 bg-white rounded-full animate-bounce shadow-lg" style={{animationDelay: '0.3s'}}></div>
+                  </div>
+                )}
+                
+                {error && (
+                  <div className="mt-6 bg-red-500/20 backdrop-blur-xl border-2 border-red-400/50 rounded-2xl px-5 py-3">
+                    <p className="text-red-100 font-medium">{error}</p>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Leaderboard Card */}
-        <div className="relative">
-          <div className="absolute inset-0 bg-gradient-to-r from-orange-400 via-amber-500 to-yellow-500 rounded-3xl blur-xl opacity-20"></div>
-          <div className="relative bg-white/80 backdrop-blur-xl rounded-3xl shadow-2xl border-2 border-orange-200/50 overflow-hidden">
-            {/* Header */}
-            <div className="bg-gradient-to-r from-orange-600 via-amber-600 to-yellow-600 p-6">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-white/25 backdrop-blur-sm rounded-xl flex items-center justify-center border border-white/30">
-                    <Trophy className="w-6 h-6 text-white" />
-                  </div>
-                  <div>
-                    <h3 className="text-2xl font-bold text-white drop-shadow">Top Hunters</h3>
-                    <p className="text-white/80 text-sm">Global Leaderboard</p>
-                  </div>
+        {/* Leaderboard Card - Ultra Premium */}
+        <div className="relative scale-in-animation">
+          <div className="absolute inset-0 bg-gradient-to-r from-purple-500 via-pink-500 to-orange-500 rounded-[32px] blur-2xl opacity-20"></div>
+          <div className="relative bg-white/10 backdrop-blur-2xl rounded-[32px] border border-white/20 overflow-hidden shadow-2xl">
+            {/* Premium Header */}
+            <div className="relative bg-gradient-to-r from-orange-600 via-amber-600 to-yellow-600 p-7 gradient-animate">
+              <div className="absolute inset-0 bg-black/10"></div>
+              <div className="relative flex items-center gap-4">
+                <div className="w-14 h-14 bg-white/20 backdrop-blur-xl rounded-2xl flex items-center justify-center border-2 border-white/30 shadow-xl">
+                  <Trophy className="w-7 h-7 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-3xl font-black text-white drop-shadow-lg tracking-tight">Top Hunters</h3>
+                  <p className="text-white/80 font-medium text-sm mt-0.5">Global Leaderboard • Top 10</p>
                 </div>
               </div>
             </div>
 
             {/* Leaderboard List */}
-            <div className="p-4">
+            <div className="p-5">
               {leaderboard && leaderboard.length ? (
                 <div className="space-y-3">
                   {leaderboard.map((u, idx) => (
                     <div
                       key={u.user_id ?? u.username ?? idx}
-                      className={`group relative bg-white/60 backdrop-blur-sm rounded-2xl p-4 border-2 border-orange-100 hover:bg-white/80 hover:border-orange-200 transition-all duration-300 shadow-md ${
-                        u.rank <= 3 ? 'hover:scale-[1.02]' : ''
+                      className={`group relative backdrop-blur-xl rounded-2xl p-5 transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] ${
+                        u.rank === 1 ? 'bg-gradient-to-r from-yellow-500/20 to-amber-500/20 border-2 border-yellow-400/40 shadow-lg shadow-yellow-500/20' :
+                        u.rank === 2 ? 'bg-gradient-to-r from-gray-400/20 to-slate-400/20 border-2 border-gray-300/40 shadow-lg shadow-gray-400/20' :
+                        u.rank === 3 ? 'bg-gradient-to-r from-orange-500/20 to-amber-600/20 border-2 border-orange-400/40 shadow-lg shadow-orange-500/20' :
+                        'bg-white/5 border-2 border-white/10 hover:bg-white/10 hover:border-white/20'
                       }`}
                     >
-                      {u.rank <= 3 && (
-                        <div className={`absolute inset-0 bg-gradient-to-r ${getRankGradient(u.rank)} opacity-0 group-hover:opacity-10 rounded-2xl transition-opacity duration-300`}></div>
-                      )}
-                      
                       <div className="relative flex items-center justify-between">
-                        <div className="flex items-center gap-4 flex-1">
+                        <div className="flex items-center gap-4 flex-1 min-w-0">
                           {/* Rank Badge */}
-                          <div className={`flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center font-bold text-lg ${
+                          <div className={`flex-shrink-0 w-14 h-14 rounded-xl flex items-center justify-center font-black text-lg shadow-xl transition-transform group-hover:scale-110 ${
                             u.rank === 1 ? 'bg-gradient-to-br from-yellow-400 to-amber-600 text-white' :
-                            u.rank === 2 ? 'bg-gradient-to-br from-gray-300 to-gray-500 text-white' :
-                            u.rank === 3 ? 'bg-gradient-to-br from-amber-500 to-amber-700 text-white' :
-                            'bg-white/10 text-white/70'
+                            u.rank === 2 ? 'bg-gradient-to-br from-gray-300 to-gray-600 text-white' :
+                            u.rank === 3 ? 'bg-gradient-to-br from-orange-500 to-amber-700 text-white' :
+                            'bg-white/10 text-white border-2 border-white/20'
                           }`}>
                             {u.rank <= 3 ? getRankIcon(u.rank) : `#${u.rank ?? idx + 1}`}
                           </div>
 
-                          {/* Username */}
+                          {/* User Info */}
                           <div className="flex-1 min-w-0">
-                            <div className={`font-semibold truncate ${
-                              u.rank === 1 ? 'text-yellow-600 text-lg' :
-                              u.rank === 2 ? 'text-gray-600 text-lg' :
-                              u.rank === 3 ? 'text-amber-700 text-lg' :
-                              'text-gray-700'
+                            <div className={`font-bold text-lg truncate mb-1 ${
+                              u.rank === 1 ? 'text-yellow-300' :
+                              u.rank === 2 ? 'text-gray-300' :
+                              u.rank === 3 ? 'text-orange-300' :
+                              'text-white'
                             }`}>
                               {u.username ?? u.user_id}
                             </div>
-                            {u.rank <= 3 && (
-                              <div className="text-gray-500 text-xs mt-1">
-                                {u.rank === 1 ? '👑 Champion' : u.rank === 2 ? '🥈 Runner Up' : '🥉 Third Place'}
-                              </div>
-                            )}
+                            <div className={`text-xs font-semibold ${
+                              u.rank <= 3 ? 'text-white/70' : 'text-white/50'
+                            }`}>
+                              {getRankBadge(u.rank)}
+                            </div>
                           </div>
                         </div>
 
-                        {/* Coins */}
-                        <div className="flex items-center gap-2 bg-gradient-to-r from-yellow-100 to-amber-100 backdrop-blur-sm px-4 py-2 rounded-xl border-2 border-yellow-300/50 shadow-sm">
-                          <span className={`font-bold text-lg ${
-                            u.rank === 1 ? 'text-yellow-600' : 'text-yellow-700'
-                          }`}>
+                        {/* Coins Badge */}
+                        <div className="flex items-center gap-2.5 bg-gradient-to-r from-yellow-400/20 to-amber-500/20 backdrop-blur-xl px-5 py-3 rounded-xl border-2 border-yellow-400/30 shadow-lg">
+                          <span className="font-black text-xl text-yellow-300">
                             {u.coins ?? 0}
                           </span>
-                          <span className="text-xl">🪙</span>
+                          <span className="text-2xl">🪙</span>
                         </div>
                       </div>
                     </div>
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-12">
-                  <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Trophy className="w-8 h-8 text-orange-400" />
+                <div className="text-center py-16">
+                  <div className="w-20 h-20 bg-orange-500/20 rounded-full flex items-center justify-center mx-auto mb-5 backdrop-blur-xl border-2 border-orange-400/30">
+                    <Trophy className="w-10 h-10 text-orange-400" />
                   </div>
-                  <p className="text-gray-600 font-medium">No leaderboard data yet.</p>
-                  <p className="text-gray-400 text-sm mt-2">Be the first to earn coins!</p>
+                  <p className="text-white font-bold text-xl mb-2">No Rankings Yet</p>
+                  <p className="text-white/60 font-medium">Be the first to earn coins and claim the top spot!</p>
                 </div>
               )}
             </div>
@@ -454,4 +480,4 @@ export default function MyCoins({ userId: propUserId }) {
       </div>
     </div>
   );
-                }
+          }
