@@ -164,16 +164,7 @@ export default function ModeratorDashboard({ user }) {
     }
   };
 
-  const markReviewed = async (reportId) => {
-    setError(null);
-    try {
-      const { error } = await supabase.from("reports").update({ status: "reviewed" }).eq("id", reportId);
-      if (error) throw error;
-      setReports((p) => p.map((r) => (r.id === reportId ? { ...r, status: "reviewed" } : r)));
-    } catch (e) {
-      setError(`Failed to mark reviewed: ${e.message}`);
-    }
-  };
+  
   const handleReview = async (reportId) => {
   const { error } = await supabase
     .from("reports")
@@ -186,6 +177,12 @@ export default function ModeratorDashboard({ user }) {
     setReports((prev) => prev.filter((r) => r.id !== reportId));
   }
 };
+  <button
+  onClick={() => handleReview(report.id)}
+  className="bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600"
+>
+  Reviewed
+</button>
 
   if (loading) {
     return (
@@ -255,12 +252,7 @@ export default function ModeratorDashboard({ user }) {
           Deals
         </button>
       </aside>
-      <button
-  onClick={() => handleReview(report.id)}
-  className="bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600"
->
-  Reviewed
-</button>
+      
 
       {/* Main */}
       <motion.main className="flex-1 p-4 md:p-6 overflow-y-auto" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
