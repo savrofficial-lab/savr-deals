@@ -1,6 +1,6 @@
 // src/App.jsx
 import React, { useEffect, useRef, useState } from "react";
-import { BrowserRouter as Router, Routes, Route, Link, useNavigate } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
 import DealsGrid from "./components/DealsGrid";
 import MyCoins from "./components/MyCoins";
 import LoginModal from "./components/LoginModal";
@@ -15,7 +15,7 @@ import ForumPage from "./components/ForumPage";
 import ThreadDetail from "./components/ThreadDetail";
 import AdminDashboard from "./components/AdminDashboard";
 import ModeratorDashboard from "./components/ModeratorDashboard";
-import NotificationsPage from "./components/NotificationsPage";
+import Notifications from "./components/Notifications";
 
 /* ---------------------------------------------------------------------------
    Small inline icons
@@ -486,7 +486,7 @@ export default function App() {
             <Route path="/thread/:id" element={<ThreadDetail />} />
             <Route path="/admin" element={<AdminDashboard user={user} />} />
             <Route path="/moderator" element={<ModeratorDashboard user={user} />} />
-            <Route path="/notifications" element={<NotificationsPage user={user} />} />
+            <Route path="/notifications" element={<Notifications user={user} />} />
           </Routes>
         </main>
 
@@ -529,8 +529,8 @@ export default function App() {
                     @savrofficialdeals
                   </a>
                 </p>
-                            </div>
-              <div className="flex flex-col justify-between items-start md:items-end">
+              </div>
+                            <div className="flex flex-col justify-between items-start md:items-end">
                 <p className="text-xs text-gray-500">
                   © {new Date().getFullYear()} Savrdeals. All rights reserved.
                 </p>
