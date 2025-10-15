@@ -1,11 +1,11 @@
-// src/components/NotificationsPage.jsx
+// src/components/Notifications.jsx
 import React, { useEffect, useState } from "react";
 import { Bell, Check, CheckCheck, Loader2, ArrowLeft, Trash2 } from "lucide-react";
 import { supabase } from "../supabaseClient";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 
-export default function NotificationsPage({ user }) {
+export default function Notifications({ user }) {
   const navigate = useNavigate();
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -246,4 +246,4 @@ export default function NotificationsPage({ user }) {
       )}
     </motion.div>
   );
-                             }
+}
