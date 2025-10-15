@@ -174,6 +174,18 @@ export default function ModeratorDashboard({ user }) {
       setError(`Failed to mark reviewed: ${e.message}`);
     }
   };
+  const handleReview = async (reportId) => {
+  const { error } = await supabase
+    .from("reports")
+    .delete()
+    .eq("id", reportId);
+
+  if (error) {
+    console.error("Error reviewing report:", error);
+  } else {
+    setReports((prev) => prev.filter((r) => r.id !== reportId));
+  }
+};
 
   if (loading) {
     return (
@@ -243,6 +255,12 @@ export default function ModeratorDashboard({ user }) {
           Deals
         </button>
       </aside>
+      <button
+  onClick={() => handleReview(report.id)}
+  className="bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600"
+>
+  Reviewed
+</button>
 
       {/* Main */}
       <motion.main className="flex-1 p-4 md:p-6 overflow-y-auto" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
