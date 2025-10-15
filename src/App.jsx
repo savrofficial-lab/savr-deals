@@ -1,6 +1,6 @@
 // src/App.jsx
 import React, { useEffect, useRef, useState } from "react";
-import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Link, useNavigate } from "react-router-dom";
 import DealsGrid from "./components/DealsGrid";
 import MyCoins from "./components/MyCoins";
 import LoginModal from "./components/LoginModal";
@@ -15,7 +15,7 @@ import ForumPage from "./components/ForumPage";
 import ThreadDetail from "./components/ThreadDetail";
 import AdminDashboard from "./components/AdminDashboard";
 import ModeratorDashboard from "./components/ModeratorDashboard";
-import Notifications from "./components/Notifications";
+import NotificationsPage from "./components/NotificationsPage";
 
 /* ---------------------------------------------------------------------------
    Small inline icons
@@ -139,6 +139,7 @@ export default function App() {
   const [search, setSearch] = useState("");
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [intendedTab, setIntendedTab] = useState(null);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   // USE FIXED CATEGORIES - NO DYNAMIC LOADING
   const [categories, setCategories] = useState(FIXED_CATEGORIES);
@@ -162,6 +163,50 @@ export default function App() {
     );
     return () => listener.subscription.unsubscribe();
   }, [intendedTab]);
+
+  // ---------------- FETCH UNREAD NOTIFICATIONS COUNT ----------------
+  useEffect(() => {
+    if (!user) return;
+    
+    const fetchUnreadCount = async () => {
+      const { data, error } = await supabase
+        .from("notifications")
+        .select("id", { count: "exact" })
+        .eq("user_id", user.id)
+        .eq("read", false);
+      
+      if (!error && data) {
+        setUnreadCount(data.length);
+      }
+    };
+
+    fetchUnreadCount();
+
+    // Realtime subscription for new notifications
+    const channel = supabase
+      .channel("notification-count")
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "notifications" },
+        (payload) => {
+          if (payload.new.user_id === user.id) {
+            setUnreadCount((prev) => prev + 1);
+          }
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "notifications" },
+        () => {
+          fetchUnreadCount();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user?.id]);
 
   // ---------------- SEARCH ----------------
   useEffect(() => {
@@ -189,7 +234,6 @@ export default function App() {
       }
     }
 
-    // Add delay to prevent immediate closing
     const timeoutId = setTimeout(() => {
       document.addEventListener("click", handleClickOutside);
     }, 100);
@@ -307,9 +351,9 @@ export default function App() {
                 />
               </motion.a>
 
-              {/* SEARCH + NOTIFICATION (fixed) */}
+              {/* SEARCH + NOTIFICATION */}
               <div className="relative flex items-center gap-3 flex-1">
-                {/* SEARCH BOX (slightly narrower so bell fits) */}
+                {/* SEARCH BOX */}
                 <div className="relative flex-1 group">
                   <span className="absolute left-4 top-1/2 -translate-y-1/2 text-amber-600 pointer-events-none transition-all group-focus-within:scale-110">
                     <IconSearch />
@@ -322,21 +366,24 @@ export default function App() {
                   />
                 </div>
 
-                {/* 🔔 NOTIFICATION ICON */}
+                {/* NOTIFICATION ICON */}
                 <Link
                   to="/notifications"
-                  className="flex items-center justify-center relative p-1 rounded-full hover:bg-gray-100 transition"
+                  className="flex items-center justify-center relative p-2 rounded-full hover:bg-amber-50 transition-all"
                   aria-label="Notifications"
                 >
                   <Bell className="w-6 h-6 text-amber-600 hover:text-amber-700 transition-transform hover:scale-110" />
-                  {/* small unread dot placeholder; you can conditionally render unreadCount > 0 */}
-                  {/* <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-red-500 rounded-full" /> */}
+                  {unreadCount > 0 && (
+                    <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-bold shadow-lg">
+                      {unreadCount > 9 ? '9+' : unreadCount}
+                    </span>
+                  )}
                 </Link>
               </div>
             </div>
           </div>
 
-          {/* TOP TABS - FIXED FOR MOBILE */}
+          {/* TOP TABS */}
           <div className="bg-gradient-to-r from-amber-50/80 to-yellow-50/80 backdrop-blur-md sticky top-[88px] z-40 border-t border-amber-100/30">
             <div className="max-w-5xl mx-auto px-2 sm:px-4 py-2 sm:py-3">
               <div className="flex items-center gap-2 overflow-visible">
@@ -356,7 +403,7 @@ export default function App() {
                   Frontpage
                 </motion.button>
 
-                {/* CATEGORIES DROPDOWN - FIXED */}
+                {/* CATEGORIES DROPDOWN */}
                 <div className="relative flex-shrink-0" ref={categoriesRef}>
                   <button
                     type="button"
@@ -437,16 +484,14 @@ export default function App() {
             <Route path="/" element={renderMain()} />
             <Route path="/deal/:id" element={<DealDetail />} />
             <Route path="/thread/:id" element={<ThreadDetail />} />
-            {/* ADMIN / MODERATOR */}
             <Route path="/admin" element={<AdminDashboard user={user} />} />
             <Route path="/moderator" element={<ModeratorDashboard user={user} />} />
-            {/* NOTIFICATIONS PAGE */}
-            <Route path="/notifications" element={<Notifications user={user} />} />
+            <Route path="/notifications" element={<NotificationsPage user={user} />} />
           </Routes>
         </main>
 
         {/* FOOTER */}
-        <div className="mt-12 pb-6 px-4 relative z-10">
+        <div className="mt-12 pb-24 px-4 relative z-10">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -484,7 +529,7 @@ export default function App() {
                     @savrofficialdeals
                   </a>
                 </p>
-              </div>
+                            </div>
               <div className="flex flex-col justify-between items-start md:items-end">
                 <p className="text-xs text-gray-500">
                   © {new Date().getFullYear()} Savrdeals. All rights reserved.
@@ -494,7 +539,7 @@ export default function App() {
           </motion.div>
         </div>
 
-                {/* BOTTOM NAV */}
+        {/* BOTTOM NAV */}
         <nav className="fixed left-0 right-0 bottom-0 z-50 backdrop-blur-xl bg-white/90 border-t-2 border-amber-100 shadow-2xl">
           <div className="max-w-5xl mx-auto px-2">
             <div className="flex justify-around items-center py-2">
