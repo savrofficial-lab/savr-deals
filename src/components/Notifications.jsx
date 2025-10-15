@@ -1,87 +1,41 @@
-// src/components/Notifications.jsx
 import React, { useEffect, useState } from "react";
-import { Bell, Check, CheckCheck, Loader2, ArrowLeft, Trash2 } from "lucide-react";
 import { supabase } from "../supabaseClient";
+import { Bell, CheckCircle, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 
 export default function Notifications({ user }) {
-  const navigate = useNavigate();
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [markingAll, setMarkingAll] = useState(false);
+  const navigate = useNavigate();
 
-  // Check if user is logged in
-  useEffect(() => {
-    if (!user) {
-      navigate("/");
-    }
-  }, [user, navigate]);
-
-  // Fetch notifications
-  useEffect(() => {
+  // Fetch all notifications for current user
+  const fetchNotifications = async () => {
     if (!user) return;
-    
-    const fetchNotifications = async () => {
-      setLoading(true);
-      const { data, error } = await supabase
-        .from("notifications")
-        .select("*")
-        .eq("user_id", user.id)
-        .order("created_at", { ascending: false });
-      
-      if (!error && data) {
-        setNotifications(data);
-      }
-      setLoading(false);
-    };
-    
-    fetchNotifications();
+    setLoading(true);
 
-    // Realtime subscription
-    const channel = supabase
-      .channel("notifications-page-changes")
-      .on(
-        "postgres_changes",
-        { event: "INSERT", schema: "public", table: "notifications" },
-        (payload) => {
-          if (payload.new.user_id === user.id) {
-            setNotifications((prev) => [payload.new, ...prev]);
-          }
-        }
-      )
-      .on(
-        "postgres_changes",
-        { event: "UPDATE", schema: "public", table: "notifications" },
-        (payload) => {
-          if (payload.new.user_id === user.id) {
-            setNotifications((prev) =>
-              prev.map((n) => (n.id === payload.new.id ? payload.new : n))
-            );
-          }
-        }
-      )
-      .on(
-        "postgres_changes",
-        { event: "DELETE", schema: "public", table: "notifications" },
-        (payload) => {
-          setNotifications((prev) => prev.filter((n) => n.id !== payload.old.id));
-        }
-      )
-      .subscribe();
+    const { data, error } = await supabase
+      .from("notifications")
+      .select("*")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false });
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [user, navigate]);
+    if (error) {
+      console.error("Error fetching notifications:", error);
+    } else {
+      setNotifications(data);
+    }
 
+    setLoading(false);
+  };
+
+  // Mark a single notification as read
   const markAsRead = async (id) => {
     const { error } = await supabase
       .from("notifications")
       .update({ read: true })
-      .eq("id", id)
-      .eq("user_id", user.id);
-    
+      .eq("id", id);
+
     if (!error) {
       setNotifications((prev) =>
         prev.map((n) => (n.id === id ? { ...n, read: true } : n))
@@ -89,165 +43,133 @@ export default function Notifications({ user }) {
     }
   };
 
+  // Mark all as read
   const markAllAsRead = async () => {
-    setMarkingAll(true);
     const { error } = await supabase
       .from("notifications")
       .update({ read: true })
-      .eq("user_id", user.id)
-      .eq("read", false);
-    
+      .eq("user_id", user.id);
     if (!error) {
       setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
     }
-    setMarkingAll(false);
   };
 
-  const deleteNotification = async (id) => {
-    const { error } = await supabase
-      .from("notifications")
-      .delete()
-      .eq("id", id)
-      .eq("user_id", user.id);
-    
-    if (!error) {
-      setNotifications((prev) => prev.filter((n) => n.id !== id));
+  // Handle clicking on notification (redirect logic)
+  const handleNotificationClick = async (n) => {
+    await markAsRead(n.id);
+
+    // Redirect based on type
+    if (n.type === "deal_reported" && n.deal_id) {
+      navigate(`/deal/${n.deal_id}`);
+    } else if (n.type === "comment_reply" && n.deal_id) {
+      navigate(`/deal/${n.deal_id}#comments`);
+    } else if (n.type === "warning" && n.user_id) {
+      navigate(`/profile/${n.user_id}`);
     }
   };
 
-  const unreadCount = notifications.filter((n) => !n.read).length;
+  // Initial + Realtime updates
+  useEffect(() => {
+    if (!user) return;
+    fetchNotifications();
+
+    const channel = supabase
+      .channel("realtime_notifications")
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "notifications" },
+        (payload) => {
+          setNotifications((prev) => [payload.new, ...prev]);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user]);
+
+  if (!user) {
+    return (
+      <div className="flex flex-col items-center justify-center h-[70vh] text-gray-600">
+        <Bell className="w-10 h-10 mb-3 text-amber-600" />
+        <p>Please log in to view notifications</p>
+      </div>
+    );
+  }
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-[70vh]">
+        <Loader2 className="animate-spin text-amber-600 w-8 h-8" />
+      </div>
+    );
+  }
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
-      className="max-w-3xl mx-auto"
-    >
+    <div className="max-w-3xl mx-auto mt-10 mb-24 px-4">
       {/* Header */}
-      <div className="bg-white/95 backdrop-blur-xl rounded-2xl shadow-xl p-6 mb-6 border-2 border-amber-100">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => navigate("/")}
-              className="p-2 hover:bg-amber-50 rounded-full transition-colors"
-              aria-label="Go back"
-            >
-              <ArrowLeft className="w-5 h-5 text-amber-700" />
-            </button>
-            <div className="flex items-center gap-3">
-              <Bell className="w-7 h-7 text-amber-600" />
-              <h1 className="text-2xl font-bold bg-gradient-to-r from-amber-700 to-yellow-600 bg-clip-text text-transparent">
-                Notifications
-              </h1>
-            </div>
-          </div>
-          
-          {unreadCount > 0 && (
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={markAllAsRead}
-              disabled={markingAll}
-              className="flex items-center gap-2 px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg font-medium text-sm transition-all shadow-md disabled:opacity-50"
-            >
-              {markingAll ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <CheckCheck className="w-4 h-4" />
-              )}
-              Mark all read
-            </motion.button>
-          )}
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-2">
+          <Bell className="w-7 h-7 text-amber-600" />
+          <h1 className="text-2xl font-semibold">Notifications</h1>
         </div>
-
-        <div className="flex items-center gap-4 text-sm">
-          <span className="text-gray-600">
-            Total: <span className="font-semibold text-gray-800">{notifications.length}</span>
-          </span>
-          <span className="text-amber-600">
-            Unread: <span className="font-semibold">{unreadCount}</span>
-          </span>
-        </div>
+        {notifications.some((n) => !n.read) && (
+          <button
+            onClick={markAllAsRead}
+            className="text-sm bg-amber-100 hover:bg-amber-200 text-amber-700 px-3 py-1 rounded-lg transition"
+          >
+            Mark all as read
+          </button>
+        )}
       </div>
 
-      {/* Notifications List */}
-      {loading ? (
-        <div className="bg-white/95 backdrop-blur-xl rounded-2xl shadow-xl p-12 border-2 border-amber-100 flex flex-col items-center justify-center">
-          <Loader2 className="w-12 h-12 text-amber-600 animate-spin mb-4" />
-          <p className="text-gray-600">Loading notifications...</p>
-        </div>
-      ) : notifications.length === 0 ? (
+      {/* Empty State */}
+      {notifications.length === 0 ? (
         <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="bg-white/95 backdrop-blur-xl rounded-2xl shadow-xl p-12 border-2 border-amber-100 text-center"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-white p-6 rounded-2xl shadow text-center text-gray-500"
         >
-          <Bell className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-          <h3 className="text-xl font-semibold text-gray-700 mb-2">No notifications yet</h3>
-          <p className="text-gray-500">When you get notifications, they'll show up here</p>
+          🎉 No notifications yet — you’re all caught up!
         </motion.div>
       ) : (
         <div className="space-y-3">
-          {notifications.map((notification, index) => (
+          {notifications.map((n) => (
             <motion.div
-              key={notification.id}
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.3, delay: index * 0.05 }}
-              className={`bg-white/95 backdrop-blur-xl rounded-xl shadow-lg p-5 border-2 transition-all hover:shadow-xl ${
-                notification.read
-                  ? "border-gray-200"
-                  : "border-amber-200 bg-gradient-to-r from-amber-50/50 to-yellow-50/50"
+              key={n.id}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className={`flex items-center justify-between p-4 rounded-xl shadow-sm border cursor-pointer transition ${
+                n.read
+                  ? "bg-gray-50 hover:bg-gray-100"
+                  : "bg-amber-50 border-amber-200 hover:bg-amber-100"
               }`}
+              onClick={() => handleNotificationClick(n)}
             >
-              <div className="flex items-start justify-between gap-4">
-                <div className="flex-1">
-                  <p className={`text-sm ${notification.read ? "text-gray-700" : "text-gray-900 font-medium"}`}>
-                    {notification.message}
-                  </p>
-                  <p className="text-xs text-gray-500 mt-2">
-                    {new Date(notification.created_at).toLocaleString("en-US", {
-                      month: "short",
-                      day: "numeric",
-                      year: "numeric",
-                      hour: "numeric",
-                      minute: "2-digit",
-                      hour12: true,
-                    })}
-                  </p>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  {!notification.read && (
-                    <motion.button
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.9 }}
-                      onClick={() => markAsRead(notification.id)}
-                      className="p-2 hover:bg-green-50 rounded-lg transition-colors group"
-                      aria-label="Mark as read"
-                      title="Mark as read"
-                    >
-                      <Check className="w-4 h-4 text-green-600 group-hover:text-green-700" />
-                    </motion.button>
-                  )}
-                  
-                  <motion.button
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.9 }}
-                    onClick={() => deleteNotification(notification.id)}
-                    className="p-2 hover:bg-red-50 rounded-lg transition-colors group"
-                    aria-label="Delete notification"
-                    title="Delete"
-                  >
-                    <Trash2 className="w-4 h-4 text-red-500 group-hover:text-red-600" />
-                  </motion.button>
-                </div>
+              <div className="flex-1">
+                <p className="text-gray-800 text-sm">{n.message}</p>
+                <p className="text-xs text-gray-400 mt-1">
+                  {new Date(n.created_at).toLocaleString()}
+                </p>
               </div>
+
+              {!n.read && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    markAsRead(n.id);
+                  }}
+                  className="ml-4 text-xs flex items-center gap-1 text-amber-600 hover:text-amber-700 transition"
+                >
+                  <CheckCircle className="w-4 h-4" />
+                  Mark Read
+                </button>
+              )}
             </motion.div>
           ))}
         </div>
       )}
-    </motion.div>
+    </div>
   );
 }
