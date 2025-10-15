@@ -307,8 +307,9 @@ export default function App() {
                 />
               </motion.a>
 
-              <div className="relative flex items-center gap-3 flex-1">
-  {/* SEARCH BOX */}
+              {/* SEARCH + NOTIFICATION (fixed) */}
+<div className="relative flex items-center gap-3 flex-1">
+  {/* SEARCH BOX (slightly narrower so bell fits) */}
   <div className="relative flex-1 group">
     <span className="absolute left-4 top-1/2 -translate-y-1/2 text-amber-600 pointer-events-none transition-all group-focus-within:scale-110">
       <IconSearch />
@@ -317,15 +318,18 @@ export default function App() {
       value={searchRaw}
       onChange={(e) => setSearchRaw(e.target.value)}
       placeholder="Search deals, phones, brands..."
-      className="w-full pl-12 pr-4 py-2.5 rounded-2xl border-2 border-amber-200/50 bg-white/90 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all shadow-sm hover:shadow-md"
+      // make input a bit shorter so icon fits nicely (you can tweak w-full -> w-[calc(100%-56px)] if using Tailwind JIT)
+      className="w-full pl-12 pr-12 py-2.5 rounded-2xl border-2 border-amber-200/50 bg-white/90 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all shadow-sm hover:shadow-md"
     />
   </div>
 
-  {/* 🔔 NOTIFICATION ICON */}
-  <div className="flex-shrink-0">
-    <NotificationIcon user={user} />
-      </div>
-                 </div>
+  {/* 🔔 NOTIFICATION ICON — use the imported Notifications component */}
+  <div className="flex-shrink-0 ml-2">
+    <Notifications user={user} />
+  </div>
+</div>
+               </div>
+             </div>
 
           {/* TOP TABS - FIXED FOR MOBILE */}
           <div className="bg-gradient-to-r from-amber-50/80 to-yellow-50/80 backdrop-blur-md sticky top-[88px] z-40 border-t border-amber-100/30">
