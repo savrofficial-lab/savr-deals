@@ -442,7 +442,7 @@ export default function App() {
                 </p>
                 <p className="text-sm text-gray-700 leading-relaxed">
                   Savrdeals helps you discover the best online deals across
-                  multiple stores.
+                  multiple stores. Majority deals you see here are affiliated we earn some commision on those deals
                 </p>
               </div>
               <div>
