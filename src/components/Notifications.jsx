@@ -8,15 +8,19 @@ import { useNavigate } from "react-router-dom";
 export default function Notifications({ user }) {
   const navigate = useNavigate();
   const [notifications, setNotifications] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [markingAll, setMarkingAll] = useState(false);
 
-  // Fetch notifications
+  // Check if user is logged in
   useEffect(() => {
     if (!user) {
       navigate("/");
-      return;
     }
+  }, [user, navigate]);
+
+  // Fetch notifications
+  useEffect(() => {
+    if (!user) return;
     
     const fetchNotifications = async () => {
       setLoading(true);
