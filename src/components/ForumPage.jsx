@@ -66,8 +66,8 @@ export default function ForumPage() {
     fetchThreads();
   }
 
-  async function handleDeleteThread(threadId, userId) {
-    if (currentUserId !== userId) {
+  async function handleDeleteThread(threadId, postedBy) {
+    if (currentUserId !== postedBy) {
       alert("You can only delete your own threads!");
       return;
     }
@@ -263,7 +263,7 @@ export default function ForumPage() {
                     </div>
 
                     {/* Three-dot menu for author */}
-                    {currentUserId === t.user_id && (
+                    {currentUserId === t.posted_by && (
                       <div className="relative flex-shrink-0">
                         <button
                           onClick={(e) => {
@@ -280,7 +280,7 @@ export default function ForumPage() {
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
-                                handleDeleteThread(t.id, t.user_id);
+                                handleDeleteThread(t.id, t.posted_by);
                               }}
                               className="w-full px-4 py-3 flex items-center gap-3 hover:bg-red-50 transition-colors duration-200 text-red-600 font-semibold"
                             >
@@ -349,4 +349,4 @@ export default function ForumPage() {
       `}</style>
     </div>
   );
-}
+      }
