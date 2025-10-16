@@ -74,6 +74,7 @@ export default function ModeratorDashboard({ user }) {
           const { data: rawReports, error: reportsErr } = await supabase
             .from("reports")
             .select("id, deal_id, reported_by, reason, status, created_at")
+            .neq("status", "reviewed")  // ✅ Add this line
             .order("created_at", { ascending: false });
           if (reportsErr) throw reportsErr;
           const reportsList = Array.isArray(rawReports) ? rawReports : [];
