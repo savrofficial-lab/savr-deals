@@ -16,6 +16,7 @@ import ThreadDetail from "./components/ThreadDetail";
 import AdminDashboard from "./components/AdminDashboard";
 import ModeratorDashboard from "./components/ModeratorDashboard";
 import Notifications from "./components/Notifications";
+import NotificationDetail from "./components/NotificationDetail";
 
 /* ---------------------------------------------------------------------------
    Small inline icons
@@ -487,6 +488,7 @@ export default function App() {
             <Route path="/admin" element={<AdminDashboard user={user} />} />
             <Route path="/moderator" element={<ModeratorDashboard user={user} />} />
             <Route path="/notifications" element={<Notifications user={user} />} />
+            <Route path="/notification/:reportId" element={<NotificationDetail user={user} />} />
           </Routes>
         </main>
 
