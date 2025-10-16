@@ -148,9 +148,36 @@ export default function DealsGrid({
         const list = Array.isArray(dealsData) ? dealsData : [];
 
         if (list.length === 0) {
-          setDeals([]);
-          setLoading(false);
-          return;
+  // If user searched something but found nothing
+  if (search && search.trim() !== "") {
+    const user = (await supabase.auth.getUser()).data.user;
+
+    if (user) {
+      // Insert the request into requested_deals
+      const { error: reqError } = await supabase.from("requested_deals").insert([
+        {
+          user_id: user.id,
+          query: search.trim(),
+          fulfilled: false,
+        },
+      ]);
+
+      if (reqError) console.error("Error inserting request:", reqError);
+    }
+
+    // Show message
+    setDeals([]);
+    setLoading(false);
+    setErrorMsg(
+      `No deals found for "${search.trim()}". Your request has been sent to moderators. Your deal will be live in 5 minutes. You’ll be notified once the deal goes live.`
+    );
+  } else {
+    setDeals([]);
+    setErrorMsg("");
+  }
+
+  setLoading(false);
+  return;
         }
 
         // Fetch like counts
@@ -219,7 +246,22 @@ export default function DealsGrid({
   // UI states
   if (loading) return <div className="text-center text-gray-500 py-8">Loading deals…</div>;
   if (errorMsg) return <div className="text-center text-red-600 py-8">Error: {errorMsg}</div>;
-  if (!deals || deals.length === 0) return <div className="text-center text-gray-500 py-8">No deals yet.</div>;
+  if (!deals || deals.length === 0) {
+  return (
+    <div className="text-center text-gray-600 max-w-md mx-auto bg-white p-4 rounded-xl shadow-sm my-8">
+      {errorMsg ? (
+        <>
+          <p className="mb-2">🔍 {errorMsg}</p>
+          <p className="text-xs text-gray-500">
+            (We’ll alert you once the requested deal goes live!)
+          </p>
+        </>
+      ) : (
+        <p>No deals available yet.</p>
+      )}
+    </div>
+  );
+  }
 
   // currency formatter helper
   const fmt = (v) => {
