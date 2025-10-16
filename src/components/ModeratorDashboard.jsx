@@ -164,19 +164,53 @@ export default function ModeratorDashboard({ user }) {
     }
   };
 
-  
-  const handleReview = async (reportId) => {
-  const { error } = await supabase
-    .from("reports")
-    .delete()
-    .eq("id", reportId);
+  // ✅ Mark report as reviewed + send notification to deal poster
+const markReviewed = async (report) => {
+  try {
+    // 1️⃣ Mark the report as reviewed (instead of deleting)
+    const { error: reportError } = await supabase
+      .from("reports")
+      .update({ status: "reviewed" })
+      .eq("id", report.id);
 
-  if (error) {
-    console.error("Error reviewing report:", error);
-  } else {
-    setReports((prev) => prev.filter((r) => r.id !== reportId));
+    if (reportError) throw reportError;
+
+    // 2️⃣ Fetch the related deal to get who posted it
+    const { data: dealData, error: dealError } = await supabase
+      .from("deals")
+      .select("id, title, posted_by")
+      .eq("id", report.deal_id)
+      .single();
+
+    if (dealError) throw dealError;
+
+    // 3️⃣ Insert a notification for that user
+    const { error: notifError } = await supabase.from("notifications").insert([
+      {
+        user_id: dealData.posted_by,
+        type: "deal_reviewed",
+        message: `✅ Your deal "${dealData.title}" has been reviewed by a moderator.`,
+        link: `/deal/${dealData.id}`,
+        read: false,
+      },
+    ]);
+
+    if (notifError) throw notifError;
+
+    // 4️⃣ Update local UI
+    setReports((prev) =>
+      prev.map((r) =>
+        r.id === report.id ? { ...r, status: "reviewed" } : r
+      )
+    );
+
+    alert("✅ Deal marked as reviewed and user notified!");
+  } catch (e) {
+    console.error("Error marking reviewed:", e);
+    alert("❌ Error marking reviewed. Check console.");
   }
 };
+ 
   <button
   onClick={() => handleReview(report.id)}
   className="bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600"
@@ -280,9 +314,12 @@ export default function ModeratorDashboard({ user }) {
                       <button onClick={() => deleteDeal(report.deal_id)} className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg flex items-center gap-2 transition-all text-sm">
                         <Trash2 size={16} /> Delete
                       </button>
-                      <button onClick={() => markReviewed(report.id)} className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg flex items-center gap-2 transition-all text-sm">
-                        <CheckCircle2 size={16} /> Reviewed
-                      </button>
+                      <button
+  onClick={() => markReviewed(report)}
+  className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg flex items-center gap-2 transition-all text-sm"
+>
+  <CheckCircle2 size={16} /> Reviewed
+</button>
                       <a href={`/deal/${report.deal_id}`} target="_blank" rel="noreferrer" className="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm">View Deal</a>
                     </div>
                   </div>
