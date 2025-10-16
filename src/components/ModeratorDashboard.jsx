@@ -289,7 +289,7 @@ export default function ModeratorDashboard({ user }) {
                         <Trash2 size={16} /> Delete
                       </button>
                       <button
-  onClick={() => markReviewed(report)}
+  onClick={() => markReviewed(report.id)}
   className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg flex items-center gap-2 transition-all text-sm"
 >
   <CheckCircle2 size={16} /> Reviewed
