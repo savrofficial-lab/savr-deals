@@ -165,49 +165,23 @@ export default function ModeratorDashboard({ user }) {
   };
 
   // ✅ Mark report as reviewed + send notification to deal poster
-const markReviewed = async (report) => {
+    const markReviewed = async (reportId) => {
   try {
-    // 1️⃣ Mark the report as reviewed (instead of deleting)
-    const { error: reportError } = await supabase
-      .from("reports")
-      .update({ status: "reviewed" })
-      .eq("id", report.id);
+    console.log("Marking report reviewed:", reportId);
+    const { data, error } = await supabase.rpc("mark_report_reviewed", { target_id: reportId });
+    
+    if (error) {
+      console.error("Supabase RPC error:", error);
+      alert("Supabase error: " + error.message);
+      return;
+    }
 
-    if (reportError) throw reportError;
-
-    // 2️⃣ Fetch the related deal to get who posted it
-    const { data: dealData, error: dealError } = await supabase
-      .from("deals")
-      .select("id, title, posted_by")
-      .eq("id", report.deal_id)
-      .single();
-
-    if (dealError) throw dealError;
-
-    // 3️⃣ Insert a notification for that user
-    const { error: notifError } = await supabase.from("notifications").insert([
-      {
-        user_id: dealData.posted_by,
-        type: "deal_reviewed",
-        message: `✅ Your deal "${dealData.title}" has been reviewed by a moderator.`,
-        link: `/deal/${dealData.id}`,
-        read: false,
-      },
-    ]);
-
-    if (notifError) throw notifError;
-
-    // 4️⃣ Update local UI
-    setReports((prev) =>
-      prev.map((r) =>
-        r.id === report.id ? { ...r, status: "reviewed" } : r
-      )
-    );
-
-    alert("✅ Deal marked as reviewed and user notified!");
+    // Remove report from list if successful
+    setReports((prev) => prev.filter((r) => r.id !== reportId));
+    alert("✅ Report marked as reviewed successfully!");
   } catch (e) {
-    console.error("Error marking reviewed:", e);
-    alert("❌ Error marking reviewed. Check console.");
+    console.error("Unexpected error:", e);
+    alert("Unexpected error: " + e.message);
   }
 };
  
