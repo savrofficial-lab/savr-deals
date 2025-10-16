@@ -62,36 +62,39 @@ export default function Notifications({ user }) {
   };
 
   // 🔹 Handle notification click — navigate based on its type or link
-  const handleNotificationClick = async (n) => {
-    await markAsRead(n.id);
+      const handleNotificationClick = async (n) => {
+  await markAsRead(n.id);
 
-    // Priority 1: if link is provided → open that link
-    if (n.link) {
-      if (n.link.startsWith("http")) {
-        window.open(n.link, "_blank");
-      } else {
-        navigate(n.link);
-      }
-      return;
+  console.log("Notification clicked:", n);
+  console.log("Link:", n.link);
+
+  // Priority 1: if link is provided → open that link
+  if (n.link) {
+    console.log("Navigating to:", n.link);
+    if (n.link.startsWith("http")) {
+      window.open(n.link, "_blank");
+    } else {
+      navigate(n.link);
     }
+    return;
+  }
 
-    // Priority 2: otherwise, use type-based navigation
-    switch (n.type) {
-      case "deal_reported":
-        navigate(`/deal/${n.deal_id || ""}`);
-        break;
-      case "comment_reply":
-        navigate(`/deal/${n.deal_id || ""}#comments`);
-        break;
-      case "warning":
-        navigate(`/profile/${n.user_id}`);
-        break;
-      default:
-        console.log("No navigation rule for type:", n.type);
-        break;
-    }
-  };
-
+  // Priority 2: otherwise, use type-based navigation
+  switch (n.type) {
+    case "deal_reported":
+      navigate(`/deal/${n.deal_id || ""}`);
+      break;
+    case "comment_reply":
+      navigate(`/deal/${n.deal_id || ""}#comments`);
+      break;
+    case "warning":
+      navigate(`/profile/${n.user_id}`);
+      break;
+    default:
+      console.log("No navigation rule for type:", n.type);
+      break;
+  }
+};
   // 🔹 Initial fetch + realtime listener
   useEffect(() => {
     if (!user) return;
