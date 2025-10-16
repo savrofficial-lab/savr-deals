@@ -20,11 +20,7 @@ export default function ModeratorDashboard({ user }) {
   const [deals, setDeals] = useState([]);
   const [requested, setRequested] = useState([]);
   const [error, setError] = useState(null);
-  const [debugInfo, setDebugInfo] = useState([]);
   const navigate = useNavigate();
-
-  const addDebug = (txt) =>
-    setDebugInfo((p) => [...p, `${new Date().toLocaleTimeString()}: ${txt}`]);
 
   // Fetch current user's role
   useEffect(() => {
@@ -121,7 +117,6 @@ export default function ModeratorDashboard({ user }) {
             .order("created_at", { ascending: false });
           if (reqError) throw reqError;
 
-          // fetch usernames
           const userIds = reqData.map((r) => r.user_id);
           let profilesMap = {};
           if (userIds.length) {
@@ -181,8 +176,10 @@ export default function ModeratorDashboard({ user }) {
     }
   };
 
-  const postRequestedDeal = (query) => {
+  const postRequestedDeal = async (query, id) => {
+    if (!confirm(`Post a new deal for "${query}"?`)) return;
     navigate(`/post-deal?prefill=${encodeURIComponent(query)}`);
+    await supabase.from("requested_deals").update({ fulfilled: true }).eq("id", id);
   };
 
   // Access guards
@@ -300,16 +297,14 @@ export default function ModeratorDashboard({ user }) {
                     </h3>
                     <p className="text-sm text-gray-600">
                       Requested by{" "}
-                      <span className="font-medium">
-                        {req.requester}
-                      </span>
+                      <span className="font-medium">{req.requester}</span>
                     </p>
                     <p className="text-xs text-gray-400">
                       {new Date(req.created_at).toLocaleString()}
                     </p>
                   </div>
                   <button
-                    onClick={() => postRequestedDeal(req.query)}
+                    onClick={() => postRequestedDeal(req.query, req.id)}
                     className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg flex items-center gap-2 transition-all text-sm"
                   >
                     <Store size={16} /> Post Deal
@@ -417,4 +412,4 @@ export default function ModeratorDashboard({ user }) {
       </motion.main>
     </div>
   );
-            }
+}
