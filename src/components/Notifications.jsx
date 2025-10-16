@@ -9,7 +9,7 @@ export default function Notifications({ user }) {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
-  // Fetch all notifications for current user
+  // 🔹 Fetch all notifications for current user
   const fetchNotifications = async () => {
     if (!user) return;
     setLoading(true);
@@ -23,52 +23,76 @@ export default function Notifications({ user }) {
     if (error) {
       console.error("Error fetching notifications:", error);
     } else {
-      setNotifications(data);
+      setNotifications(data || []);
     }
 
     setLoading(false);
   };
 
-  // Mark a single notification as read
+  // 🔹 Mark a single notification as read
   const markAsRead = async (id) => {
     const { error } = await supabase
       .from("notifications")
       .update({ read: true })
       .eq("id", id);
 
-    if (!error) {
-      setNotifications((prev) =>
-        prev.map((n) => (n.id === id ? { ...n, read: true } : n))
-      );
+    if (error) {
+      console.error("Error marking read:", error);
+      return;
     }
+
+    setNotifications((prev) =>
+      prev.map((n) => (n.id === id ? { ...n, read: true } : n))
+    );
   };
 
-  // Mark all as read
+  // 🔹 Mark all as read
   const markAllAsRead = async () => {
     const { error } = await supabase
       .from("notifications")
       .update({ read: true })
       .eq("user_id", user.id);
-    if (!error) {
-      setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+
+    if (error) {
+      console.error("Error marking all read:", error);
+      return;
     }
+
+    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
   };
 
-  // Handle clicking on notification (redirect logic)
+  // 🔹 Handle notification click — navigate based on its type or link
   const handleNotificationClick = async (n) => {
     await markAsRead(n.id);
 
-    // Redirect based on type
-    if (n.type === "deal_reported" && n.deal_id) {
-      navigate(`/deal/${n.deal_id}`);
-    } else if (n.type === "comment_reply" && n.deal_id) {
-      navigate(`/deal/${n.deal_id}#comments`);
-    } else if (n.type === "warning" && n.user_id) {
-      navigate(`/profile/${n.user_id}`);
+    // Priority 1: if link is provided → open that link
+    if (n.link) {
+      if (n.link.startsWith("http")) {
+        window.open(n.link, "_blank");
+      } else {
+        navigate(n.link);
+      }
+      return;
+    }
+
+    // Priority 2: otherwise, use type-based navigation
+    switch (n.type) {
+      case "deal_reported":
+        navigate(`/deal/${n.deal_id || ""}`);
+        break;
+      case "comment_reply":
+        navigate(`/deal/${n.deal_id || ""}#comments`);
+        break;
+      case "warning":
+        navigate(`/profile/${n.user_id}`);
+        break;
+      default:
+        console.log("No navigation rule for type:", n.type);
+        break;
     }
   };
 
-  // Initial + Realtime updates
+  // 🔹 Initial fetch + realtime listener
   useEffect(() => {
     if (!user) return;
     fetchNotifications();
@@ -77,7 +101,12 @@ export default function Notifications({ user }) {
       .channel("realtime_notifications")
       .on(
         "postgres_changes",
-        { event: "INSERT", schema: "public", table: "notifications" },
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "notifications",
+          filter: `user_id=eq.${user.id}`,
+        },
         (payload) => {
           setNotifications((prev) => [payload.new, ...prev]);
         }
@@ -89,6 +118,7 @@ export default function Notifications({ user }) {
     };
   }, [user]);
 
+  // 🔹 Not logged in
   if (!user) {
     return (
       <div className="flex flex-col items-center justify-center h-[70vh] text-gray-600">
@@ -98,6 +128,7 @@ export default function Notifications({ user }) {
     );
   }
 
+  // 🔹 Loading spinner
   if (loading) {
     return (
       <div className="flex justify-center items-center h-[70vh]">
@@ -106,6 +137,7 @@ export default function Notifications({ user }) {
     );
   }
 
+  // 🔹 Render all notifications
   return (
     <div className="max-w-3xl mx-auto mt-10 mb-24 px-4">
       {/* Header */}
@@ -124,7 +156,7 @@ export default function Notifications({ user }) {
         )}
       </div>
 
-      {/* Empty State */}
+      {/* Empty state */}
       {notifications.length === 0 ? (
         <motion.div
           initial={{ opacity: 0, y: 10 }}
