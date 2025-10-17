@@ -1,7 +1,8 @@
-// src/components/Profile.jsx
+// src/components/Profile.jsx - WITH BADGE DISPLAY
 import React, { useEffect, useState } from "react";
 import { supabase } from "../supabaseClient";
 import UserDealsTable from "./UserDealsTable";
+import BadgeDisplay from "./BadgeDisplay";
 
 export default function Profile({ userId }) {
   const [loading, setLoading] = useState(true);
@@ -11,7 +12,9 @@ export default function Profile({ userId }) {
     email: "",
     avatar_url: "",
     bio: "",
+    equipped_badge: null,
   });
+  const [userCoins, setUserCoins] = useState(0);
   const [editing, setEditing] = useState(false);
 
   useEffect(() => {
@@ -24,34 +27,46 @@ export default function Profile({ userId }) {
     let mounted = true;
 
     (async function load() {
-      const { data, error } = await supabase
+      // Fetch profile WITH equipped_badge
+      const { data: profileData, error: profileError } = await supabase
         .from("profiles")
-        .select("full_name,username,email,avatar_url,bio,created_at")
+        .select("full_name,username,email,avatar_url,bio,created_at,equipped_badge")
+        .eq("user_id", userId)
+        .single();
+
+      // Fetch coins
+      const { data: coinsData, error: coinsError } = await supabase
+        .from("coins")
+        .select("balance")
         .eq("user_id", userId)
         .single();
 
       if (!mounted) return;
 
-      if (error && error.code === "PGRST116") {
-        console.warn("⚠️ No profile row yet for userId:", userId);
+      if (profileError && profileError.code === "PGRST116") {
         setProfile({
           full_name: "",
           username: "",
           email: "",
           avatar_url: "",
           bio: "",
+          equipped_badge: null,
         });
-      } else if (data) {
+      } else if (profileData) {
         setProfile({
-          full_name: data.full_name || "",
-          username: data.username || "",
-          email: data.email || "",
-          avatar_url: data.avatar_url || "",
-          bio: data.bio || "",
+          full_name: profileData.full_name || "",
+          username: profileData.username || "",
+          email: profileData.email || "",
+          avatar_url: profileData.avatar_url || "",
+          bio: profileData.bio || "",
+          equipped_badge: profileData.equipped_badge || null,
         });
-      } else if (error) {
-        console.error("❌ Profile load error:", error);
       }
+
+      if (coinsData && !coinsError) {
+        setUserCoins(coinsData.balance || 0);
+      }
+
       setLoading(false);
     })();
 
@@ -77,7 +92,6 @@ export default function Profile({ userId }) {
     const { error } = await supabase.from("profiles").upsert(payload);
     if (error) {
       alert("Error saving profile: " + error.message);
-      console.error(error);
     } else {
       alert("Profile saved.");
       setEditing(false);
@@ -103,14 +117,6 @@ export default function Profile({ userId }) {
           {name?.charAt(0) || "A"}
         </div>
       )}
-      {editing && (
-        <div className="absolute inset-0 bg-black/40 rounded-2xl flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 cursor-pointer">
-          <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-          </svg>
-        </div>
-      )}
     </div>
   );
 
@@ -119,9 +125,6 @@ export default function Profile({ userId }) {
       <div className="flex items-center justify-center py-16">
         <div className="relative">
           <div className="w-16 h-16 border-4 border-amber-200 border-t-amber-600 rounded-full animate-spin"></div>
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="w-8 h-8 bg-amber-600 rounded-full animate-pulse"></div>
-          </div>
         </div>
       </div>
     );
@@ -129,39 +132,45 @@ export default function Profile({ userId }) {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 py-8 px-4">
-      {/* Animated background */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-20 right-20 w-64 h-64 bg-amber-300 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-pulse"></div>
-        <div className="absolute bottom-20 left-20 w-64 h-64 bg-orange-300 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-pulse" style={{animationDelay: '1s'}}></div>
-      </div>
-
       <div className="relative z-10 max-w-2xl mx-auto">
         {/* Profile Card */}
         <div className="backdrop-blur-xl bg-white/90 rounded-3xl shadow-2xl overflow-hidden border border-amber-100/50 mb-6">
           {/* Header gradient */}
-          <div className="h-32 bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 relative">
-            <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZGVmcz48cGF0dGVybiBpZD0iZ3JpZCIgd2lkdGg9IjQwIiBoZWlnaHQ9IjQwIiBwYXR0ZXJuVW5pdHM9InVzZXJTcGFjZU9uVXNlIj48cGF0aCBkPSJNIDQwIDAgTCAwIDAgMCA0MCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJ3aGl0ZSIgc3Ryb2tlLW9wYWNpdHk9IjAuMSIgc3Ryb2tlLXdpZHRoPSIxIi8+PC9wYXR0ZXJuPjwvZGVmcz48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSJ1cmwoI2dyaWQpIi8+PC9zdmc+')] opacity-30"></div>
-          </div>
+          <div className="h-32 bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600"></div>
 
           <div className="px-4 sm:px-6 pb-6">
-            {/* Avatar and Info - Mobile Optimized */}
+            {/* Avatar and Info */}
             <div className="flex flex-col items-center -mt-12 mb-4">
               <AvatarPreview src={profile.avatar_url} name={profile.full_name} />
               
               <div className="text-center mt-3 w-full">
-                <h2 className="text-2xl font-bold text-gray-800">
-                  {profile.full_name || "No name yet"}
-                </h2>
+                {/* Name with Badge */}
+                <div className="flex items-center justify-center gap-2 mb-1">
+                  <h2 className="text-2xl font-bold text-gray-800">
+                    {profile.full_name || "No name yet"}
+                  </h2>
+                  {profile.equipped_badge && (
+                    <BadgeDisplay badgeId={profile.equipped_badge} size="md" />
+                  )}
+                </div>
+                
                 <p className="text-amber-600 font-medium">
                   @{profile.username || "username"}
                 </p>
-                <p className="text-gray-600 text-sm leading-relaxed mt-2 px-4">
+                
+                {/* Coins Display */}
+                <div className="flex items-center justify-center gap-2 mt-2 bg-amber-50 rounded-full px-4 py-2 inline-flex">
+                  <span className="text-2xl">🪙</span>
+                  <span className="font-bold text-amber-700">{userCoins} Coins</span>
+                </div>
+                
+                <p className="text-gray-600 text-sm leading-relaxed mt-3 px-4">
                   {profile.bio || "No bio yet."}
                 </p>
               </div>
             </div>
 
-            {/* Action Buttons - Mobile Optimized */}
+            {/* Action Buttons */}
             <div className="flex flex-col sm:flex-row gap-3 w-full">
               <button
                 onClick={() => setEditing(!editing)}
@@ -172,6 +181,18 @@ export default function Profile({ userId }) {
                 </svg>
                 {editing ? "Cancel" : "Edit"}
               </button>
+              
+              {/* View Rewards Button */}
+              <a
+                href="/rewards"
+                className="w-full px-4 py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-xl font-medium shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 flex items-center justify-center gap-2"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+                </svg>
+                Rewards
+              </a>
+              
               <button
                 onClick={handleLogout}
                 className="w-full px-4 py-3 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-xl font-medium shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 flex items-center justify-center gap-2"
@@ -203,8 +224,6 @@ export default function Profile({ userId }) {
                       value={profile.username}
                       onChange={(e) => setProfile(p => ({ ...p, username: e.target.value }))}
                       placeholder="Choose a unique username"
-                      type="text"
-                      autoComplete="off"
                       className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:border-amber-500 focus:ring-4 focus:ring-amber-100 transition-all duration-200 outline-none"
                     />
                   </div>
