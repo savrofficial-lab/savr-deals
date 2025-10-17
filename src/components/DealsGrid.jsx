@@ -146,30 +146,14 @@ export default function DealsGrid({
         }
 
         const list = Array.isArray(dealsData) ? dealsData : [];
-
+      
         if (list.length === 0) {
-  // If user searched something but found nothing
   if (search && search.trim() !== "") {
-    const user = (await supabase.auth.getUser()).data.user;
-
-    if (user) {
-      // Insert the request into requested_deals
-      const { error: reqError } = await supabase.from("requested_deals").insert([
-        {
-          user_id: user.id,
-          query: search.trim(),
-          fulfilled: false,
-        },
-      ]);
-
-      if (reqError) console.error("Error inserting request:", reqError);
-    }
-
-    // Show message
+    // We only display a message here. The actual requested_deals insertion
+    // is handled in App.jsx when user clicks Search (handleSearchSubmit).
     setDeals([]);
-    setLoading(false);
     setErrorMsg(
-      `No deals found for "${search.trim()}". Your request has been sent to moderators. Your deal will be live in 5 minutes. You’ll be notified once the deal goes live.`
+      `No deals found for "${search.trim()}". Your request has been sent to moderators (if you pressed Search). You’ll be notified once a deal is posted.`
     );
   } else {
     setDeals([]);
@@ -178,8 +162,8 @@ export default function DealsGrid({
 
   setLoading(false);
   return;
-        }
-
+         }
+        
         // Fetch like counts
         const ids = list.map((d) => d.id).filter(Boolean);
         let likeCounts = {};
