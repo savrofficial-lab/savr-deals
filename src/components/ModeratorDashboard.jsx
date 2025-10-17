@@ -12,7 +12,8 @@ import {
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 
-export default function ModeratorDashboard({ user }) {
+export default function ModeratorDashboard({ user: propUser }) {
+  const [user, setUser] = useState(propUser || null);
   const [activeTab, setActiveTab] = useState("reports");
   const [loading, setLoading] = useState(true);
   const [role, setRole] = useState("");
@@ -22,9 +23,23 @@ export default function ModeratorDashboard({ user }) {
   const [error, setError] = useState(null);
   const navigate = useNavigate();
 
-  // Fetch current user's role
+  // ✅ Ensure we always have current user (even if propUser is missing)
   useEffect(() => {
-    let mounted = true;
+    const loadUser = async () => {
+      if (!propUser) {
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+        setUser(user);
+      } else {
+        setUser(propUser);
+      }
+    };
+    loadUser();
+  }, [propUser]);
+
+  // ✅ Fetch current user's role
+  useEffect(() => {
     const fetchRole = async () => {
       if (!user) return;
       setLoading(true);
@@ -35,21 +50,18 @@ export default function ModeratorDashboard({ user }) {
           .eq("user_id", user.id)
           .single();
         if (error) throw error;
-        if (mounted) setRole(data?.role || "");
+        setRole(data?.role || "");
       } catch (e) {
-        if (mounted) setError(e.message);
+        setError(e.message);
       } finally {
-        if (mounted) setLoading(false);
+        setLoading(false);
       }
     };
     fetchRole();
-    return () => (mounted = false);
   }, [user?.id]);
 
-  // Fetch data depending on tab
+  // ✅ Fetch data depending on tab
   useEffect(() => {
-    let mounted = true;
-
     const fetchData = async () => {
       if (!user || !["moderator", "admin"].includes(role)) return;
       setLoading(true);
@@ -62,14 +74,10 @@ export default function ModeratorDashboard({ user }) {
             .neq("status", "reviewed")
             .order("created_at", { ascending: false });
           if (reportsErr) throw reportsErr;
-          const reportsList = Array.isArray(rawReports) ? rawReports : [];
 
-          const dealIds = Array.from(
-            new Set(reportsList.map((r) => r.deal_id).filter(Boolean))
-          );
-          const reporterIds = Array.from(
-            new Set(reportsList.map((r) => r.reported_by).filter(Boolean))
-          );
+          const reportsList = rawReports || [];
+          const dealIds = reportsList.map((r) => r.deal_id).filter(Boolean);
+          const reporterIds = reportsList.map((r) => r.reported_by).filter(Boolean);
 
           let dealsMap = {};
           if (dealIds.length) {
@@ -101,19 +109,20 @@ export default function ModeratorDashboard({ user }) {
             reporter: profilesMap[r.reported_by] ?? null,
           }));
 
-          if (mounted) setReports(enriched);
+          setReports(enriched);
         } else if (activeTab === "deals") {
           const { data: dealsData, error: dealsError } = await supabase
             .from("deals")
             .select("id, title, description, image, posted_by, created_at")
             .order("created_at", { ascending: false });
           if (dealsError) throw dealsError;
-          if (mounted) setDeals(dealsData || []);
+          setDeals(dealsData || []);
         } else if (activeTab === "requested") {
+          // ⚠️ CHECK: change this column name if your table uses requested_by instead of user_id
           const { data: reqData, error: reqError } = await supabase
             .from("requested_deals")
             .select("id, user_id, query, fulfilled, created_at")
-            .or("fulfilled.is.false,fulfilled.is.null")
+            .eq("fulfilled", false)
             .order("created_at", { ascending: false });
           if (reqError) throw reqError;
 
@@ -135,19 +144,16 @@ export default function ModeratorDashboard({ user }) {
             requester: profilesMap[r.user_id]?.username ?? "Unknown User",
           }));
 
-          if (mounted) setRequested(enrichedReq);
+          setRequested(enrichedReq);
         }
       } catch (e) {
-        if (mounted) setError(e.message);
+        setError(e.message);
       } finally {
-        if (mounted) setLoading(false);
+        setLoading(false);
       }
     };
 
     fetchData();
-    return () => {
-      mounted = false;
-    };
   }, [activeTab, user?.id, role]);
 
   // Actions
@@ -182,7 +188,7 @@ export default function ModeratorDashboard({ user }) {
     await supabase.from("requested_deals").update({ fulfilled: true }).eq("id", id);
   };
 
-  // Access guards
+  // Guards
   if (loading)
     return (
       <div className="flex flex-col items-center justify-center h-screen text-gray-600 bg-gray-50">
@@ -197,9 +203,7 @@ export default function ModeratorDashboard({ user }) {
         <div className="bg-white p-6 rounded-lg shadow text-center">
           <AlertCircle className="h-12 w-12 text-amber-600 mx-auto mb-3" />
           <h2 className="text-xl font-bold mb-1">Login Required</h2>
-          <p className="text-gray-600 mb-4">
-            Please log in to access this panel.
-          </p>
+          <p className="text-gray-600 mb-4">Please log in to access this panel.</p>
           <a
             href="/"
             className="px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition"
@@ -210,26 +214,24 @@ export default function ModeratorDashboard({ user }) {
       </div>
     );
 
-     // Only block access once role is confirmed (not while it's still loading)
-if (!loading && !["moderator", "admin"].includes(role))
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="bg-white p-6 rounded-lg shadow text-center">
-        <AlertCircle className="h-12 w-12 text-red-600 mx-auto mb-3" />
-        <h2 className="text-xl font-bold mb-1">Access Denied</h2>
-        <p className="text-gray-600 mb-4">
-          You are not authorized to access this page.
-        </p>
-        <a
-          href="/"
-          className="px-4 py-2 bg-sky-600 text-white rounded-lg hover:bg-sky-700 transition"
-        >
-          Go Home
-        </a>
+  if (!["moderator", "admin"].includes(role))
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="bg-white p-6 rounded-lg shadow text-center">
+          <AlertCircle className="h-12 w-12 text-red-600 mx-auto mb-3" />
+          <h2 className="text-xl font-bold mb-1">Access Denied</h2>
+          <p className="text-gray-600 mb-4">
+            You are not authorized to access this page.
+          </p>
+          <a
+            href="/"
+            className="px-4 py-2 bg-sky-600 text-white rounded-lg hover:bg-sky-700 transition"
+          >
+            Go Home
+          </a>
+        </div>
       </div>
-    </div>
-  );
-  
+    );
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col md:flex-row">
@@ -414,4 +416,4 @@ if (!loading && !["moderator", "admin"].includes(role))
       </motion.main>
     </div>
   );
-}
+                        }
