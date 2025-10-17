@@ -225,6 +225,53 @@ export default function App() {
       setShowLoginModal(true);
     }
   }
+   // ---------------- REQUESTED DEAL SUBMIT (called when user clicks Search or presses Enter) ----------------
+  async function handleSearchSubmit() {
+    const q = searchRaw?.trim();
+    if (!q) return;
+
+    // set search to actually perform query in DealsGrid
+    setSearch(q);
+
+    try {
+      // get logged in user
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
+
+      if (currentUser) {
+        // insert request — prevent duplicates within last X hours? (optional)
+        // we attempt to insert only if a matching unfulfilled request doesn't already exist
+        const { data: exists, error: existsErr } = await supabase
+          .from('requested_deals')
+          .select('id')
+          .eq('query', q)
+          .eq('fulfilled', false)
+          .limit(1);
+
+        if (!existsErr && exists && exists.length > 0) {
+          // Already requested — no need to insert again
+        } else {
+          const { error: insertErr } = await supabase.from('requested_deals').insert([
+            {
+              user_id: currentUser.id,
+              query: q,
+              fulfilled: false,
+            },
+          ]);
+          if (insertErr) {
+            console.error('Failed to insert requested_deal:', insertErr);
+          } else {
+            // optional: show a quick toast/message — you can add a state for user feedback if you want
+            console.log('Requested deal inserted for:', q);
+          }
+        }
+      } else {
+        // not logged in — still setSearch so DealsGrid will search (or show message)
+        console.log('User not logged in - search will still run but request not saved.');
+      }
+    } catch (err) {
+      console.error('Error handling search submit:', err);
+    }
+  }
 
   // ---------------- OUTSIDE CLICK ----------------
   useEffect(() => {
@@ -355,19 +402,34 @@ export default function App() {
 
               {/* SEARCH + NOTIFICATION */}
               <div className="relative flex items-center gap-3 flex-1">
-                {/* SEARCH BOX */}
-                <div className="relative flex-1 group">
-                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-amber-600 pointer-events-none transition-all group-focus-within:scale-110">
-                    <IconSearch />
-                  </span>
-                  <input
-                    value={searchRaw}
-                    onChange={(e) => setSearchRaw(e.target.value)}
-                    placeholder="Search deals, phones, brands..."
-                    className="w-full pl-12 pr-12 py-2.5 rounded-2xl border-2 border-amber-200/50 bg-white/90 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all shadow-sm hover:shadow-md"
-                  />
-                </div>
+      
+                 {/* SEARCH BOX (with submit button) */}
+  <div className="relative flex-1 group flex items-center">
+    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-amber-600 pointer-events-none transition-all group-focus-within:scale-110">
+      <IconSearch />
+    </span>
 
+    <input
+      value={searchRaw}
+      onChange={(e) => setSearchRaw(e.target.value)}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          handleSearchSubmit();
+        }
+      }}
+      placeholder="Search deals, phones, brands..."
+      className="flex-1 pl-12 pr-28 py-2.5 rounded-2xl border-2 border-amber-200/50 bg-white/90 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all shadow-sm hover:shadow-md"
+    />
+
+    {/* Search button (right inside the input area) */}
+    <button
+      onClick={handleSearchSubmit}
+      className="absolute right-2 top-1/2 -translate-y-1/2 px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-sm shadow"
+    >
+      Search
+    </button>
+  </div>
                 {/* NOTIFICATION ICON */}
                 <Link
                   to="/notifications"
