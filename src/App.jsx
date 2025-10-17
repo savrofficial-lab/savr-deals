@@ -540,7 +540,7 @@ export default function App() {
         </main>
 
         {/* FOOTER */}
-                <div className="mt-12 pb-24 px-4 relative z-10">
+         <div className="mt-12 pb-24 px-4 relative z-10">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -552,7 +552,7 @@ export default function App() {
                 <p className="font-bold text-xl mb-3 bg-gradient-to-r from-amber-700 to-yellow-600 bg-clip-text text-transparent">
                   About Us
                 </p>
-                 <p className="text-sm text-gray-700 leading-relaxed">
+                <p className="text-sm text-gray-700 leading-relaxed">
                   Savrdeals helps you discover the best online deals across
                   multiple stores. Majority deals you see here are affiliated — we earn some commission on those deals.
                 </p>
@@ -577,7 +577,7 @@ export default function App() {
                   >
                     @savrofficialdeals
                   </a>
-                 </p>
+                </p>
               </div>
               <div className="flex flex-col justify-between items-start md:items-end">
                 <p className="text-xs text-gray-500">
@@ -718,3 +718,4 @@ export default function App() {
       `}</style>
     </Router>
   );
+}
