@@ -113,7 +113,7 @@ export default function ModeratorDashboard({ user }) {
           const { data: reqData, error: reqError } = await supabase
             .from("requested_deals")
             .select("id, user_id, query, fulfilled, created_at")
-            .eq("fulfilled", false)
+            .or("fulfilled.is.false,fulfilled.is.null")
             .order("created_at", { ascending: false });
           if (reqError) throw reqError;
 
@@ -210,24 +210,26 @@ export default function ModeratorDashboard({ user }) {
       </div>
     );
 
-  if (!["moderator", "admin"].includes(role))
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="bg-white p-6 rounded-lg shadow text-center">
-          <AlertCircle className="h-12 w-12 text-red-600 mx-auto mb-3" />
-          <h2 className="text-xl font-bold mb-1">Access Denied</h2>
-          <p className="text-gray-600 mb-4">
-            You are not authorized to access this page.
-          </p>
-          <a
-            href="/"
-            className="px-4 py-2 bg-sky-600 text-white rounded-lg hover:bg-sky-700 transition"
-          >
-            Go Home
-          </a>
-        </div>
+     // Only block access once role is confirmed (not while it's still loading)
+if (!loading && !["moderator", "admin"].includes(role))
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="bg-white p-6 rounded-lg shadow text-center">
+        <AlertCircle className="h-12 w-12 text-red-600 mx-auto mb-3" />
+        <h2 className="text-xl font-bold mb-1">Access Denied</h2>
+        <p className="text-gray-600 mb-4">
+          You are not authorized to access this page.
+        </p>
+        <a
+          href="/"
+          className="px-4 py-2 bg-sky-600 text-white rounded-lg hover:bg-sky-700 transition"
+        >
+          Go Home
+        </a>
       </div>
-    );
+    </div>
+  );
+  
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col md:flex-row">
