@@ -252,28 +252,51 @@ export default function ModeratorDashboard({ user }) {
       if (updateError) throw updateError;
 
       // Step 2: Send notification to user
-      const { error: notifError, data: notifData } = await supabase
+      const { error: notifError } = await supabase
         .from("notifications")
         .insert({
           user_id: userId,
           type: "deal_posted",
           message: `The deal you requested for "${query}" is now live on Savrdeals! Check it out now.`,
           read: false,
-        })
-        .select();
+        });
       
       if (notifError) {
-        console.error("Notification insert error:", notifError);
-        alert(`Note: Notification failed - ${notifError.message}\nBut deal request was marked as fulfilled.`);
-      } else {
-        console.log("Notification sent successfully:", notifData);
-        alert(`Notification sent to user about "${query}"`);
+        console.error("Notification error:", notifError);
+        alert(`Notification failed: ${notifError.message}`);
       }
 
-      // Step 3: Remove from requested deals list immediately
-      setRequested((prev) => prev.filter((r) => r.id !== id));
+      // Step 3: Refetch requested deals to update the list
+      const { data: reqData, error: reqError } = await supabase
+        .from("requested_deals")
+        .select("id, user_id, query, fulfilled, created_at")
+        .eq("fulfilled", false)
+        .order("created_at", { ascending: false });
+      
+      if (reqError) throw reqError;
+
+      const userIds = reqData.map((r) => r.user_id);
+      let profilesMap = {};
+      if (userIds.length) {
+        const { data: profilesData } = await supabase
+          .from("profiles")
+          .select("user_id, username")
+          .in("user_id", userIds);
+        profilesMap = (profilesData || []).reduce((acc, p) => {
+          acc[p.user_id] = p;
+          return acc;
+        }, {});
+      }
+
+      const enrichedReq = reqData.map((r) => ({
+        ...r,
+        requester: profilesMap[r.user_id]?.username ?? "Unknown User",
+      }));
+
+      setRequested(enrichedReq);
 
       setLoading(false);
+      alert(`✅ Deal marked as fulfilled!\nNotification sent to user.\n\nNow click the "Post" tab and post: "${query}"`);
 
     } catch (e) {
       setLoading(false);
@@ -512,4 +535,4 @@ export default function ModeratorDashboard({ user }) {
       </motion.main>
     </div>
   );
-                   }
+        }
