@@ -237,13 +237,49 @@ export default function ModeratorDashboard({ user }) {
     }
   };
 
-  const postRequestedDeal = async (query, id) => {
+  const postRequestedDeal = async (query, id, userId) => {
     if (!confirm(`Post a new deal for "${query}"?`)) return;
-    navigate(`/post-deal?prefill=${encodeURIComponent(query)}`);
-    await supabase
-      .from("requested_deals")
-      .update({ fulfilled: true })
-      .eq("id", id);
+    
+    try {
+      setLoading(true);
+      
+      // Step 1: Mark as fulfilled in database
+      const { error: updateError } = await supabase
+        .from("requested_deals")
+        .update({ fulfilled: true })
+        .eq("id", id);
+      
+      if (updateError) throw updateError;
+
+      // Step 2: Send notification to user
+      const { error: notifError, data: notifData } = await supabase
+        .from("notifications")
+        .insert({
+          user_id: userId,
+          type: "deal_posted",
+          message: `The deal you requested for "${query}" is now live on Savrdeals! Check it out now.`,
+          read: false,
+        })
+        .select();
+      
+      if (notifError) {
+        console.error("Notification insert error:", notifError);
+        alert(`Note: Notification failed - ${notifError.message}\nBut deal request was marked as fulfilled.`);
+      } else {
+        console.log("Notification sent successfully:", notifData);
+        alert(`Notification sent to user about "${query}"`);
+      }
+
+      // Step 3: Remove from requested deals list immediately
+      setRequested((prev) => prev.filter((r) => r.id !== id));
+
+      setLoading(false);
+
+    } catch (e) {
+      setLoading(false);
+      alert(`Error: ${e.message}`);
+      console.error("Full error:", e);
+    }
   };
 
   // Access guards
@@ -368,7 +404,7 @@ export default function ModeratorDashboard({ user }) {
                     </p>
                   </div>
                   <button
-                    onClick={() => postRequestedDeal(req.query, req.id)}
+                    onClick={() => postRequestedDeal(req.query, req.id, req.user_id)}
                     className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg flex items-center gap-2 transition-all text-sm"
                   >
                     <Store size={16} /> Post Deal
@@ -476,4 +512,4 @@ export default function ModeratorDashboard({ user }) {
       </motion.main>
     </div>
   );
-                  }
+                   }
