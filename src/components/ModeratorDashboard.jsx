@@ -23,47 +23,80 @@ export default function ModeratorDashboard({ user: propUser }) {
   const [error, setError] = useState(null);
   const navigate = useNavigate();
 
-  // ✅ Ensure we always have current user (even if propUser is missing)
+  // --- Ensure we always have current user (works if propUser missing or out-of-date) ---
   useEffect(() => {
+    let mounted = true;
     const loadUser = async () => {
-      if (!propUser) {
-        const {
-          data: { user },
-        } = await supabase.auth.getUser();
-        setUser(user);
-      } else {
-        setUser(propUser);
+      try {
+        if (propUser) {
+          if (mounted) setUser(propUser);
+          return;
+        }
+        const { data } = await supabase.auth.getUser();
+        if (mounted) setUser(data?.user ?? null);
+      } catch (e) {
+        console.error("loadUser error:", e);
       }
     };
     loadUser();
+    return () => (mounted = false);
   }, [propUser]);
 
-  // ✅ Fetch current user's role
+  // --- Fetch role from profiles (supports either role string or is_moderator boolean) ---
   useEffect(() => {
+    let mounted = true;
     const fetchRole = async () => {
-      if (!user) return;
+      if (!user) {
+        setRole("");
+        setLoading(false);
+        return;
+      }
       setLoading(true);
+      setError(null);
       try {
+        // Try fetching role field first
         const { data, error } = await supabase
           .from("profiles")
-          .select("role")
+          .select("role, is_moderator, user_id")
           .eq("user_id", user.id)
           .single();
-        if (error) throw error;
-        setRole(data?.role || "");
+
+        if (error) {
+          // If no row or error, fallback gracefully
+          console.warn("profiles fetch error:", error.message || error);
+          if (mounted) setRole("");
+        } else {
+          let resolvedRole = "";
+          if (data?.role) {
+            resolvedRole = data.role;
+          } else if (data?.is_moderator === true) {
+            resolvedRole = "moderator";
+          }
+          if (mounted) setRole(resolvedRole);
+        }
       } catch (e) {
-        setError(e.message);
+        console.error("fetchRole unexpected:", e);
+        if (mounted) setError(e.message);
       } finally {
-        setLoading(false);
+        if (mounted) setLoading(false);
       }
     };
+
     fetchRole();
+    return () => (mounted = false);
   }, [user?.id]);
 
-  // ✅ Fetch data depending on tab
+  // --- Fetch data depending on activeTab (reports / deals / requested) ---
   useEffect(() => {
+    let mounted = true;
+    let requestedChannel = null;
+
     const fetchData = async () => {
-      if (!user || !["moderator", "admin"].includes(role)) return;
+      if (!user || !["moderator", "admin"].includes(role)) {
+        // not authorized (or role still loading) — keep empty arrays
+        return;
+      }
+
       setLoading(true);
       setError(null);
       try {
@@ -73,18 +106,21 @@ export default function ModeratorDashboard({ user: propUser }) {
             .select("id, deal_id, reported_by, reason, status, created_at")
             .neq("status", "reviewed")
             .order("created_at", { ascending: false });
-          if (reportsErr) throw reportsErr;
 
-          const reportsList = rawReports || [];
-          const dealIds = reportsList.map((r) => r.deal_id).filter(Boolean);
-          const reporterIds = reportsList.map((r) => r.reported_by).filter(Boolean);
+          if (reportsErr) throw reportsErr;
+          const reportsList = Array.isArray(rawReports) ? rawReports : [];
+
+          // batch fetch deals & reporter profiles
+          const dealIds = Array.from(new Set(reportsList.map((r) => r.deal_id).filter(Boolean)));
+          const reporterIds = Array.from(new Set(reportsList.map((r) => r.reported_by).filter(Boolean)));
 
           let dealsMap = {};
           if (dealIds.length) {
-            const { data: dealsData } = await supabase
+            const { data: dealsData, error: dealsError } = await supabase
               .from("deals")
               .select("id, title, description, image, posted_by, created_at")
               .in("id", dealIds);
+            if (dealsError) console.warn("deals fetch error:", dealsError);
             dealsMap = (dealsData || []).reduce((acc, d) => {
               acc[d.id] = d;
               return acc;
@@ -93,10 +129,11 @@ export default function ModeratorDashboard({ user: propUser }) {
 
           let profilesMap = {};
           if (reporterIds.length) {
-            const { data: profilesData } = await supabase
+            const { data: profilesData, error: profilesError } = await supabase
               .from("profiles")
               .select("user_id, username, avatar_url")
               .in("user_id", reporterIds);
+            if (profilesError) console.warn("profiles fetch error:", profilesError);
             profilesMap = (profilesData || []).reduce((acc, p) => {
               acc[p.user_id] = p;
               return acc;
@@ -109,54 +146,98 @@ export default function ModeratorDashboard({ user: propUser }) {
             reporter: profilesMap[r.reported_by] ?? null,
           }));
 
-          setReports(enriched);
+          if (mounted) setReports(enriched);
         } else if (activeTab === "deals") {
           const { data: dealsData, error: dealsError } = await supabase
             .from("deals")
             .select("id, title, description, image, posted_by, created_at")
             .order("created_at", { ascending: false });
           if (dealsError) throw dealsError;
-          setDeals(dealsData || []);
+          if (mounted) setDeals(dealsData || []);
         } else if (activeTab === "requested") {
-          // ⚠️ CHECK: change this column name if your table uses requested_by instead of user_id
+          // requested_deals may use column user_id or requested_by — try both
           const { data: reqData, error: reqError } = await supabase
             .from("requested_deals")
-            .select("id, user_id, query, fulfilled, created_at")
+            .select("id, user_id, requested_by, query, fulfilled, created_at")
             .eq("fulfilled", false)
             .order("created_at", { ascending: false });
-          if (reqError) throw reqError;
 
-          const userIds = reqData.map((r) => r.user_id);
+          if (reqError) throw reqError;
+          const realReqs = Array.isArray(reqData) ? reqData : [];
+
+          // normalize user id field (prefer user_id; fallback to requested_by)
+          const userIds = realReqs.map((r) => r.user_id ?? r.requested_by).filter(Boolean);
           let profilesMap = {};
           if (userIds.length) {
-            const { data: profilesData } = await supabase
+            const { data: profilesData, error: profilesError } = await supabase
               .from("profiles")
               .select("user_id, username")
               .in("user_id", userIds);
+            if (profilesError) console.warn("profiles fetch error:", profilesError);
             profilesMap = (profilesData || []).reduce((acc, p) => {
               acc[p.user_id] = p;
               return acc;
             }, {});
           }
 
-          const enrichedReq = reqData.map((r) => ({
-            ...r,
-            requester: profilesMap[r.user_id]?.username ?? "Unknown User",
-          }));
+          const enrichedReq = realReqs.map((r) => {
+            const requesterId = r.user_id ?? r.requested_by ?? null;
+            return {
+              ...r,
+              requester: requesterId ? (profilesMap[requesterId]?.username ?? requesterId) : "Unknown User",
+              normalized_user_id: requesterId,
+            };
+          });
 
-          setRequested(enrichedReq);
+          if (mounted) setRequested(enrichedReq);
+
+          // realtime subscription: update requested list live on insert
+          requestedChannel = supabase
+            .channel("requested_deals_realtime")
+            .on(
+              "postgres_changes",
+              {
+                event: "INSERT",
+                schema: "public",
+                table: "requested_deals",
+              },
+              (payload) => {
+                try {
+                  const newRow = payload.new;
+                  // only add pending ones (fulfilled=false)
+                  if (newRow && newRow.fulfilled === false) {
+                    const requesterId = newRow.user_id ?? newRow.requested_by ?? null;
+                    const newReq = {
+                      ...newRow,
+                      requester: requesterId || "Unknown User",
+                      normalized_user_id: requesterId,
+                    };
+                    setRequested((prev) => [newReq, ...prev]);
+                  }
+                } catch (err) {
+                  console.error("requested realtime handler error:", err);
+                }
+              }
+            )
+            .subscribe();
         }
       } catch (e) {
-        setError(e.message);
+        console.error("fetchData error:", e);
+        if (mounted) setError(e.message || String(e));
       } finally {
-        setLoading(false);
+        if (mounted) setLoading(false);
       }
     };
 
     fetchData();
+
+    return () => {
+      if (requestedChannel) supabase.removeChannel(requestedChannel);
+      // cleanup
+    };
   }, [activeTab, user?.id, role]);
 
-  // Actions
+  // --- Actions ---
   const deleteDeal = async (id) => {
     if (!confirm("Delete this deal? This cannot be undone.")) return;
     try {
@@ -182,13 +263,24 @@ export default function ModeratorDashboard({ user: propUser }) {
     }
   };
 
+  // Post deal for requested query — mark request fulfilled after confirmation
   const postRequestedDeal = async (query, id) => {
     if (!confirm(`Post a new deal for "${query}"?`)) return;
-    navigate(`/post-deal?prefill=${encodeURIComponent(query)}`);
-    await supabase.from("requested_deals").update({ fulfilled: true }).eq("id", id);
+    try {
+      // navigate to post-deal with prefill
+      navigate(`/post-deal?prefill=${encodeURIComponent(query)}`);
+
+      // mark the request fulfilled in background (don't block navigation)
+      const { error } = await supabase.from("requested_deals").update({ fulfilled: true }).eq("id", id);
+      if (error) console.warn("Failed to update requested_deals.fulfilled:", error);
+      // remove from UI
+      setRequested((p) => p.filter((r) => r.id !== id));
+    } catch (e) {
+      console.error("postRequestedDeal error:", e);
+    }
   };
 
-  // Guards
+  // --- Guards / Loading UI ---
   if (loading)
     return (
       <div className="flex flex-col items-center justify-center h-screen text-gray-600 bg-gray-50">
@@ -220,9 +312,7 @@ export default function ModeratorDashboard({ user: propUser }) {
         <div className="bg-white p-6 rounded-lg shadow text-center">
           <AlertCircle className="h-12 w-12 text-red-600 mx-auto mb-3" />
           <h2 className="text-xl font-bold mb-1">Access Denied</h2>
-          <p className="text-gray-600 mb-4">
-            You are not authorized to access this page.
-          </p>
+          <p className="text-gray-600 mb-4">You are not authorized to access this page.</p>
           <a
             href="/"
             className="px-4 py-2 bg-sky-600 text-white rounded-lg hover:bg-sky-700 transition"
@@ -233,6 +323,7 @@ export default function ModeratorDashboard({ user: propUser }) {
       </div>
     );
 
+  // --- UI ---
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col md:flex-row">
       {/* Sidebar */}
@@ -296,9 +387,7 @@ export default function ModeratorDashboard({ user: propUser }) {
                   className="bg-white border rounded-lg shadow p-4 flex justify-between items-center"
                 >
                   <div>
-                    <h3 className="font-semibold text-lg text-sky-700">
-                      {req.query}
-                    </h3>
+                    <h3 className="font-semibold text-lg text-sky-700">{req.query}</h3>
                     <p className="text-sm text-gray-600">
                       Requested by{" "}
                       <span className="font-medium">{req.requester}</span>
@@ -326,36 +415,20 @@ export default function ModeratorDashboard({ user: propUser }) {
               <p className="text-gray-500">No reports found 🎉</p>
             ) : (
               reports.map((report) => (
-                <div
-                  key={report.id}
-                  className="bg-white rounded-lg shadow p-4 border"
-                >
+                <div key={report.id} className="bg-white rounded-lg shadow p-4 border">
                   <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                     <div className="flex-1">
-                      <h3 className="font-semibold text-lg">
-                        {report.deal?.title ?? "Unknown Deal"}
-                      </h3>
+                      <h3 className="font-semibold text-lg">{report.deal?.title ?? "Unknown Deal"}</h3>
                       <p className="text-gray-600 text-sm mb-2">
-                        Reported by:{" "}
-                        <span className="font-medium">
-                          {report.reporter?.username ?? "Unknown"}
-                        </span>
+                        Reported by: <span className="font-medium">{report.reporter?.username ?? "Unknown"}</span>
                       </p>
-                      <p className="text-gray-500 text-sm italic">
-                        Reason: {report.reason ?? "No reason provided"}
-                      </p>
+                      <p className="text-gray-500 text-sm italic">Reason: {report.reason ?? "No reason provided"}</p>
                     </div>
                     <div className="flex gap-2">
-                      <button
-                        onClick={() => deleteDeal(report.deal_id)}
-                        className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg flex items-center gap-2 text-sm"
-                      >
+                      <button onClick={() => deleteDeal(report.deal_id)} className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg flex items-center gap-2 text-sm">
                         <Trash2 size={16} /> Delete
                       </button>
-                      <button
-                        onClick={() => markReviewed(report.id)}
-                        className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg flex items-center gap-2 text-sm"
-                      >
+                      <button onClick={() => markReviewed(report.id)} className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg flex items-center gap-2 text-sm">
                         <CheckCircle2 size={16} /> Reviewed
                       </button>
                     </div>
@@ -373,39 +446,16 @@ export default function ModeratorDashboard({ user: propUser }) {
               <p className="text-gray-500">No deals found</p>
             ) : (
               deals.map((deal) => (
-                <div
-                  key={deal.id}
-                  className="bg-white rounded-lg shadow overflow-hidden border"
-                >
-                  {deal.image && (
-                    <img
-                      src={deal.image}
-                      alt={deal.title}
-                      className="h-40 w-full object-cover"
-                    />
-                  )}
+                <div key={deal.id} className="bg-white rounded-lg shadow overflow-hidden border">
+                  {deal.image && <img src={deal.image} alt={deal.title} className="h-40 w-full object-cover" />}
                   <div className="p-4">
                     <h3 className="font-semibold">{deal.title}</h3>
-                    <p className="text-sm text-gray-500 mb-2">
-                      {deal.description
-                        ? `${deal.description.slice(0, 100)}...`
-                        : ""}
-                    </p>
+                    <p className="text-sm text-gray-500 mb-2">{deal.description ? `${deal.description.slice(0, 100)}...` : ""}</p>
                     <div className="flex gap-2">
-                      <button
-                        onClick={() => deleteDeal(deal.id)}
-                        className="px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white text-sm rounded-lg flex items-center gap-1 transition-all"
-                      >
+                      <button onClick={() => deleteDeal(deal.id)} className="px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white text-sm rounded-lg flex items-center gap-1 transition-all">
                         <Trash2 size={14} /> Delete
                       </button>
-                      <a
-                        href={`/deal/${deal.id}`}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="px-3 py-1.5 bg-gray-100 rounded-lg text-sm hover:bg-gray-200"
-                      >
-                        View
-                      </a>
+                      <a href={`/deal/${deal.id}`} target="_blank" rel="noreferrer" className="px-3 py-1.5 bg-gray-100 rounded-lg text-sm hover:bg-gray-200">View</a>
                     </div>
                   </div>
                 </div>
@@ -416,4 +466,4 @@ export default function ModeratorDashboard({ user: propUser }) {
       </motion.main>
     </div>
   );
-                        }
+        }
