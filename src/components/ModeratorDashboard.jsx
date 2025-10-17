@@ -258,12 +258,12 @@ export default function ModeratorDashboard({ user }) {
           user_id: userId,
           type: "deal_posted",
           message: `The deal you requested for "${query}" is now live on Savrdeals! Check it out now.`,
+          link: null,
           read: false,
         });
       
       if (notifError) {
         console.error("Notification error:", notifError);
-        alert(`Notification failed: ${notifError.message}`);
       }
 
       // Step 3: Refetch requested deals to update the list
@@ -535,4 +535,4 @@ export default function ModeratorDashboard({ user }) {
       </motion.main>
     </div>
   );
-        }
+                        } 
