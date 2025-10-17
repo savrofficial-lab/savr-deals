@@ -400,25 +400,22 @@ export default function App() {
     </span>
 
     <input
-      value={searchRaw}
-      onChange={(e) => setSearchRaw(e.target.value)}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter') {
-          e.preventDefault();
-          handleSearchSubmit();
-        }
-      }}
-      placeholder="Search deals, phones, brands..."
-      className="flex-1 pl-12 pr-28 py-2.5 rounded-2xl border-2 border-amber-200/50 bg-white/90 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all shadow-sm hover:shadow-md"
-    />
+  type="text"
+  value={searchRaw}
+  onChange={(e) => setSearchRaw(e.target.value)}
+  onKeyDown={(e) => e.key === "Enter" && handleSearchSubmit()}
+  placeholder="Search deals..."
+  className="border rounded px-3 py-1 w-full"
+/>
+    
 
     {/* Search button (right inside the input area) */}
     <button
-      onClick={handleSearchSubmit}
-      className="absolute right-2 top-1/2 -translate-y-1/2 px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-sm shadow"
-    >
-      Search
-    </button>
+  onClick={handleSearchSubmit}
+  className="bg-sky-500 text-white px-3 py-1 rounded"
+>
+  Search
+</button>
   </div>
                 {/* NOTIFICATION ICON */}
                 <Link
