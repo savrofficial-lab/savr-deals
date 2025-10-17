@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "../supabaseClient";
-import { ArrowLeft, Heart, Send, MessageSquare } from "lucide-react";
+import { ArrowLeft, Heart, Send, MessageSquare, MoreVertical, Trash2 } from "lucide-react";
 
 export default function ThreadDetail() {
   const { id } = useParams();
@@ -10,6 +10,7 @@ export default function ThreadDetail() {
   const [replies, setReplies] = useState([]);
   const [replyText, setReplyText] = useState("");
   const [currentUserId, setCurrentUserId] = useState(null);
+  const [openMenuId, setOpenMenuId] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -68,6 +69,30 @@ export default function ThreadDetail() {
     } else {
       setReplyText("");
       fetchReplies();
+    }
+  }
+
+  async function handleDeleteReply(replyId, replyBy) {
+    if (currentUserId !== replyBy) {
+      alert("You can only delete your own replies!");
+      return;
+    }
+
+    if (!confirm("Are you sure you want to delete this reply? This action cannot be undone.")) {
+      return;
+    }
+
+    const { error } = await supabase
+      .from("forum_replies")
+      .delete()
+      .eq("id", replyId);
+
+    if (error) {
+      console.error("Error deleting reply:", error);
+      alert("Failed to delete reply. Please try again.");
+    } else {
+      fetchReplies();
+      setOpenMenuId(null);
     }
   }
 
@@ -286,6 +311,36 @@ export default function ThreadDetail() {
                         </div>
                         <p className="text-sm sm:text-base text-amber-800 leading-relaxed whitespace-pre-wrap">{r.content}</p>
                       </div>
+
+                      {/* Three-dot menu for reply author */}
+                      {currentUserId === r.reply_by && (
+                        <div className="relative flex-shrink-0">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setOpenMenuId(openMenuId === r.id ? null : r.id);
+                            }}
+                            className="p-1.5 sm:p-2 hover:bg-amber-100 rounded-lg transition-colors duration-200"
+                          >
+                            <MoreVertical className="w-4 h-4 sm:w-5 sm:h-5 text-amber-700" />
+                          </button>
+                          
+                          {openMenuId === r.id && (
+                            <div className="absolute right-0 top-full mt-2 z-10 bg-white rounded-xl shadow-xl border border-amber-200 overflow-hidden min-w-[140px]">
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDeleteReply(r.id, r.reply_by);
+                                }}
+                                className="w-full px-4 py-2.5 flex items-center gap-2.5 hover:bg-red-50 transition-colors duration-200 text-red-600 font-semibold text-sm"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                                <span>Delete</span>
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </div>
                   </div>
                 ))}
