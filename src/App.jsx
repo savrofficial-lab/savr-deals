@@ -210,11 +210,6 @@ export default function App() {
     };
   }, [user?.id]);
 
-  // ---------------- SEARCH ----------------
-  useEffect(() => {
-    const t = setTimeout(() => setSearch(searchRaw.trim()), 300);
-    return () => clearTimeout(t);
-  }, [searchRaw]);
 
   // ---------------- LOGIN CHECK ----------------
   function requireLoginFor(tabName) {
