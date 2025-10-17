@@ -221,47 +221,47 @@ export default function App() {
     }
   }
    // ---------------- REQUESTED DEAL SUBMIT (called when user clicks Search or presses Enter) ----------------
-         async function handleSearchSubmit() {
-  const q = searchRaw.trim();
-  if (!q) {
-    alert("❌ Please type something before searching");
-    return;
-  }
-
-  setSearch(q);
-
-  try {
-    const { data: { user }, error: userErr } = await supabase.auth.getUser();
-    if (userErr) throw userErr;
-    if (!user) {
-      alert("⚠️ You must be logged in to request a deal");
+  async function handleSearchSubmit() {
+    const q = searchRaw.trim();
+    if (!q) {
+      alert("❌ Please type something before searching");
       return;
     }
 
-    // Check if already requested
-    const { data: existing, error: checkErr } = await supabase
-      .from("requested_deals")
-      .select("id")
-      .eq("query", q)
-      .eq("fulfilled", false)
-      .limit(1);
+    setSearch(q);
 
-    if (checkErr) throw checkErr;
+    try {
+      const { data: { user }, error: userErr } = await supabase.auth.getUser();
+      if (userErr) throw userErr;
+      if (!user) {
+        alert("⚠️ You must be logged in to request a deal");
+        return;
+      }
 
-    if (!existing || existing.length === 0) {
-      const { error: insertErr } = await supabase
+      // Check if already requested
+      const { data: existing, error: checkErr } = await supabase
         .from("requested_deals")
-        .insert([{ user_id: user.id, query: q, fulfilled: false }]);
+        .select("id")
+        .eq("query", q)
+        .eq("fulfilled", false)
+        .limit(1);
 
-      if (insertErr) throw insertErr;
-      alert("✅ Request successfully added for: " + q);
-    } else {
-      alert("ℹ️ Request already exists for: " + q);
+      if (checkErr) throw checkErr;
+
+      if (!existing || existing.length === 0) {
+        const { error: insertErr } = await supabase
+          .from("requested_deals")
+          .insert([{ user_id: user.id, query: q, fulfilled: false }]);
+
+        if (insertErr) throw insertErr;
+        alert("✅ Request successfully added for: " + q);
+      } else {
+        alert("ℹ️ Request already exists for: " + q);
+      }
+    } catch (err) {
+      alert("❌ Error: " + err.message);
     }
-  } catch (err) {
-    alert("❌ Error: " + err.message);
   }
-         }
 
   // ---------------- OUTSIDE CLICK ----------------
   useEffect(() => {
@@ -376,7 +376,8 @@ export default function App() {
         {/* HEADER */}
         <header className="backdrop-blur-xl bg-white/80 sticky top-0 z-50 shadow-lg border-b border-amber-100/50">
           <div className="max-w-5xl mx-auto px-4 py-3">
-            <div className="flex items-center gap-4">
+            {/* Logo and Notification Row */}
+            <div className="flex items-center justify-between mb-3">
               <Link to="/" className="flex-shrink-0">
                 <motion.div
                   whileHover={{ scale: 1.05 }}
@@ -385,52 +386,47 @@ export default function App() {
                   <img
                     src="/savrdeals-logo.png"
                     alt="Savrdeals"
-                    className="h-14 w-auto object-contain drop-shadow-md"
+                    className="h-12 sm:h-14 w-auto object-contain drop-shadow-md"
                   />
                 </motion.div>
               </Link>
 
-              {/* SEARCH + NOTIFICATION */}
-              <div className="relative flex items-center gap-3 flex-1">
-      
-                 {/* SEARCH BOX (with submit button) */}
-  <div className="relative flex-1 group flex items-center">
-    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-amber-600 pointer-events-none transition-all group-focus-within:scale-110">
-      <IconSearch />
-    </span>
+              {/* NOTIFICATION ICON */}
+              <Link
+                to="/notifications"
+                className="flex items-center justify-center relative p-2 rounded-full hover:bg-amber-50 transition-all"
+                aria-label="Notifications"
+              >
+                <Bell className="w-6 h-6 text-amber-600 hover:text-amber-700 transition-transform hover:scale-110" />
+                {unreadCount > 0 && (
+                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-bold shadow-lg">
+                    {unreadCount > 9 ? '9+' : unreadCount}
+                  </span>
+                )}
+              </Link>
+            </div>
 
-    <input
-  type="text"
-  value={searchRaw}
-  onChange={(e) => setSearchRaw(e.target.value)}
-  onKeyDown={(e) => e.key === "Enter" && handleSearchSubmit()}
-  placeholder="Search deals..."
-  className="border rounded px-3 py-1 w-full"
-/>
-    
+            {/* SEARCH BAR - Full Width Below */}
+            <div className="relative flex items-center gap-2 group">
+              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-amber-600 pointer-events-none transition-all group-focus-within:scale-110 z-10">
+                <IconSearch />
+              </span>
 
-    {/* Search button (right inside the input area) */}
-    <button
-  onClick={handleSearchSubmit}
-  className="bg-sky-500 text-white px-3 py-1 rounded"
->
-  Search
-</button>
-  </div>
-                {/* NOTIFICATION ICON */}
-                <Link
-                  to="/notifications"
-                  className="flex items-center justify-center relative p-2 rounded-full hover:bg-amber-50 transition-all"
-                  aria-label="Notifications"
-                >
-                  <Bell className="w-6 h-6 text-amber-600 hover:text-amber-700 transition-transform hover:scale-110" />
-                  {unreadCount > 0 && (
-                    <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-bold shadow-lg">
-                      {unreadCount > 9 ? '9+' : unreadCount}
-                    </span>
-                  )}
-                </Link>
-              </div>
+              <input
+                type="text"
+                value={searchRaw}
+                onChange={(e) => setSearchRaw(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleSearchSubmit()}
+                placeholder="Search deals..."
+                className="w-full pl-12 pr-3 py-3 rounded-xl border-2 border-amber-200 focus:border-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-200 bg-white/90 backdrop-blur-sm text-gray-700 placeholder-gray-400 transition-all shadow-sm"
+              />
+
+              <button
+                onClick={handleSearchSubmit}
+                className="bg-gradient-to-r from-sky-500 to-blue-500 hover:from-sky-600 hover:to-blue-600 text-white px-6 py-3 rounded-xl font-semibold shadow-md hover:shadow-lg transition-all whitespace-nowrap"
+              >
+                Search
+              </button>
             </div>
           </div>
 
@@ -544,7 +540,7 @@ export default function App() {
         </main>
 
         {/* FOOTER */}
-        <div className="mt-12 pb-24 px-4 relative z-10">
+                <div className="mt-12 pb-24 px-4 relative z-10">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -556,7 +552,7 @@ export default function App() {
                 <p className="font-bold text-xl mb-3 bg-gradient-to-r from-amber-700 to-yellow-600 bg-clip-text text-transparent">
                   About Us
                 </p>
-                <p className="text-sm text-gray-700 leading-relaxed">
+                 <p className="text-sm text-gray-700 leading-relaxed">
                   Savrdeals helps you discover the best online deals across
                   multiple stores. Majority deals you see here are affiliated — we earn some commission on those deals.
                 </p>
@@ -722,5 +718,3 @@ export default function App() {
       `}</style>
     </Router>
   );
-}
-              
