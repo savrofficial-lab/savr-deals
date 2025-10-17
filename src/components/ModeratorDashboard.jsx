@@ -241,6 +241,8 @@ export default function ModeratorDashboard({ user }) {
     if (!confirm(`Post a new deal for "${query}"?`)) return;
     
     try {
+      setLoading(true);
+      
       // Step 1: Mark as fulfilled in database
       const { error: updateError } = await supabase
         .from("requested_deals")
@@ -250,7 +252,7 @@ export default function ModeratorDashboard({ user }) {
       if (updateError) throw updateError;
 
       // Step 2: Send notification to user
-      const { error: notifError } = await supabase
+      await supabase
         .from("notifications")
         .insert({
           user_id: userId,
@@ -258,18 +260,16 @@ export default function ModeratorDashboard({ user }) {
           message: `The deal you requested for "${query}" is now live on Savrdeals! Check it out now.`,
           read: false,
         });
-      
-      if (notifError) console.warn("Notification error:", notifError.message);
 
-      // Step 3: Remove from requested deals list (both local state and real-time will handle this)
+      // Step 3: Remove from requested deals list
       setRequested((prev) => prev.filter((r) => r.id !== id));
 
-      // Step 4: Navigate to post deal page with prefilled query
-      alert(`✅ Deal marked as fulfilled! Redirecting to post page...`);
-      navigate(`/post-deal?prefill=${encodeURIComponent(query)}`);
+      setLoading(false);
+      alert(`✅ Marked as fulfilled! Remember the deal: "${query}"`);
+
     } catch (e) {
-      alert(`❌ Error: ${e.message}`);
-      console.error("Error posting deal:", e);
+      setLoading(false);
+      alert(`Error: ${e.message}`);
     }
   };
 
