@@ -237,40 +237,13 @@ export default function ModeratorDashboard({ user }) {
     }
   };
 
-  const postRequestedDeal = async (query, id, userId) => {
+  const postRequestedDeal = async (query, id) => {
     if (!confirm(`Post a new deal for "${query}"?`)) return;
-    
-    try {
-      setLoading(true);
-      
-      // Step 1: Mark as fulfilled in database
-      const { error: updateError } = await supabase
-        .from("requested_deals")
-        .update({ fulfilled: true })
-        .eq("id", id);
-      
-      if (updateError) throw updateError;
-
-      // Step 2: Send notification to user
-      await supabase
-        .from("notifications")
-        .insert({
-          user_id: userId,
-          type: "deal_posted",
-          message: `The deal you requested for "${query}" is now live on Savrdeals! Check it out now.`,
-          read: false,
-        });
-
-      // Step 3: Remove from requested deals list
-      setRequested((prev) => prev.filter((r) => r.id !== id));
-
-      setLoading(false);
-      alert(`✅ Marked as fulfilled! Remember the deal: "${query}"`);
-
-    } catch (e) {
-      setLoading(false);
-      alert(`Error: ${e.message}`);
-    }
+    navigate(`/post-deal?prefill=${encodeURIComponent(query)}`);
+    await supabase
+      .from("requested_deals")
+      .update({ fulfilled: true })
+      .eq("id", id);
   };
 
   // Access guards
@@ -395,7 +368,7 @@ export default function ModeratorDashboard({ user }) {
                     </p>
                   </div>
                   <button
-                    onClick={() => postRequestedDeal(req.query, req.id, req.user_id)}
+                    onClick={() => postRequestedDeal(req.query, req.id)}
                     className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg flex items-center gap-2 transition-all text-sm"
                   >
                     <Store size={16} /> Post Deal
@@ -503,4 +476,4 @@ export default function ModeratorDashboard({ user }) {
       </motion.main>
     </div>
   );
-}
+                  }
