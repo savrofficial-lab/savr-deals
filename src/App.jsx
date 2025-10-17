@@ -221,24 +221,24 @@ export default function App() {
     }
   }
    // ---------------- REQUESTED DEAL SUBMIT (called when user clicks Search or presses Enter) ----------------
-       // inside App.jsx (anywhere above return)
-async function handleSearchSubmit() {
+         async function handleSearchSubmit() {
   const q = searchRaw.trim();
-  if (!q) return;
+  if (!q) {
+    alert("❌ Please type something before searching");
+    return;
+  }
 
-  console.log("Submitting search for:", q);
-  setSearch(q); // this triggers DealsGrid query
+  setSearch(q);
 
   try {
-    // get current user
     const { data: { user }, error: userErr } = await supabase.auth.getUser();
     if (userErr) throw userErr;
     if (!user) {
-      console.log("⚠️  No user logged in, skipping insert");
+      alert("⚠️ You must be logged in to request a deal");
       return;
     }
 
-    // check if already requested
+    // Check if already requested
     const { data: existing, error: checkErr } = await supabase
       .from("requested_deals")
       .select("id")
@@ -254,14 +254,14 @@ async function handleSearchSubmit() {
         .insert([{ user_id: user.id, query: q, fulfilled: false }]);
 
       if (insertErr) throw insertErr;
-      console.log("✅  Request inserted successfully for:", q);
+      alert("✅ Request successfully added for: " + q);
     } else {
-      console.log("ℹ️  Request already exists for:", q);
+      alert("ℹ️ Request already exists for: " + q);
     }
   } catch (err) {
-    console.error("❌  handleSearchSubmit failed:", err);
+    alert("❌ Error: " + err.message);
   }
-}
+         }
 
   // ---------------- OUTSIDE CLICK ----------------
   useEffect(() => {
