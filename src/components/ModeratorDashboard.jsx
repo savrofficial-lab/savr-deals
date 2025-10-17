@@ -266,37 +266,19 @@ export default function ModeratorDashboard({ user }) {
         console.error("Notification error:", notifError);
       }
 
-      // Step 3: Refetch requested deals to update the list
-      const { data: reqData, error: reqError } = await supabase
+      // Step 3: Delete the request from the database permanently
+      const { error: deleteError } = await supabase
         .from("requested_deals")
-        .select("id, user_id, query, fulfilled, created_at")
-        .eq("fulfilled", false)
-        .order("created_at", { ascending: false });
+        .delete()
+        .eq("id", id);
       
-      if (reqError) throw reqError;
+      if (deleteError) throw deleteError;
 
-      const userIds = reqData.map((r) => r.user_id);
-      let profilesMap = {};
-      if (userIds.length) {
-        const { data: profilesData } = await supabase
-          .from("profiles")
-          .select("user_id, username")
-          .in("user_id", userIds);
-        profilesMap = (profilesData || []).reduce((acc, p) => {
-          acc[p.user_id] = p;
-          return acc;
-        }, {});
-      }
-
-      const enrichedReq = reqData.map((r) => ({
-        ...r,
-        requester: profilesMap[r.user_id]?.username ?? "Unknown User",
-      }));
-
-      setRequested(enrichedReq);
+      // Step 4: Remove from requested deals list immediately
+      setRequested((prev) => prev.filter((r) => r.id !== id));
 
       setLoading(false);
-      alert(`✅ Deal marked as fulfilled!\nNotification sent to user.\n\nNow click the "Post" tab and post: "${query}"`);
+      alert(`✅ Done! Deal deleted from requests.\nNotification sent to user.\n\nNow click the "Post" tab and post: "${query}"`);
 
     } catch (e) {
       setLoading(false);
@@ -535,4 +517,4 @@ export default function ModeratorDashboard({ user }) {
       </motion.main>
     </div>
   );
-                        } 
+        }
