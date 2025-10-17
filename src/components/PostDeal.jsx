@@ -1,9 +1,11 @@
 // src/components/PostDeal.jsx
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { supabase } from "../supabaseClient";
 import imageCompression from "browser-image-compression";
 
 export default function PostDeal({ onPosted }) {
+  const [searchParams] = useSearchParams();
   const [form, setForm] = useState({
     title: "",
     description: "",
@@ -16,6 +18,18 @@ export default function PostDeal({ onPosted }) {
   const [loading, setLoading] = useState(false);
   const [focusedField, setFocusedField] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
+
+  // Read prefill from query params on mount
+  useEffect(() => {
+    const prefill = searchParams.get("prefill");
+    if (prefill) {
+      setForm((prev) => ({
+        ...prev,
+        title: prefill,
+      }));
+      console.log("Form prefilled with:", prefill);
+    }
+  }, [searchParams]);
 
   async function handleImageUpload(file) {
     try {
@@ -41,7 +55,7 @@ export default function PostDeal({ onPosted }) {
 
       return publicUrlData.publicUrl;
     } catch (err) {
-      console.error("❌ Image upload error:", err);
+      console.error("Image upload error:", err);
       alert("Failed to upload image.");
       return null;
     }
@@ -51,7 +65,6 @@ export default function PostDeal({ onPosted }) {
     const file = e.target.files[0];
     if (file) {
       setImageFile(file);
-      // Create preview
       const reader = new FileReader();
       reader.onloadend = () => {
         setImagePreview(reader.result);
@@ -94,10 +107,10 @@ export default function PostDeal({ onPosted }) {
 
     setLoading(false);
     if (error) {
-      console.error("❌ Insert error:", error);
+      console.error("Insert error:", error);
       alert("Could not post: " + error.message);
     } else {
-      alert("✅ Deal posted successfully!");
+      alert("Deal posted successfully!");
       setForm({
         title: "",
         description: "",
@@ -124,7 +137,6 @@ export default function PostDeal({ onPosted }) {
   return (
     <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 py-8 px-4">
       <div className="max-w-3xl mx-auto">
-        {/* Header Section */}
         <div className="text-center mb-8">
           <div className="inline-block mb-4">
             <div className="bg-gradient-to-r from-amber-600 to-orange-600 text-white px-6 py-2 rounded-full text-sm font-semibold shadow-lg">
@@ -137,13 +149,10 @@ export default function PostDeal({ onPosted }) {
           <p className="text-gray-600 text-lg">Help the community save money on great products</p>
         </div>
 
-        {/* Main Form Card */}
         <div className="bg-white rounded-3xl shadow-2xl overflow-hidden border border-amber-100">
-          {/* Decorative Top Bar */}
           <div className="h-2 bg-gradient-to-r from-amber-500 via-orange-500 to-amber-500"></div>
           
           <form onSubmit={handleSubmit} className="p-8 space-y-6">
-            {/* Title Field */}
             <div className="relative">
               <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
                 <span className="bg-gradient-to-r from-amber-600 to-orange-600 text-white w-6 h-6 rounded-full flex items-center justify-center text-xs mr-2">1</span>
@@ -164,7 +173,6 @@ export default function PostDeal({ onPosted }) {
               />
             </div>
 
-            {/* Product Link Field */}
             <div className="relative">
               <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
                 <span className="bg-gradient-to-r from-amber-600 to-orange-600 text-white w-6 h-6 rounded-full flex items-center justify-center text-xs mr-2">2</span>
@@ -185,7 +193,6 @@ export default function PostDeal({ onPosted }) {
               />
             </div>
 
-            {/* Price Fields */}
             <div className="grid grid-cols-2 gap-4">
               <div className="relative">
                 <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
@@ -234,7 +241,6 @@ export default function PostDeal({ onPosted }) {
               </div>
             </div>
 
-            {/* Discount Badge Preview */}
             {discount > 0 && (
               <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl p-4 flex items-center justify-center">
                 <div className="flex items-center gap-2">
@@ -247,7 +253,6 @@ export default function PostDeal({ onPosted }) {
               </div>
             )}
 
-            {/* Image Upload Field */}
             <div className="relative">
               <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
                 <span className="bg-gradient-to-r from-purple-600 to-pink-600 text-white w-6 h-6 rounded-full flex items-center justify-center text-xs mr-2">📸</span>
@@ -289,7 +294,6 @@ export default function PostDeal({ onPosted }) {
               </div>
             </div>
 
-            {/* Category Field */}
             <div className="relative">
               <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
                 <span className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white w-6 h-6 rounded-full flex items-center justify-center text-xs mr-2">🏷️</span>
@@ -309,7 +313,6 @@ export default function PostDeal({ onPosted }) {
               />
             </div>
 
-            {/* Description Field */}
             <div className="relative">
               <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
                 <span className="bg-gradient-to-r from-teal-600 to-cyan-600 text-white w-6 h-6 rounded-full flex items-center justify-center text-xs mr-2">✍️</span>
@@ -330,7 +333,6 @@ export default function PostDeal({ onPosted }) {
               />
             </div>
 
-            {/* Action Buttons */}
             <div className="flex gap-4 pt-4">
               <button
                 type="submit"
@@ -368,7 +370,6 @@ export default function PostDeal({ onPosted }) {
           </form>
         </div>
 
-        {/* Info Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8">
           <div className="bg-white rounded-2xl p-5 shadow-lg border border-amber-100 text-center transform hover:scale-105 transition-transform duration-300">
             <div className="text-4xl mb-2">💰</div>
@@ -391,4 +392,4 @@ export default function PostDeal({ onPosted }) {
       </div>
     </div>
   );
-                        }
+}
