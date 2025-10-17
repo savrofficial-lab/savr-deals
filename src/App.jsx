@@ -18,7 +18,7 @@ import ModeratorDashboard from "./components/ModeratorDashboard";
 import Notifications from "./components/Notifications";
 import NotificationDetail from "./components/NotificationDetail";
 import DealRemoved from "./components/DealRemoved";
-
+import RewardsPage from './components/RewardsPage';
 /* ---------------------------------------------------------------------------
    Small inline icons
 --------------------------------------------------------------------------- */
@@ -536,6 +536,7 @@ export default function App() {
             <Route path="/notifications" element={<Notifications user={user} />} />
             <Route path="/notification/:reportId" element={<NotificationDetail user={user} />} />
             <Route path="/deal-removed" element={<DealRemoved />} />
+            <Route path="/rewards" element={<RewardsPage />} /> 
           </Routes>
         </main>
 
