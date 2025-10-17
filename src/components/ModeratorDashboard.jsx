@@ -237,13 +237,40 @@ export default function ModeratorDashboard({ user }) {
     }
   };
 
-  const postRequestedDeal = async (query, id) => {
+  const postRequestedDeal = async (query, id, userId) => {
     if (!confirm(`Post a new deal for "${query}"?`)) return;
-    navigate(`/post-deal?prefill=${encodeURIComponent(query)}`);
-    await supabase
-      .from("requested_deals")
-      .update({ fulfilled: true })
-      .eq("id", id);
+    
+    try {
+      // Step 1: Mark as fulfilled in database
+      const { error: updateError } = await supabase
+        .from("requested_deals")
+        .update({ fulfilled: true })
+        .eq("id", id);
+      
+      if (updateError) throw updateError;
+
+      // Step 2: Send notification to user
+      const { error: notifError } = await supabase
+        .from("notifications")
+        .insert({
+          user_id: userId,
+          type: "deal_posted",
+          message: `The deal you requested for "${query}" is now live on Savrdeals! Check it out now.`,
+          read: false,
+        });
+      
+      if (notifError) console.warn("Notification error:", notifError.message);
+
+      // Step 3: Remove from requested deals list (both local state and real-time will handle this)
+      setRequested((prev) => prev.filter((r) => r.id !== id));
+
+      // Step 4: Navigate to post deal page with prefilled query
+      alert(`✅ Deal marked as fulfilled! Redirecting to post page...`);
+      navigate(`/post-deal?prefill=${encodeURIComponent(query)}`);
+    } catch (e) {
+      alert(`❌ Error: ${e.message}`);
+      console.error("Error posting deal:", e);
+    }
   };
 
   // Access guards
@@ -368,7 +395,7 @@ export default function ModeratorDashboard({ user }) {
                     </p>
                   </div>
                   <button
-                    onClick={() => postRequestedDeal(req.query, req.id)}
+                    onClick={() => postRequestedDeal(req.query, req.id, req.user_id)}
                     className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg flex items-center gap-2 transition-all text-sm"
                   >
                     <Store size={16} /> Post Deal
@@ -476,4 +503,4 @@ export default function ModeratorDashboard({ user }) {
       </motion.main>
     </div>
   );
-                        }
+}
