@@ -221,52 +221,47 @@ export default function App() {
     }
   }
    // ---------------- REQUESTED DEAL SUBMIT (called when user clicks Search or presses Enter) ----------------
-  async function handleSearchSubmit() {
-    const q = searchRaw?.trim();
-    if (!q) return;
+       // inside App.jsx (anywhere above return)
+async function handleSearchSubmit() {
+  const q = searchRaw.trim();
+  if (!q) return;
 
-    // set search to actually perform query in DealsGrid
-    setSearch(q);
+  console.log("Submitting search for:", q);
+  setSearch(q); // this triggers DealsGrid query
 
-    try {
-      // get logged in user
-      const { data: { user: currentUser } } = await supabase.auth.getUser();
-
-      if (currentUser) {
-        // insert request — prevent duplicates within last X hours? (optional)
-        // we attempt to insert only if a matching unfulfilled request doesn't already exist
-        const { data: exists, error: existsErr } = await supabase
-          .from('requested_deals')
-          .select('id')
-          .eq('query', q)
-          .eq('fulfilled', false)
-          .limit(1);
-
-        if (!existsErr && exists && exists.length > 0) {
-          // Already requested — no need to insert again
-        } else {
-          const { error: insertErr } = await supabase.from('requested_deals').insert([
-            {
-              user_id: currentUser.id,
-              query: q,
-              fulfilled: false,
-            },
-          ]);
-          if (insertErr) {
-            console.error('Failed to insert requested_deal:', insertErr);
-          } else {
-            // optional: show a quick toast/message — you can add a state for user feedback if you want
-            console.log('Requested deal inserted for:', q);
-          }
-        }
-      } else {
-        // not logged in — still setSearch so DealsGrid will search (or show message)
-        console.log('User not logged in - search will still run but request not saved.');
-      }
-    } catch (err) {
-      console.error('Error handling search submit:', err);
+  try {
+    // get current user
+    const { data: { user }, error: userErr } = await supabase.auth.getUser();
+    if (userErr) throw userErr;
+    if (!user) {
+      console.log("⚠️  No user logged in, skipping insert");
+      return;
     }
+
+    // check if already requested
+    const { data: existing, error: checkErr } = await supabase
+      .from("requested_deals")
+      .select("id")
+      .eq("query", q)
+      .eq("fulfilled", false)
+      .limit(1);
+
+    if (checkErr) throw checkErr;
+
+    if (!existing || existing.length === 0) {
+      const { error: insertErr } = await supabase
+        .from("requested_deals")
+        .insert([{ user_id: user.id, query: q, fulfilled: false }]);
+
+      if (insertErr) throw insertErr;
+      console.log("✅  Request inserted successfully for:", q);
+    } else {
+      console.log("ℹ️  Request already exists for:", q);
+    }
+  } catch (err) {
+    console.error("❌  handleSearchSubmit failed:", err);
   }
+}
 
   // ---------------- OUTSIDE CLICK ----------------
   useEffect(() => {
