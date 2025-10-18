@@ -74,42 +74,66 @@ export default function PostDeal({ onPosted }) {
     const user = userData.user;
     let imageUrl = null;
 
-    if (imageFile) {
-      imageUrl = await handleImageUpload(imageFile);
-    }
+    // Upload image if selected
+if (imageFile) {
+  imageUrl = await handleImageUpload(imageFile);
+  console.log("🖼️ Image upload returned URL:", imageUrl);
 
-    const payload = {
-      title: form.title,
-      description: form.description || null,
-      price: form.price ? Number(form.price) : null,
-      old_price: form.old_price ? Number(form.old_price) : null,
-      image: imageUrl || null,
-      link: form.link,
-      category: form.category || null,
-      posted_by: user.id,
-      published: true,
-    };
+  // Stop if upload failed
+  if (!imageUrl) {
+    alert("❌ Image upload failed. Please try again.");
+    setLoading(false);
+    return;
+  }
+}
 
-    const { data, error } = await supabase.from("deals").insert([payload]).select();
+// Prepare the payload
+const payload = {
+  title: form.title,
+  description: form.description || null,
+  price: form.price ? Number(form.price) : null,
+  old_price: form.old_price ? Number(form.old_price) : null,
+  image: imageUrl || null,
+  link: form.link,
+  category: form.category || null,
+  posted_by: user.id,
+  published: true,
+};
 
-    setLoading(false);
-    if (error) {
-      console.error("❌ Insert error:", error);
-      alert("Could not post: " + error.message);
-    } else {
-      alert("✅ Deal posted successfully!");
-      setForm({
-        title: "",
-        description: "",
-        price: "",
-        old_price: "",
-        link: "",
-        category: "",
-      });
-      setImageFile(null);
-      setImagePreview(null);
-      if (typeof onPosted === "function") onPosted();
-    }
+console.log("📦 Posting payload:", payload);
+
+// Try inserting into deals table
+const { data, error } = await supabase
+  .from("deals")
+  .insert([payload])
+  .select()
+  .single(); // ✅ ensures only one row returned
+
+setLoading(false);
+
+if (error) {
+  console.error("❌ Insert error:", error);
+  alert("Could not post deal: " + error.message);
+  return;
+}
+
+console.log("✅ Deal posted successfully:", data);
+
+// Reset form after success
+alert("✅ Deal posted successfully!");
+setForm({
+  title: "",
+  description: "",
+  price: "",
+  old_price: "",
+  link: "",
+  category: "",
+});
+setImageFile(null);
+setImagePreview(null);
+
+if (typeof onPosted === "function") onPosted();
+     }
   }
 
   const calculateDiscount = () => {
