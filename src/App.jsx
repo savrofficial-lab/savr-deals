@@ -236,13 +236,6 @@ export default function App() {
   }
 
   // ---------------- REQUESTED DEAL SUBMIT (called when user clicks Search or presses Enter)
-  // New smart logic:
-  // 1) Trim query q.
-  // 2) Perform a quick server-side ilike search (title/description/category).
-  // 3) If server finds rows → set search to q and show results.
-  // 4) If server finds none → fetch published deals and run normalized client-side match.
-  // 5) If any client-side matches → set search (show results).
-  // 6) If still none → check requested_deals table (avoid duplicates) and insert request.
   async function handleSearchSubmit() {
     const q = searchRaw.trim();
     if (!q) {
@@ -250,19 +243,13 @@ export default function App() {
       return;
     }
 
-    // set UI search state so DealsGrid can pick it up when results exist
     setSearch(q);
-
-    // Normalize for internal comparisons
     const normalizedQuery = normalizeText(q);
 
     try {
-      // Ensure user is logged in for making requests (but allow search to show results for non-logged-in users)
       const { data: authData } = await supabase.auth.getUser();
       const currentUser = authData?.user ?? null;
 
-      // 1) Quick server-side ilike search for performance (title/description/category)
-      // Use %q% naive search to quickly find obvious matches
       const { data: serverMatches, error: serverErr } = await supabase
         .from("deals")
         .select("id, title, description, category, published")
@@ -278,19 +265,16 @@ export default function App() {
       }
 
       if (Array.isArray(serverMatches) && serverMatches.length > 0) {
-        // We found server-side matches — set search and return (DealsGrid will show)
         setSearch(q);
         return;
       }
 
-      // 2) If server-side found nothing, fetch a list of published deals to do a normalized match
-      // (This handles spacing/punctuation/case differences like "iphone15", "i phone 15", etc.)
       const { data: allPublished, error: allErr } = await supabase
         .from("deals")
         .select("id, title, description, category, published")
         .eq("published", true)
         .order("created_at", { ascending: false })
-        .limit(500); // limit to reasonable amount
+        .limit(500);
 
       if (allErr) {
         console.warn("Error fetching published deals for normalized search:", allErr);
@@ -302,7 +286,6 @@ export default function App() {
           const t = normalizeText(d.title || "");
           const desc = normalizeText(d.description || "");
           const cat = normalizeText(d.category || "");
-          // match normalized query as substring of any normalized field
           return (
             (t && t.includes(normalizedQuery)) ||
             (desc && desc.includes(normalizedQuery)) ||
@@ -312,20 +295,15 @@ export default function App() {
       }
 
       if (matched.length > 0) {
-        // Found matches via normalized local search — set search so DealsGrid shows them
         setSearch(q);
         return;
       }
 
-      // 3) No matches at all — create or deduplicate requested_deals
-      // Must be logged in to create a request
       if (!currentUser) {
-        // If not logged in, don't create request; show login prompt instead
         setShowLoginModal(true);
         return;
       }
 
-      // Avoid duplicate requests: check exact query first
       const { data: existingExact, error: existingErr } = await supabase
         .from("requested_deals")
         .select("id, query")
@@ -342,8 +320,6 @@ export default function App() {
         return;
       }
 
-      // Also attempt to check normalized duplicates (client-side) to avoid many near-duplicates
-      // Fetch recent unfulfilled requests (limit to 500)
       const { data: recentReqs, error: recentErr } = await supabase
         .from("requested_deals")
         .select("id, query, user_id, created_at")
@@ -370,14 +346,13 @@ export default function App() {
         return;
       }
 
-      // Insert the requested_deals row
       const { error: insertErr } = await supabase.from("requested_deals").insert([
-  {
-    user_id: currentUser.id,
-    query: q.trim(),
-    fulfilled: false, // ✅ explicitly set false
-  },
-]);
+        {
+          user_id: currentUser.id,
+          query: q.trim(),
+          fulfilled: false,
+        },
+      ]);
 
       if (insertErr) {
         console.error("Error inserting requested_deal:", insertErr);
@@ -388,15 +363,14 @@ export default function App() {
       alert(
         `✅ Request successfully added for: "${q}". We'll notify you when it's live.`
       );
-      // keep search state set to q (so DealsGrid will still search for this term if user wants)
       setSearch(q);
     } catch (err) {
       console.error("Search submit error:", err);
       alert("❌ Error: " + (err.message || String(err)));
     }
-  }
+  } 
 
-  // ---------------- OUTSIDE CLICK ----------------
+// ---------------- OUTSIDE CLICK ----------------
   useEffect(() => {
     if (!showCategories) return;
 
@@ -572,9 +546,9 @@ export default function App() {
           </div>
 
           {/* TOP TABS */}
-              <div className="bg-gradient-to-r from-amber-50/80 to-yellow-50/80 backdrop-blur-md sticky top-[88px] z-40 border-t border-amber-100/30">
+          <div className="bg-gradient-to-r from-amber-50/80 to-yellow-50/80 backdrop-blur-md sticky top-[88px] z-40 border-t border-amber-100/30">
             <div className="max-w-5xl mx-auto px-2 sm:px-4 py-2 sm:py-3">
-              <div className="flex items-center gap-2 overflow-visible">
+              <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide">
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
@@ -661,19 +635,19 @@ export default function App() {
                   Hot Deals
                   <Sparkles className="h-3 w-3 sm:h-4 sm:w-4" />
                 </motion.button>
+
+                <Link to="/blog">
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="whitespace-nowrap px-2.5 sm:px-4 md:px-5 py-1.5 sm:py-2 md:py-2.5 rounded-lg sm:rounded-xl text-xs sm:text-sm font-semibold transition-all shadow-sm flex-shrink-0 bg-white/90 text-gray-700 border-2 border-amber-100 hover:bg-amber-50 hover:border-amber-200"
+                  >
+                    Blog
+                  </motion.button>
+                </Link>
               </div>
             </div>
           </div>
-           <button
-  onClick={() => navigate("/blog")}
-  className={`px-4 py-2 rounded-full ${
-    location.pathname === "/blog"
-      ? "bg-amber-500 text-white"
-      : "bg-white text-gray-800"
-  }`}
->
-  Blog
-</button>
         </header>
 
         {/* MAIN CONTENT */}
@@ -871,4 +845,4 @@ export default function App() {
       `}</style>
     </Router>
   );
-       }
+}
