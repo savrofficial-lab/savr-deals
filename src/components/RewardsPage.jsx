@@ -27,14 +27,12 @@ export default function RewardsPage() {
   const [showEquipModal, setShowEquipModal] = useState(false);
   const [selectedBadge, setSelectedBadge] = useState(null);
 
-  // Fetch user data on mount
   useEffect(() => {
     fetchUserData();
   }, []);
 
   const fetchUserData = async () => {
     try {
-      // Get current user
       const { data: { user } } = await supabase.auth.getUser();
       
       if (!user) {
@@ -44,7 +42,6 @@ export default function RewardsPage() {
 
       setUserId(user.id);
 
-      // Fetch coins
       const { data: coinsData, error: coinsError } = await supabase
         .from('coins')
         .select('balance')
@@ -57,7 +54,6 @@ export default function RewardsPage() {
         setUserCoins(coinsData?.balance || 0);
       }
 
-      // Fetch equipped badge
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('equipped_badge')
@@ -116,32 +112,36 @@ export default function RewardsPage() {
 
     return (
       <div 
-        className={`relative bg-white rounded-2xl p-6 transition-all duration-300 border-2 ${
+        className={`relative bg-white rounded-xl p-4 transition-all duration-300 border-2 ${
           unlocked 
-            ? `${milestone.borderColor} hover:scale-105 hover:${milestone.glowColor} hover:shadow-xl cursor-pointer` 
+            ? `${milestone.borderColor} hover:scale-105 hover:shadow-lg cursor-pointer` 
             : 'border-gray-200 opacity-60'
-        }`}
+        } ${equipped ? 'ring-2 ring-green-400' : ''}`}
         onClick={() => unlocked && handleEquipBadge(milestone)}
       >
+        {/* Equipped checkmark - smaller */}
         {equipped && (
-          <div className="absolute -top-3 -right-3 bg-green-500 text-white rounded-full p-2 shadow-lg z-10">
-            <Check size={16} />
+          <div className="absolute -top-2 -right-2 bg-green-500 text-white rounded-full p-1 shadow-md z-10">
+            <Check size={12} />
           </div>
         )}
 
+        {/* Lock overlay for locked badges */}
         {!unlocked && (
-          <div className="absolute inset-0 bg-gray-100/80 backdrop-blur-sm rounded-2xl flex items-center justify-center z-10">
-            <Lock size={48} className="text-gray-400" />
+          <div className="absolute inset-0 bg-gray-100/80 backdrop-blur-sm rounded-xl flex items-center justify-center z-10">
+            <Lock size={32} className="text-gray-400" />
           </div>
         )}
 
-        <div className={`w-24 h-24 mx-auto mb-4 rounded-full bg-gradient-to-br ${milestone.color} flex items-center justify-center ${unlocked ? 'animate-pulse' : ''}`}>
-          <Icon size={48} className="text-white" />
+        {/* Badge Icon - smaller */}
+        <div className={`w-16 h-16 mx-auto mb-3 rounded-full bg-gradient-to-br ${milestone.color} flex items-center justify-center ${unlocked ? 'animate-pulse' : ''}`}>
+          <Icon size={32} className="text-white" />
         </div>
 
+        {/* Badge Info - compact */}
         <div className="text-center">
-          <h3 className="text-xl font-bold text-gray-800 mb-1">{milestone.name}</h3>
-          <p className={`text-sm font-semibold mb-2 ${
+          <h3 className="text-base font-bold text-gray-800 mb-1 truncate">{milestone.name}</h3>
+          <p className={`text-xs font-semibold mb-2 ${
             milestone.rarity === 'Common' ? 'text-orange-500' :
             milestone.rarity === 'Rare' ? 'text-gray-500' :
             milestone.rarity === 'Epic' ? 'text-yellow-500' :
@@ -151,16 +151,18 @@ export default function RewardsPage() {
           }`}>
             {milestone.rarity}
           </p>
-          <p className="text-gray-600 text-sm mb-3">{milestone.description}</p>
+          <p className="text-gray-600 text-xs mb-2 line-clamp-2">{milestone.description}</p>
           
-          <div className="flex items-center justify-center gap-2 bg-gray-100 rounded-full px-4 py-2">
-            <span className="text-2xl">🪙</span>
-            <span className="font-bold text-gray-700">{milestone.coins} Coins</span>
+          {/* Coins requirement - smaller */}
+          <div className="flex items-center justify-center gap-1 bg-gray-100 rounded-full px-3 py-1.5 mb-2">
+            <span className="text-base">🪙</span>
+            <span className="font-bold text-gray-700 text-sm">{milestone.coins}</span>
           </div>
 
+          {/* Equip button - smaller */}
           {unlocked && (
             <button 
-              className={`mt-4 w-full py-2 rounded-lg font-semibold transition-all ${
+              className={`w-full py-1.5 rounded-lg font-semibold text-sm transition-all ${
                 equipped 
                   ? 'bg-green-500 text-white cursor-default' 
                   : 'bg-gradient-to-r ' + milestone.color + ' text-white hover:opacity-90'
@@ -170,7 +172,7 @@ export default function RewardsPage() {
                 if (!equipped) handleEquipBadge(milestone);
               }}
             >
-              {equipped ? 'Equipped ✓' : 'Equip Badge'}
+              {equipped ? 'Equipped ✓' : 'Equip'}
             </button>
           )}
         </div>
@@ -200,43 +202,46 @@ export default function RewardsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-amber-50 to-yellow-50">
-      <div className="bg-gradient-to-r from-orange-500 to-amber-500 text-white py-8 px-4">
+    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-amber-50 to-yellow-50 pb-20">
+      {/* Header - compact */}
+      <div className="bg-gradient-to-r from-orange-500 to-amber-500 text-white py-6 px-4">
         <div className="max-w-6xl mx-auto">
-          <h1 className="text-4xl font-bold mb-2">🏆 Rewards & Badges</h1>
-          <p className="text-orange-100">Unlock exclusive badges and flex your status!</p>
+          <h1 className="text-2xl sm:text-3xl font-bold mb-1">🏆 Rewards & Badges</h1>
+          <p className="text-sm text-orange-100">Unlock exclusive badges and flex your status!</p>
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto px-4 -mt-6">
-        <div className="bg-gradient-to-br from-orange-400 to-amber-500 rounded-3xl p-8 shadow-2xl">
-          <div className="flex items-center justify-between mb-6 flex-wrap gap-4">
+      {/* Current Status Card - compact */}
+      <div className="max-w-6xl mx-auto px-4 -mt-4">
+        <div className="bg-gradient-to-br from-orange-400 to-amber-500 rounded-2xl p-4 sm:p-6 shadow-xl">
+          <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
             <div>
-              <h2 className="text-white text-2xl font-bold mb-2">Your Coins</h2>
-              <div className="flex items-center gap-3">
-                <span className="text-6xl font-black text-white">{userCoins}</span>
-                <span className="text-4xl">🪙</span>
+              <h2 className="text-white text-lg sm:text-xl font-bold mb-1">Your Coins</h2>
+              <div className="flex items-center gap-2">
+                <span className="text-4xl sm:text-5xl font-black text-white">{userCoins}</span>
+                <span className="text-2xl sm:text-3xl">🪙</span>
               </div>
             </div>
             
             {currentTier && (
               <div className="text-right">
-                <p className="text-orange-100 text-sm mb-2">Current Tier</p>
-                <div className={`inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm rounded-full px-6 py-3 border-2 ${currentTier.borderColor}`}>
-                  {React.createElement(ICON_MAP[currentTier.icon], { size: 32, className: 'text-white' })}
-                  <span className="text-white font-bold text-xl">{currentTier.name}</span>
+                <p className="text-orange-100 text-xs mb-1">Current Tier</p>
+                <div className={`inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm rounded-full px-4 py-2 border-2 ${currentTier.borderColor}`}>
+                  {React.createElement(ICON_MAP[currentTier.icon], { size: 24, className: 'text-white' })}
+                  <span className="text-white font-bold text-sm sm:text-base">{currentTier.name}</span>
                 </div>
               </div>
             )}
           </div>
 
+          {/* Progress bar - compact */}
           {nextMilestone && (
-            <div className="bg-white/20 backdrop-blur-sm rounded-2xl p-4">
+            <div className="bg-white/20 backdrop-blur-sm rounded-xl p-3">
               <div className="flex justify-between items-center mb-2">
-                <span className="text-white font-semibold">Next: {nextMilestone.name}</span>
-                <span className="text-white font-bold">{nextMilestone.coins - userCoins} coins needed</span>
+                <span className="text-white font-semibold text-sm">Next: {nextMilestone.name}</span>
+                <span className="text-white font-bold text-sm">{nextMilestone.coins - userCoins} left</span>
               </div>
-              <div className="w-full bg-white/30 rounded-full h-4 overflow-hidden">
+              <div className="w-full bg-white/30 rounded-full h-3 overflow-hidden">
                 <div 
                   className="bg-gradient-to-r from-green-400 to-emerald-500 h-full rounded-full transition-all duration-500 flex items-center justify-end pr-2"
                   style={{ width: `${progressToNext}%` }}
@@ -249,35 +254,39 @@ export default function RewardsPage() {
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto px-4 py-12">
-        <h2 className="text-3xl font-bold text-gray-800 mb-8 text-center">All Badges</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {/* Badges Grid - 3 columns on mobile, more on larger screens */}
+      <div className="max-w-6xl mx-auto px-4 py-6">
+        <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-4 text-center">
+          All Badges
+        </h2>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3 sm:gap-4">
           {MILESTONES.map((milestone) => (
             <BadgeCard key={milestone.id} milestone={milestone} />
           ))}
         </div>
       </div>
 
+      {/* Equip Modal - responsive */}
       {showEquipModal && selectedBadge && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl">
+          <div className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-2xl">
             <div className="text-center">
-              <div className={`w-32 h-32 mx-auto mb-6 rounded-full bg-gradient-to-br ${selectedBadge.color} flex items-center justify-center`}>
-                {React.createElement(ICON_MAP[selectedBadge.icon], { size: 64, className: 'text-white' })}
+              <div className={`w-24 h-24 mx-auto mb-4 rounded-full bg-gradient-to-br ${selectedBadge.color} flex items-center justify-center`}>
+                {React.createElement(ICON_MAP[selectedBadge.icon], { size: 48, className: 'text-white' })}
               </div>
-              <h3 className="text-2xl font-bold text-gray-800 mb-2">Equip {selectedBadge.name}?</h3>
-              <p className="text-gray-600 mb-6">This badge will be displayed on your profile, leaderboard, and forum posts.</p>
+              <h3 className="text-xl font-bold text-gray-800 mb-2">Equip {selectedBadge.name}?</h3>
+              <p className="text-gray-600 text-sm mb-5">This badge will be displayed on your profile, leaderboard, and forum posts.</p>
               
               <div className="flex gap-3">
                 <button 
                   onClick={() => setShowEquipModal(false)}
-                  className="flex-1 py-3 bg-gray-200 text-gray-700 rounded-xl font-semibold hover:bg-gray-300 transition-colors"
+                  className="flex-1 py-2.5 bg-gray-200 text-gray-700 rounded-xl font-semibold hover:bg-gray-300 transition-colors text-sm"
                 >
                   Cancel
                 </button>
                 <button 
                   onClick={confirmEquip}
-                  className={`flex-1 py-3 bg-gradient-to-r ${selectedBadge.color} text-white rounded-xl font-semibold hover:opacity-90 transition-opacity`}
+                  className={`flex-1 py-2.5 bg-gradient-to-r ${selectedBadge.color} text-white rounded-xl font-semibold hover:opacity-90 transition-opacity text-sm`}
                 >
                   Equip Now
                 </button>
@@ -287,24 +296,25 @@ export default function RewardsPage() {
         </div>
       )}
 
-      <div className="max-w-6xl mx-auto px-4 pb-12">
-        <div className="bg-white rounded-2xl p-8 shadow-lg border-2 border-orange-200">
-          <h3 className="text-2xl font-bold text-gray-800 mb-4">💡 How It Works</h3>
-          <ul className="space-y-3 text-gray-700">
-            <li className="flex items-start gap-3">
-              <span className="text-xl">🎯</span>
-              <span><strong>Earn coins</strong> by posting deals, voting, and being active</span>
+      {/* Info Section - compact */}
+      <div className="max-w-6xl mx-auto px-4 pb-6">
+        <div className="bg-white rounded-xl p-5 shadow-lg border-2 border-orange-200">
+          <h3 className="text-lg font-bold text-gray-800 mb-3">💡 How It Works</h3>
+          <ul className="space-y-2 text-gray-700 text-sm">
+            <li className="flex items-start gap-2">
+              <span className="text-base">🎯</span>
+              <span><strong>Earn coins</strong> by posting deals and being active</span>
             </li>
-            <li className="flex items-start gap-3">
-              <span className="text-xl">🏆</span>
-              <span><strong>Unlock badges</strong> when you reach coin milestones</span>
+            <li className="flex items-start gap-2">
+              <span className="text-base">🏆</span>
+              <span><strong>Unlock badges</strong> when you reach milestones</span>
             </li>
-            <li className="flex items-start gap-3">
-              <span className="text-xl">✨</span>
+            <li className="flex items-start gap-2">
+              <span className="text-base">✨</span>
               <span><strong>Equip your favorite</strong> badge to show everywhere</span>
             </li>
-            <li className="flex items-start gap-3">
-              <span className="text-xl">👑</span>
+            <li className="flex items-start gap-2">
+              <span className="text-base">👑</span>
               <span><strong>Flex your status</strong> - higher badges = more respect!</span>
             </li>
           </ul>
@@ -312,4 +322,4 @@ export default function RewardsPage() {
       </div>
     </div>
   );
-        }
+}
