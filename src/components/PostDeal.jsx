@@ -88,6 +88,7 @@ export default function PostDeal({ onPosted }) {
       category: form.category || null,
       posted_by: user.id,
       published: true,
+      created_at: new Date().toISOString(),
     };
 
     const { data, error } = await supabase.from("deals").insert([payload]).select();
