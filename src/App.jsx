@@ -149,6 +149,9 @@ export default function App() {
   const [showCategories, setShowCategories] = useState(false);
   const categoriesRef = useRef(null);
 
+  // ✅ DEALS REFRESH TRIGGER - Force DealsGrid to re-fetch when a deal is posted
+  const [dealsRefreshTrigger, setDealsRefreshTrigger] = useState(0);
+
   // ---------------- AUTH ----------------
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => setUser(data?.user ?? null));
@@ -305,6 +308,7 @@ export default function App() {
 
           {activeTopTab === "Frontpage" && (
             <DealsGrid
+              key={dealsRefreshTrigger}
               search={search}
               selectedCategory={selectedCategory}
               hideHeaderCategories={true}
@@ -313,6 +317,7 @@ export default function App() {
 
           {activeTopTab === "Hot Deals" && (
             <DealsGrid
+              key={dealsRefreshTrigger}
               search={search}
               selectedCategory={selectedCategory}
               hideHeaderCategories={true}
@@ -330,7 +335,13 @@ export default function App() {
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.3 }}
         >
-          <PostDeal userId={user?.id} onPosted={() => setActiveBottom("Home")} />
+          <PostDeal 
+            userId={user?.id} 
+            onPosted={() => {
+              setDealsRefreshTrigger(prev => prev + 1);
+              setActiveBottom("Home");
+            }} 
+          />
         </motion.div>
       );
     }
