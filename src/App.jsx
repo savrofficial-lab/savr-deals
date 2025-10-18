@@ -20,6 +20,7 @@ import NotificationDetail from "./components/NotificationDetail";
 import DealRemoved from "./components/DealRemoved";
 import RewardsPage from './components/RewardsPage';
 import Blog from "./components/Blog";
+import BlogPoster from "./components/BlogPoster";
 
 /* ---------------------------------------------------------------------------
    Small inline icons
@@ -663,6 +664,7 @@ export default function App() {
             <Route path="/deal-removed" element={<DealRemoved />} />
             <Route path="/rewards" element={<RewardsPage />} /> 
             <Route path="/blog" element={<Blog />} /> 
+            <Route path="/BlogPoster" element={<BlogPoster />} /> 
           </Routes>
         </main>
 
