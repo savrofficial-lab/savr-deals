@@ -370,15 +370,14 @@ export default function App() {
       }
 
       // Insert the requested_deals row
-      const { error: insertErr } = await supabase
-        .from("requested_deals")
-        .insert([
-          {
-            user_id: currentUser.id,
-            query: q,
-            fulfilled: false,
-          },
-        ]);
+      const { error: insertErr } = await supabase.from("requested_deals").insert([
+  {
+    user_id: user.id,
+    query: searchQuery.trim(),
+    fulfilled: false, // ✅ explicitly set false
+    created_at: new Date().toISOString(),
+  },
+]);
 
       if (insertErr) {
         console.error("Error inserting requested_deal:", insertErr);
