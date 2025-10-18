@@ -19,6 +19,16 @@ export default function PostDeal({ onPosted }) {
 
   async function handleImageUpload(file) {
     try {
+      // Validate file type
+      if (!file.type.startsWith("image/")) {
+        throw new Error("Please upload a valid image file");
+      }
+
+      // Validate file size before compression
+      if (file.size > 5 * 1024 * 1024) {
+        throw new Error("File size must be less than 5MB");
+      }
+
       const compressedFile = await imageCompression(file, {
         maxSizeMB: 0.25,
         maxWidthOrHeight: 1080,
@@ -26,34 +36,58 @@ export default function PostDeal({ onPosted }) {
       });
 
       const fileName = `${Date.now()}_${file.name}`;
+      
+      // Upload compressed file as Blob
       const { data, error } = await supabase.storage
         .from("deal-image")
         .upload(fileName, compressedFile, {
           cacheControl: "3600",
           upsert: false,
+          contentType: compressedFile.type,
         });
 
-      if (error) throw error;
+      if (error) {
+        console.error("❌ Supabase upload error:", error);
+        throw new Error(error.message || "Upload failed");
+      }
 
+      // Get public URL
       const { data: publicUrlData } = supabase.storage
         .from("deal-image")
         .getPublicUrl(fileName);
 
+      if (!publicUrlData?.publicUrl) {
+        throw new Error("Failed to generate public URL");
+      }
+
       return publicUrlData.publicUrl;
     } catch (err) {
       console.error("❌ Image upload error:", err);
-      alert("Failed to upload image.");
-      return null;
+      throw err;
     }
   }
 
   function handleFileChange(e) {
     const file = e.target.files[0];
     if (file) {
+      // Validate file type and size
+      if (!file.type.startsWith("image/")) {
+        alert("⚠️ Please select a valid image file (PNG, JPG, etc.)");
+        return;
+      }
+
+      if (file.size > 5 * 1024 * 1024) {
+        alert("⚠️ Image size must be less than 5MB");
+        return;
+      }
+
       setImageFile(file);
       const reader = new FileReader();
       reader.onloadend = () => {
         setImagePreview(reader.result);
+      };
+      reader.onerror = () => {
+        alert("Error reading file");
       };
       reader.readAsDataURL(file);
     }
@@ -63,70 +97,94 @@ export default function PostDeal({ onPosted }) {
     e.preventDefault();
     setLoading(true);
 
-    const { data: userData, error: userErr } = await supabase.auth.getUser();
-    if (userErr || !userData?.user) {
-      alert("You must be signed in to post a deal.");
-      setLoading(false);
-      return;
-    }
-
-    const user = userData.user;
-    let imageUrl = null;
-
-    if (imageFile) {
-      imageUrl = await handleImageUpload(imageFile);
-      console.log("🖼️ Image upload returned URL:", imageUrl);
-
-      if (!imageUrl) {
-        alert("❌ Image upload failed. Please try again.");
+    try {
+      // Check authentication
+      const { data: userData, error: userErr } = await supabase.auth.getUser();
+      if (userErr || !userData?.user) {
+        alert("You must be signed in to post a deal.");
         setLoading(false);
         return;
       }
+
+      const user = userData.user;
+      let imageUrl = null;
+
+      // Upload image if provided
+      if (imageFile) {
+        try {
+          imageUrl = await handleImageUpload(imageFile);
+          console.log("🖼️ Image uploaded successfully:", imageUrl);
+        } catch (imgErr) {
+          console.error("❌ Image upload failed:", imgErr);
+          alert(`Failed to upload image: ${imgErr.message}`);
+          setLoading(false);
+          return;
+        }
+      }
+
+      // Validate required fields
+      if (!form.title.trim()) {
+        alert("Please enter a deal title");
+        setLoading(false);
+        return;
+      }
+
+      if (!form.link.trim()) {
+        alert("Please enter a product link");
+        setLoading(false);
+        return;
+      }
+
+      const payload = {
+        title: form.title.trim(),
+        description: form.description?.trim() || null,
+        price: form.price ? Number(form.price) : null,
+        old_price: form.old_price ? Number(form.old_price) : null,
+        image: imageUrl || null,
+        link: form.link.trim(),
+        category: form.category?.trim() || null,
+        posted_by: user.id,
+        published: true,
+      };
+
+      console.log("📦 Posting payload:", payload);
+
+      // Insert deal into database
+      const { data, error } = await supabase
+        .from("deals")
+        .insert([payload])
+        .select()
+        .single();
+
+      if (error) {
+        console.error("❌ Database insert error:", error);
+        alert(`Could not post deal: ${error.message}`);
+        setLoading(false);
+        return;
+      }
+
+      console.log("✅ Deal posted successfully:", data);
+      alert("✅ Deal posted successfully!");
+
+      // Reset form
+      setForm({
+        title: "",
+        description: "",
+        price: "",
+        old_price: "",
+        link: "",
+        category: "",
+      });
+      setImageFile(null);
+      setImagePreview(null);
+
+      if (typeof onPosted === "function") onPosted();
+    } catch (err) {
+      console.error("❌ Unexpected error:", err);
+      alert("An unexpected error occurred. Please try again.");
+    } finally {
+      setLoading(false);
     }
-
-    const payload = {
-      title: form.title,
-      description: form.description || null,
-      price: form.price ? Number(form.price) : null,
-      old_price: form.old_price ? Number(form.old_price) : null,
-      image: imageUrl || null,
-      link: form.link,
-      category: form.category || null,
-      posted_by: user.id,
-      published: true,
-    };
-
-    console.log("📦 Posting payload:", payload);
-
-    const { data, error } = await supabase
-      .from("deals")
-      .insert([payload])
-      .select()
-      .single();
-
-    setLoading(false);
-
-    if (error) {
-      console.error("❌ Insert error:", error);
-      alert("Could not post deal: " + error.message);
-      return;
-    }
-
-    console.log("✅ Deal posted successfully:", data);
-
-    alert("✅ Deal posted successfully!");
-    setForm({
-      title: "",
-      description: "",
-      price: "",
-      old_price: "",
-      link: "",
-      category: "",
-    });
-    setImageFile(null);
-    setImagePreview(null);
-
-    if (typeof onPosted === "function") onPosted();
   }
 
   const calculateDiscount = () => {
@@ -396,4 +454,4 @@ export default function PostDeal({ onPosted }) {
       </div>
     </div>
   );
-}
+            }
