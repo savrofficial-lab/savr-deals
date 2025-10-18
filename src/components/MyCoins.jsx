@@ -1,10 +1,12 @@
-// src/components/MyCoins.jsx
+// src/components/MyCoins.jsx - FINAL VERSION WITH ROUTER NAVIGATION
 import React, { useEffect, useState, useRef } from "react";
+import { useNavigate } from "react-router-dom"; // THIS IS THE KEY LINE
 import { supabase } from "../supabaseClient";
-import { Trophy, RefreshCw, Gift, Crown, Award, Medal } from "lucide-react";
+import { Trophy, RefreshCw, Crown, Award, Medal, Sparkles } from "lucide-react";
 
 export default function MyCoins({ userId: propUserId }) {
   const mountedRef = useRef(true);
+  const navigate = useNavigate(); // THIS LETS YOU NAVIGATE TO /rewards
   const [uid, setUid] = useState(propUserId || null);
   const [loading, setLoading] = useState(false);
 
@@ -36,14 +38,13 @@ export default function MyCoins({ userId: propUserId }) {
     };
   }, [propUserId]);
 
-  // Load balance - ALWAYS prefer profiles.coins first, then fallback to coins_ledger
+  // Load balance
   async function loadBalanceForUser(userId) {
     if (!userId) return;
     setLoading(true);
     setError(null);
 
     try {
-      // 1) FIRST: Try profiles.coins (this is where triggers update)
       const { data: profileData, error: profileErr } = await supabase
         .from("profiles")
         .select("username, coins")
@@ -60,7 +61,6 @@ export default function MyCoins({ userId: propUserId }) {
         return;
       }
 
-      // 2) FALLBACK: Try coins table
       const { data: coinData, error: coinErr } = await supabase
         .from("coins")
         .select("balance, pending")
@@ -76,7 +76,6 @@ export default function MyCoins({ userId: propUserId }) {
         return;
       }
 
-      // 3) LAST RESORT: Sum coins_ledger
       const { data: ledgerRows, error: ledgerErr } = await supabase
         .from("coins_ledger")
         .select("amount")
@@ -92,7 +91,6 @@ export default function MyCoins({ userId: propUserId }) {
         return;
       }
 
-      // If all fail
       console.warn("Could not fetch coins:", profileErr ?? coinErr ?? ledgerErr);
       if (mountedRef.current) {
         setBalance(0);
@@ -106,7 +104,7 @@ export default function MyCoins({ userId: propUserId }) {
     }
   }
 
-  // Load leaderboard - LIMITED TO TOP 10
+  // Load leaderboard
   async function loadLeaderboard() {
     try {
       const { data, error } = await supabase
@@ -120,7 +118,6 @@ export default function MyCoins({ userId: propUserId }) {
         return;
       }
 
-      // Fallback to profiles - LIMITED TO TOP 10
       const { data: profs, error: pErr } = await supabase
         .from("profiles")
         .select("user_id, username, coins")
@@ -164,7 +161,6 @@ export default function MyCoins({ userId: propUserId }) {
     };
 
     try {
-      // Watch coins_ledger for this user
       const ch1 = supabase
         .channel(`coins_ledger_user_${uid}`)
         .on(
@@ -182,7 +178,6 @@ export default function MyCoins({ userId: propUserId }) {
         )
         .subscribe();
 
-      // Watch profiles updates for this user
       const ch2 = supabase
         .channel(`profiles_user_${uid}`)
         .on(
@@ -204,7 +199,6 @@ export default function MyCoins({ userId: propUserId }) {
         )
         .subscribe();
 
-      // Watch all profiles for leaderboard updates
       const ch3 = supabase
         .channel(`profiles_leaderboard`)
         .on(
@@ -227,19 +221,22 @@ export default function MyCoins({ userId: propUserId }) {
     };
   }, [uid]);
 
-  // Initial loads
   useEffect(() => {
     if (!uid) return;
     loadBalanceForUser(uid);
     loadLeaderboard();
   }, [uid]);
 
-  // Manual refresh
   const refresh = async () => {
     if (!uid) return;
     console.log("🔄 Manual refresh triggered");
     await loadBalanceForUser(uid);
     await loadLeaderboard();
+  };
+
+  // THIS IS THE KEY FUNCTION - Navigates to /rewards route
+  const goToRewards = () => {
+    navigate('/rewards');
   };
 
   const getRankIcon = (rank) => {
@@ -287,11 +284,9 @@ export default function MyCoins({ userId: propUserId }) {
       `}</style>
 
       <div className="max-w-2xl mx-auto px-4 pt-8 space-y-6">
-        {/* Coin Balance Card */}
         <div className="relative">
           <div className="bg-gradient-to-br from-orange-500 via-amber-500 to-yellow-500 rounded-3xl p-8 shadow-2xl">
             <div className="text-center">
-              {/* Coin Icon */}
               <div className="inline-flex items-center justify-center w-20 h-20 bg-white/30 rounded-full mb-4 float-coin">
                 <span className="text-4xl">🪙</span>
               </div>
@@ -311,7 +306,6 @@ export default function MyCoins({ userId: propUserId }) {
                 </div>
               )}
 
-              {/* Action Buttons */}
               <div className="mt-6 flex justify-center gap-3">
                 <button
                   onClick={refresh}
@@ -322,9 +316,13 @@ export default function MyCoins({ userId: propUserId }) {
                   <span className="text-white font-semibold">Refresh</span>
                 </button>
                 
-                <button className="px-6 py-3 bg-white rounded-xl hover:bg-white/95 transition-all duration-200 border border-orange-200">
-                  <Gift className="w-5 h-5 text-orange-600 inline mr-2" />
-                  <span className="text-orange-700 font-semibold">Redeem Soon</span>
+                {/* UPDATED BUTTON - Navigates to /rewards */}
+                <button 
+                  onClick={goToRewards}
+                  className="px-6 py-3 bg-white rounded-xl hover:bg-white/95 hover:scale-105 transition-all duration-200 border border-orange-200 shadow-lg"
+                >
+                  <Sparkles className="w-5 h-5 text-orange-600 inline mr-2" />
+                  <span className="text-orange-700 font-semibold">View Rewards</span>
                 </button>
               </div>
 
@@ -345,9 +343,7 @@ export default function MyCoins({ userId: propUserId }) {
           </div>
         </div>
 
-        {/* Leaderboard Card */}
         <div className="bg-white rounded-3xl shadow-xl border-2 border-orange-100 overflow-hidden">
-          {/* Header */}
           <div className="bg-gradient-to-r from-orange-500 to-amber-500 p-6">
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 bg-white/25 rounded-xl flex items-center justify-center border border-white/30">
@@ -360,7 +356,6 @@ export default function MyCoins({ userId: propUserId }) {
             </div>
           </div>
 
-          {/* Leaderboard List */}
           <div className="p-4">
             {leaderboard && leaderboard.length ? (
               <div className="space-y-3">
@@ -376,7 +371,6 @@ export default function MyCoins({ userId: propUserId }) {
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-4 flex-1 min-w-0">
-                        {/* Rank Badge */}
                         <div className={`flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center font-bold text-lg shadow-md ${
                           u.rank === 1 ? 'bg-gradient-to-br from-yellow-400 to-amber-600 text-white' :
                           u.rank === 2 ? 'bg-gradient-to-br from-gray-300 to-gray-600 text-white' :
@@ -386,7 +380,6 @@ export default function MyCoins({ userId: propUserId }) {
                           {u.rank <= 3 ? getRankIcon(u.rank) : `#${u.rank ?? idx + 1}`}
                         </div>
 
-                        {/* User Info */}
                         <div className="flex-1 min-w-0">
                           <div className={`font-bold text-lg truncate mb-1 ${
                             u.rank === 1 ? 'text-yellow-700' :
@@ -402,7 +395,6 @@ export default function MyCoins({ userId: propUserId }) {
                         </div>
                       </div>
 
-                      {/* Coins Badge */}
                       <div className="flex items-center gap-2 bg-gradient-to-r from-yellow-100 to-amber-100 px-4 py-2 rounded-xl border-2 border-yellow-300">
                         <span className="font-black text-lg text-yellow-700">
                           {u.coins ?? 0}
@@ -427,4 +419,4 @@ export default function MyCoins({ userId: propUserId }) {
       </div>
     </div>
   );
-}
+          }
