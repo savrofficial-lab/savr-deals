@@ -19,6 +19,7 @@ import Notifications from "./components/Notifications";
 import NotificationDetail from "./components/NotificationDetail";
 import DealRemoved from "./components/DealRemoved";
 import RewardsPage from './components/RewardsPage';
+import Blog from "./components/Blog";
 
 /* ---------------------------------------------------------------------------
    Small inline icons
@@ -663,6 +664,16 @@ export default function App() {
               </div>
             </div>
           </div>
+           <button
+  onClick={() => navigate("/blog")}
+  className={`px-4 py-2 rounded-full ${
+    location.pathname === "/blog"
+      ? "bg-amber-500 text-white"
+      : "bg-white text-gray-800"
+  }`}
+>
+  Blog
+</button>
         </header>
 
         {/* MAIN CONTENT */}
@@ -677,6 +688,7 @@ export default function App() {
             <Route path="/notification/:reportId" element={<NotificationDetail user={user} />} />
             <Route path="/deal-removed" element={<DealRemoved />} />
             <Route path="/rewards" element={<RewardsPage />} /> 
+            <Route path="/blog" element={<Blog />} /> 
           </Routes>
         </main>
 
