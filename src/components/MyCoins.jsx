@@ -419,4 +419,4 @@ export default function MyCoins({ userId: propUserId }) {
       </div>
     </div>
   );
-          
+}
