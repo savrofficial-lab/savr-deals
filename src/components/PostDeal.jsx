@@ -37,18 +37,25 @@ export default function PostDeal({ onPosted }) {
 
       const fileName = `${Date.now()}_${file.name}`;
       
-      // Upload compressed file as Blob
+      // Convert blob to File object for better compatibility
+      const finalFile = new File([compressedFile], fileName, { 
+        type: "image/jpeg" 
+      });
+
+      // Upload file
       const { data, error } = await supabase.storage
         .from("deal-image")
-        .upload(fileName, compressedFile, {
+        .upload(fileName, finalFile, {
           cacheControl: "3600",
           upsert: false,
-          contentType: compressedFile.type,
         });
 
       if (error) {
-        console.error("❌ Supabase upload error:", error);
-        throw new Error(error.message || "Upload failed");
+        throw new Error(`Upload error: ${error.message || error.statusCode || "Unknown error"}`);
+      }
+
+      if (!data) {
+        throw new Error("No data returned from upload");
       }
 
       // Get public URL
@@ -62,8 +69,12 @@ export default function PostDeal({ onPosted }) {
 
       return publicUrlData.publicUrl;
     } catch (err) {
-      console.error("❌ Image upload error:", err);
-      throw err;
+      console.error("❌ Image upload error details:", {
+        message: err.message,
+        name: err.name,
+        stack: err.stack
+      });
+      throw new Error(err.message || "Failed to upload image. Check bucket name and permissions.");
     }
   }
 
@@ -107,22 +118,8 @@ export default function PostDeal({ onPosted }) {
       }
 
       const user = userData.user;
-      let imageUrl = null;
 
-      // Upload image if provided
-      if (imageFile) {
-        try {
-          imageUrl = await handleImageUpload(imageFile);
-          console.log("🖼️ Image uploaded successfully:", imageUrl);
-        } catch (imgErr) {
-          console.error("❌ Image upload failed:", imgErr);
-          alert(`Failed to upload image: ${imgErr.message}`);
-          setLoading(false);
-          return;
-        }
-      }
-
-      // Validate required fields
+      // Validate required fields FIRST
       if (!form.title.trim()) {
         alert("Please enter a deal title");
         setLoading(false);
@@ -131,6 +128,26 @@ export default function PostDeal({ onPosted }) {
 
       if (!form.link.trim()) {
         alert("Please enter a product link");
+        setLoading(false);
+        return;
+      }
+
+      // Image is REQUIRED
+      if (!imageFile) {
+        alert("❌ Please upload a product image before posting");
+        setLoading(false);
+        return;
+      }
+
+      // NOW upload the image
+      let imageUrl = null;
+      try {
+        imageUrl = await handleImageUpload(imageFile);
+        console.log("🖼️ Image uploaded successfully:", imageUrl);
+      } catch (imgErr) {
+        const errorMsg = imgErr.message || "Unknown error";
+        console.error("❌ Image upload failed:", imgErr);
+        alert(`⚠️ Image Upload Failed:\n\n${errorMsg}\n\nTroubleshooting:\n1. Check bucket name is "deal-image"\n2. Check bucket is public\n3. Try a different image`);
         setLoading(false);
         return;
       }
@@ -454,4 +471,4 @@ export default function PostDeal({ onPosted }) {
       </div>
     </div>
   );
-            }
+}
