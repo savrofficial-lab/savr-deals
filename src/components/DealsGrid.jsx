@@ -222,16 +222,8 @@ export default function DealsGrid({
 
     fetchDeals();
 
-    // POLLING - Check for new deals every 5 seconds (since real-time replication not enabled)
-    const pollInterval = setInterval(() => {
-      if (mounted) {
-        fetchDeals();
-      }
-    }, 5000); // Check every 5 seconds
-
     return () => {
       mounted = false;
-      clearInterval(pollInterval);
     };
   }, [selectedCategoryInternal, search, filterHotDeals]);
 
@@ -380,4 +372,4 @@ export default function DealsGrid({
       </div>
     </div>
   );
-              }
+}
