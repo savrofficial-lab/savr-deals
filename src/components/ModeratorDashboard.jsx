@@ -198,7 +198,7 @@ export default function ModeratorDashboard({ user }) {
         )
         .subscribe((status) => {
           if (status === "SUBSCRIBED") {
-            console.log("✅ Real-time subscription active for requested deals");
+            console.log("Real-time subscription active for requested deals");
           }
         });
     }
@@ -231,7 +231,7 @@ export default function ModeratorDashboard({ user }) {
       });
       if (error) throw error;
       setReports((prev) => prev.filter((r) => r.id !== reportId));
-      alert("✅ Report marked as reviewed!");
+      alert("Report marked as reviewed!");
     } catch (e) {
       alert("Error: " + e.message);
     }
@@ -251,7 +251,7 @@ export default function ModeratorDashboard({ user }) {
       
       if (updateError) throw updateError;
 
-      // Step 2: Send notification to user
+      // Step 2: Send in-app notification to user
       const { error: notifError } = await supabase
         .from("notifications")
         .insert({
@@ -266,7 +266,38 @@ export default function ModeratorDashboard({ user }) {
         console.error("Notification error:", notifError);
       }
 
-      // Step 3: Delete the request from the database permanently
+      // Step 3: Get user email from profiles table
+      const { data: userData, error: userError } = await supabase
+        .from("profiles")
+        .select("email")
+        .eq("user_id", userId)
+        .single();
+
+      // Step 4: Send email notification
+      if (userData?.email) {
+        try {
+          const emailResponse = await fetch("/api/send-email", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              email: userData.email,
+              dealName: query,
+            }),
+          });
+
+          if (!emailResponse.ok) {
+            console.warn("Email sending failed:", await emailResponse.text());
+          } else {
+            console.log("Email sent successfully");
+          }
+        } catch (emailError) {
+          console.error("Error sending email:", emailError);
+        }
+      }
+
+      // Step 5: Delete the request from the database
       const { error: deleteError } = await supabase
         .from("requested_deals")
         .delete()
@@ -274,11 +305,11 @@ export default function ModeratorDashboard({ user }) {
       
       if (deleteError) throw deleteError;
 
-      // Step 4: Remove from requested deals list immediately
+      // Step 6: Remove from requested deals list
       setRequested((prev) => prev.filter((r) => r.id !== id));
 
       setLoading(false);
-      alert(`✅ Done! Deal deleted from requests.\nNotification sent to user.\n\nNow click the "Post" tab and post: "${query}"`);
+      alert(`Done! Deal deleted from requests.\nNotification & email sent to user.\n\nNow click the "Post" tab and post: "${query}"`);
 
     } catch (e) {
       setLoading(false);
@@ -389,7 +420,7 @@ export default function ModeratorDashboard({ user }) {
         {activeTab === "requested" && (
           <div className="grid gap-4">
             {requested.length === 0 ? (
-              <p className="text-gray-500">No requested deals found 🎉</p>
+              <p className="text-gray-500">No requested deals found</p>
             ) : (
               requested.map((req) => (
                 <div
@@ -424,7 +455,7 @@ export default function ModeratorDashboard({ user }) {
         {activeTab === "reports" && (
           <div className="grid gap-4">
             {reports.length === 0 ? (
-              <p className="text-gray-500">No reports found 🎉</p>
+              <p className="text-gray-500">No reports found</p>
             ) : (
               reports.map((report) => (
                 <div
@@ -517,4 +548,4 @@ export default function ModeratorDashboard({ user }) {
       </motion.main>
     </div>
   );
-        }
+}
