@@ -132,8 +132,8 @@ export default function DealsGrid({
           query = query.ilike("title", `%${search.trim()}%`);
         }
 
-        // Order by created_at instead of id for proper chronological order
-        const { data: dealsData, error: dealsError } = await query.order("created_at", { ascending: false });
+        // ✅ Order by created_at - put non-null values first (descending), then nulls
+        const { data: dealsData, error: dealsError } = await query.order("created_at", { ascending: false, nullsFirst: false });
 
         if (!mounted) return;
 
@@ -222,60 +222,16 @@ export default function DealsGrid({
 
     fetchDeals();
 
-    // REAL-TIME SUBSCRIPTION - Listen for new deals
-    const channel = supabase
-      .channel("deals-realtime")
-      .on(
-        "postgres_changes",
-        { event: "INSERT", schema: "public", table: "deals" },
-        (payload) => {
-          if (payload.new.published) {
-            // Add new deal to the top of the list
-            setDeals((prevDeals) => {
-              const price = parseFloat(payload.new.price ?? payload.new.discounted_price ?? 0);
-              const oldPrice = parseFloat(payload.new.old_price ?? payload.new.oldPrice ?? payload.new.mrp ?? 0);
-              let discountPercent = 0;
-              
-              if (!Number.isNaN(price) && !Number.isNaN(oldPrice) && oldPrice > price) {
-                discountPercent = Math.round(((oldPrice - price) / oldPrice) * 100);
-              }
-
-              const newDeal = {
-                ...payload.new,
-                like_count: 0,
-                discountPercent: discountPercent
-              };
-
-              return [newDeal, ...prevDeals];
-            });
-          }
-        }
-      )
-      .on(
-        "postgres_changes",
-        { event: "UPDATE", schema: "public", table: "deals" },
-        (payload) => {
-          setDeals((prevDeals) =>
-            prevDeals.map((deal) => 
-              deal.id === payload.new.id ? { ...deal, ...payload.new } : deal
-            )
-          );
-        }
-      )
-      .on(
-        "postgres_changes",
-        { event: "DELETE", schema: "public", table: "deals" },
-        (payload) => {
-          setDeals((prevDeals) =>
-            prevDeals.filter((deal) => deal.id !== payload.old.id)
-          );
-        }
-      )
-      .subscribe();
+    // POLLING - Check for new deals every 5 seconds (since real-time replication not enabled)
+    const pollInterval = setInterval(() => {
+      if (mounted) {
+        fetchDeals();
+      }
+    }, 5000); // Check every 5 seconds
 
     return () => {
       mounted = false;
-      supabase.removeChannel(channel);
+      clearInterval(pollInterval);
     };
   }, [selectedCategoryInternal, search, filterHotDeals]);
 
@@ -424,4 +380,4 @@ export default function DealsGrid({
       </div>
     </div>
   );
-}
+              }
