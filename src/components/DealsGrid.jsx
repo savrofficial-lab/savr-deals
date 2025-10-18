@@ -148,21 +148,21 @@ export default function DealsGrid({
         const list = Array.isArray(dealsData) ? dealsData : [];
       
         if (list.length === 0) {
-  if (search && search.trim() !== "") {
-    // We only display a message here. The actual requested_deals insertion
-    // is handled in App.jsx when user clicks Search (handleSearchSubmit).
-    setDeals([]);
-    setErrorMsg(
-      `No deals found for "${search.trim()}". Your request has been sent to moderators (if you pressed Search). You’ll be notified once a deal is posted.`
-    );
-  } else {
-    setDeals([]);
-    setErrorMsg("");
-  }
+          if (search && search.trim() !== "") {
+            // We only display a message here. The actual requested_deals insertion
+            // is handled in App.jsx when user clicks Search (handleSearchSubmit).
+            setDeals([]);
+            setErrorMsg(
+              `No deals found for "${search.trim()}". Your request has been sent to moderators (if you pressed Search). You'll be notified once a deal is posted.`
+            );
+          } else {
+            setDeals([]);
+            setErrorMsg("");
+          }
 
-  setLoading(false);
-  return;
-         }
+          setLoading(false);
+          return;
+        }
         
         // Fetch like counts
         const ids = list.map((d) => d.id).filter(Boolean);
@@ -222,8 +222,60 @@ export default function DealsGrid({
 
     fetchDeals();
 
+    // REAL-TIME SUBSCRIPTION - Listen for new deals
+    const channel = supabase
+      .channel("deals-realtime")
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "deals" },
+        (payload) => {
+          if (payload.new.published) {
+            // Add new deal to the top of the list
+            setDeals((prevDeals) => {
+              const price = parseFloat(payload.new.price ?? payload.new.discounted_price ?? 0);
+              const oldPrice = parseFloat(payload.new.old_price ?? payload.new.oldPrice ?? payload.new.mrp ?? 0);
+              let discountPercent = 0;
+              
+              if (!Number.isNaN(price) && !Number.isNaN(oldPrice) && oldPrice > price) {
+                discountPercent = Math.round(((oldPrice - price) / oldPrice) * 100);
+              }
+
+              const newDeal = {
+                ...payload.new,
+                like_count: 0,
+                discountPercent: discountPercent
+              };
+
+              return [newDeal, ...prevDeals];
+            });
+          }
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "deals" },
+        (payload) => {
+          setDeals((prevDeals) =>
+            prevDeals.map((deal) => 
+              deal.id === payload.new.id ? { ...deal, ...payload.new } : deal
+            )
+          );
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "DELETE", schema: "public", table: "deals" },
+        (payload) => {
+          setDeals((prevDeals) =>
+            prevDeals.filter((deal) => deal.id !== payload.old.id)
+          );
+        }
+      )
+      .subscribe();
+
     return () => {
       mounted = false;
+      supabase.removeChannel(channel);
     };
   }, [selectedCategoryInternal, search, filterHotDeals]);
 
@@ -231,20 +283,20 @@ export default function DealsGrid({
   if (loading) return <div className="text-center text-gray-500 py-8">Loading deals…</div>;
   if (errorMsg) return <div className="text-center text-red-600 py-8">Error: {errorMsg}</div>;
   if (!deals || deals.length === 0) {
-  return (
-    <div className="text-center text-gray-600 max-w-md mx-auto bg-white p-4 rounded-xl shadow-sm my-8">
-      {errorMsg ? (
-        <>
-          <p className="mb-2">🔍 {errorMsg}</p>
-          <p className="text-xs text-gray-500">
-            (We’ll alert you once the requested deal goes live!)
-          </p>
-        </>
-      ) : (
-        <p>No deals available yet.</p>
-      )}
-    </div>
-  );
+    return (
+      <div className="text-center text-gray-600 max-w-md mx-auto bg-white p-4 rounded-xl shadow-sm my-8">
+        {errorMsg ? (
+          <>
+            <p className="mb-2">🔍 {errorMsg}</p>
+            <p className="text-xs text-gray-500">
+              (We'll alert you once the requested deal goes live!)
+            </p>
+          </>
+        ) : (
+          <p>No deals available yet.</p>
+        )}
+      </div>
+    );
   }
 
   // currency formatter helper
