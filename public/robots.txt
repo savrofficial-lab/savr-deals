@@ -1,3 +1,8 @@
 User-agent: *
 Allow: /
+
+# Don't index internal API or admin routes
+Disallow: /api/
+Disallow: /admin/
+
 Sitemap: https://savr-deals.vercel.app/sitemap.xml
