@@ -19,6 +19,7 @@ import Notifications from "./components/Notifications";
 import NotificationDetail from "./components/NotificationDetail";
 import DealRemoved from "./components/DealRemoved";
 import RewardsPage from './components/RewardsPage';
+
 /* ---------------------------------------------------------------------------
    Small inline icons
 --------------------------------------------------------------------------- */
@@ -223,7 +224,24 @@ export default function App() {
       setShowLoginModal(true);
     }
   }
-   // ---------------- REQUESTED DEAL SUBMIT (called when user clicks Search or presses Enter) ----------------
+
+  // ---------------- SMART NORMALIZE FUNCTION ----------------
+  // Normalize text by removing punctuation/spaces and lowercasing.
+  function normalizeText(text = "") {
+    return String(text)
+      .toLowerCase()
+      .replace(/[\u2018\u2019\u201C\u201D]/g, "") // fix smart quotes if any
+      .replace(/[^a-z0-9]/g, ""); // remove everything except alphanumerics
+  }
+
+  // ---------------- REQUESTED DEAL SUBMIT (called when user clicks Search or presses Enter)
+  // New smart logic:
+  // 1) Trim query q.
+  // 2) Perform a quick server-side ilike search (title/description/category).
+  // 3) If server finds rows → set search to q and show results.
+  // 4) If server finds none → fetch published deals and run normalized client-side match.
+  // 5) If any client-side matches → set search (show results).
+  // 6) If still none → check requested_deals table (avoid duplicates) and insert request.
   async function handleSearchSubmit() {
     const q = searchRaw.trim();
     if (!q) {
@@ -231,38 +249,151 @@ export default function App() {
       return;
     }
 
+    // set UI search state so DealsGrid can pick it up when results exist
     setSearch(q);
 
+    // Normalize for internal comparisons
+    const normalizedQuery = normalizeText(q);
+
     try {
-      const { data: { user }, error: userErr } = await supabase.auth.getUser();
-      if (userErr) throw userErr;
-      if (!user) {
-        alert("⚠️ You must be logged in to request a deal");
+      // Ensure user is logged in for making requests (but allow search to show results for non-logged-in users)
+      const { data: authData } = await supabase.auth.getUser();
+      const currentUser = authData?.user ?? null;
+
+      // 1) Quick server-side ilike search for performance (title/description/category)
+      // Use %q% naive search to quickly find obvious matches
+      const { data: serverMatches, error: serverErr } = await supabase
+        .from("deals")
+        .select("id, title, description, category, published")
+        .eq("published", true)
+        .or(
+          `title.ilike.%${q}%,description.ilike.%${q}%,category.ilike.%${q}%`
+        )
+        .order("created_at", { ascending: false })
+        .limit(50);
+
+      if (serverErr) {
+        console.warn("Server search error:", serverErr.message || serverErr);
+      }
+
+      if (Array.isArray(serverMatches) && serverMatches.length > 0) {
+        // We found server-side matches — set search and return (DealsGrid will show)
+        setSearch(q);
         return;
       }
 
-      // Check if already requested
-      const { data: existing, error: checkErr } = await supabase
+      // 2) If server-side found nothing, fetch a list of published deals to do a normalized match
+      // (This handles spacing/punctuation/case differences like "iphone15", "i phone 15", etc.)
+      const { data: allPublished, error: allErr } = await supabase
+        .from("deals")
+        .select("id, title, description, category, published")
+        .eq("published", true)
+        .order("created_at", { ascending: false })
+        .limit(500); // limit to reasonable amount
+
+      if (allErr) {
+        console.warn("Error fetching published deals for normalized search:", allErr);
+      }
+
+      let matched = [];
+      if (Array.isArray(allPublished) && allPublished.length > 0) {
+        matched = allPublished.filter((d) => {
+          const t = normalizeText(d.title || "");
+          const desc = normalizeText(d.description || "");
+          const cat = normalizeText(d.category || "");
+          // match normalized query as substring of any normalized field
+          return (
+            (t && t.includes(normalizedQuery)) ||
+            (desc && desc.includes(normalizedQuery)) ||
+            (cat && cat.includes(normalizedQuery))
+          );
+        });
+      }
+
+      if (matched.length > 0) {
+        // Found matches via normalized local search — set search so DealsGrid shows them
+        setSearch(q);
+        return;
+      }
+
+      // 3) No matches at all — create or deduplicate requested_deals
+      // Must be logged in to create a request
+      if (!currentUser) {
+        // If not logged in, don't create request; show login prompt instead
+        setShowLoginModal(true);
+        return;
+      }
+
+      // Avoid duplicate requests: check exact query first
+      const { data: existingExact, error: existingErr } = await supabase
         .from("requested_deals")
-        .select("id")
-        .eq("query", q)
+        .select("id, query")
         .eq("fulfilled", false)
+        .eq("query", q)
         .limit(1);
 
-      if (checkErr) throw checkErr;
-
-      if (!existing || existing.length === 0) {
-        const { error: insertErr } = await supabase
-          .from("requested_deals")
-          .insert([{ user_id: user.id, query: q, fulfilled: false }]);
-
-        if (insertErr) throw insertErr;
-        alert("✅ Request successfully added for: " + q);
-      } else {
-        alert("ℹ️ Request already exists for: " + q);
+      if (existingErr) {
+        console.warn("Error checking existing requested_deals:", existingErr);
       }
+
+      if (Array.isArray(existingExact) && existingExact.length > 0) {
+        alert(`ℹ️ Request already exists for: ${q}`);
+        return;
+      }
+
+      // Also attempt to check normalized duplicates (client-side) to avoid many near-duplicates
+      // Fetch recent unfulfilled requests (limit to 500)
+      const { data: recentReqs, error: recentErr } = await supabase
+        .from("requested_deals")
+        .select("id, query, user_id, created_at")
+        .eq("fulfilled", false)
+        .order("created_at", { ascending: false })
+        .limit(500);
+
+      if (recentErr) {
+        console.warn("Error fetching recent requested_deals:", recentErr);
+      }
+
+      let duplicateFound = false;
+      if (Array.isArray(recentReqs)) {
+        for (const r of recentReqs) {
+          if (normalizeText(r.query || "") === normalizedQuery) {
+            duplicateFound = true;
+            break;
+          }
+        }
+      }
+
+      if (duplicateFound) {
+        alert(`ℹ️ A similar request already exists for: ${q}`);
+        return;
+      }
+
+      // Insert the requested_deals row
+      const { error: insertErr } = await supabase
+        .from("requested_deals")
+        .insert([
+          {
+            user_id: currentUser.id,
+            query: q,
+            fulfilled: false,
+          },
+        ]);
+
+      if (insertErr) {
+        console.error("Error inserting requested_deal:", insertErr);
+        alert("❌ Failed to send request: " + (insertErr.message || insertErr));
+        return;
+      }
+
+      alert(
+        `✅ Request successfully added for: "${q}". We'll notify you when it's live.`
+      );
+      // keep search state set to q (so DealsGrid will still search for this term if user wants)
+      setSearch(q);
     } catch (err) {
-      alert("❌ Error: " + err.message);
+      console.error("Search submit error:", err);
+      alert("❌ Error: " + (err.message || String(err)));
     }
   }
 
@@ -442,7 +573,7 @@ export default function App() {
           </div>
 
           {/* TOP TABS */}
-          <div className="bg-gradient-to-r from-amber-50/80 to-yellow-50/80 backdrop-blur-md sticky top-[88px] z-40 border-t border-amber-100/30">
+              <div className="bg-gradient-to-r from-amber-50/80 to-yellow-50/80 backdrop-blur-md sticky top-[88px] z-40 border-t border-amber-100/30">
             <div className="max-w-5xl mx-auto px-2 sm:px-4 py-2 sm:py-3">
               <div className="flex items-center gap-2 overflow-visible">
                 <motion.button
@@ -552,7 +683,7 @@ export default function App() {
         </main>
 
         {/* FOOTER */}
-         <div className="mt-12 pb-24 px-4 relative z-10">
+        <div className="mt-12 pb-24 px-4 relative z-10">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -730,4 +861,4 @@ export default function App() {
       `}</style>
     </Router>
   );
-}
+       }
