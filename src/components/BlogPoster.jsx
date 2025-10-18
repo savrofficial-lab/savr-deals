@@ -38,16 +38,23 @@ export default function BlogPoster() {
         return;
       }
 
+      // Add a small delay to ensure latest data from database
+      await new Promise(resolve => setTimeout(resolve, 500));
+
       const { data: profile, error } = await supabase
         .from("profiles")
         .select("role")
         .eq("id", authUser.id)
         .single();
 
-      if (error || !profile || profile.role !== "blogger") {
+      if (error) {
+        console.error("Profile fetch error:", error);
         setIsAuthorized(false);
-      } else {
+      } else if (profile && profile.role === "blogger") {
         setIsAuthorized(true);
+      } else {
+        console.log("User role:", profile?.role);
+        setIsAuthorized(false);
       }
     } catch (err) {
       console.error("Authorization check error:", err);
